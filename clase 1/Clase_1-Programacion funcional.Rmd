@@ -1,6 +1,6 @@
 ---
-title: "Clase 1 - Programacion Funcional"
-author: "Diego Kozlowski y Juan Barriola"
+title: "Clase 1 - Loops, estructuras condicionales y funciones"
+author: "Juan Barriola y Sofía Perini"
 date: ""
 output:
   html_notebook:
@@ -16,7 +16,7 @@ div.main-container {
 }
 </style>
 
->Reiniciar R
+> Reiniciar R
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -97,7 +97,6 @@ suma <- function(valor1, valor2) {
 
 suma(5,6)
 ```
-
 
 Obviamente las funciones no son sólo para variables numéricas. Por ejemplo, podemos pegar dos strings con una flecha en el medio
 
