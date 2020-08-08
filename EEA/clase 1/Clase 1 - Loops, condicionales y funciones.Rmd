@@ -1,0 +1,179 @@
+---
+title: "Clase 1 - Loops, estructuras condicionales y funciones"
+author: "Juan Barriola y Sofía Perini"
+date: ""
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+Librerias que se utilizan en esta clase:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+# Loops
+
+Un __loop__ es una estructura de código que nos permite aplicar iterativamente un mismo conjunto de comandos, variando el valor de una variable. Por ejemplo:
+
+```{r,warning=FALSE}
+for(i in 1:10){
+   print(i^2)
+}
+```
+
+Esto se lee como: "Recorre cada uno de los valores (i) del vector numérico 1 a 10, y para cada uno de ellos imprimí el cuadrado (i^2)". 
+
+Se puede especificar la palabra que se desee que tome cada uno de los valores que debe tomar. En el ejemplo anterior fue **i**, pero bien podría ser "**Valores**".
+
+```{r}
+for(Valores in 1:10){
+   print(Valores^2)
+  
+}
+```
+
+Un loop puede iterar sobre cualquier tipo de vector, independientemente de lo que contenga.
+
+> Los loops son una estructura básica que existen en cualquier lenguaje de programación. En R no recomendamos abusar de ellos porque hacen que el código sea más lento.
+
+
+# Estructuras Condicionales
+
+Las __estructuras condiconales__ nos permiten ejecutar una porción de código en caso de que cumplan una condición lógica
+
+## if
+
+Su funcionamiento es el siguiente:     
+```if(condición){código a ejecutar si se cumple la condición}```
+
+```{r,warning=FALSE}
+if( 2+2 == 4){
+  print("Menos Mal")
+}
+
+```
+
+```{r,warning=FALSE}
+if( 2+2 == 148.24){
+  print("R, tenemos un problema")
+}
+
+```
+
+
+## ifelse
+
+La función ```if_else()``` sirve para crear o modificar dicotómicamente un objeto/variable/vector a partir del cumplimiento de una o más condiciones lógicas.  
+
+Su funcionamiento es el siguiente:      
+```if_else(condición, función a aplicar si se cumple la condición, función a aplicar si no se cumple la condición)```
+
+```{r}
+if_else(2+2 == 4, true = "Joya", false = "Error")
+```
+
+# Funciones
+
+La creación de __funciones__ propias nos permite automatizar todas aquellas partes del código que se repiten mucho. Una vez diseñadas, funcionan igual que cualquier comando. 
+
+Por ejemplo, podemos definir la suma de dos elementos como
+
+
+```{r}
+suma <- function(valor1, valor2) {
+  valor1+valor2
+}
+
+suma(5,6)
+```
+
+Obviamente las funciones no son sólo para variables numéricas. Por ejemplo, podemos pegar dos strings con una flecha en el medio
+
+```{r}
+funcion_prueba <- function(parametro1,parametro2) {
+  paste(parametro1, parametro2, sep = " <--> ")
+}
+
+funcion_prueba(parametro1 = "A ver", parametro2 = "Qué pasa")
+
+```
+
+También podemos asignar un valor por default para los parametros en caso de que el usuario no defina su valor al utilizar la función.
+
+```{r}
+Otra_funcion_prueba <- function(parametro1 ,parametro2 = "String default") {
+  paste(parametro1, parametro2, sep = " <--> ")
+  
+}
+Otra_funcion_prueba(parametro1 = "Valor 1")
+
+```
+
+Las funciones que creamos nosotros permanecen en el ambiente de R temporariamente. Cuando removemos los objetos del ambiente, la función deja de existir. Por ende, debemos incorporarla en cada uno de los scripts en la cual la necesitemos. Una buena práctica, es incorporar nuestras funciones útiles al comienzo de cada script junto a la carga de las librerías.                         
+
+> Vale mencionar que __lo que ocurre en una función, queda en la función__ excepto que explícitamente pidamos que devuelva el resultado, con el comando `print()`. 
+
+Las funciones siempre devuelven el último objeto que se crea en ellas, o si explicitamente se utiliza el comando `return()`
+
+**Funciones anónimas**
+
+Son funciones a las cuales no les asignamos un nombre. Esto suele ser útil para hacer funciones pequeñas dentro de otras funciones o estructuras más complejas.
+
+```{r}
+(function(x) x*2)(10)
+```
+
+# Ejercicios para practicar 
+
+## Ejercicio 1
+ 
+1) Crear un dataframe con el dataset de R: state.x77 y contestar las siguientes preguntas:
+
+a) ¿Cuál es la población total de Estados Unidos? 
+b) ¿Cuál es la media de la expectativa de vida?
+c) ¿Cual es la mediana del ingreso en pesos argentinos?
+
+2) Crear un dataset **df_indice** solo con las columnas de porcentaje de analfabetismo sobre población  (*Illiteracy*) y tasa de homicidios por 100.000 habitantes (*Murder*). 
+a) Crear una nueva variable **ilit_murd** que contenga la suma de los valores de ambas variables del dataset. 
+b) Encontrar los valores máximos y mínimos de esta nueva variable.  
+
+3) OBJETOS 
+
+a) Crear un VALOR llamado _OBJETO_ definido como el resultado de la suma: 5+6
+b) Crear un VECTOR _VEC0_ que contenga una muestra aleatoria de números del 1 al 10.
+c) Crear 3 vectores ( _VEC1_, _VEC2_, _VEC3_) que sean transformaciones del anterior consistentes en multiplicar por 2, elevar al cuadrado y restarle 2, respectivamente.
+d) Crear 3 vectores con la misma cantidad de elementos que VEC0, pero con variables string (texto) ( _VEC4_, _VEC5_, _VEC6_). Hint: usar la funcion ```rep()``` en los casos que se quiera repetir un caracter.   
+e) Crear un dataframe _DFRAME_ como combinación de todos los vectores creados previamente.
+f) Crear una lista _LA_LISTA_ con el _OBJETO_ creado en el punto a), alguno de los vectores y el _DFRAME_ del punto e).
+
+4) LOOPS
+
+a) Para todos los valores del vector _VEC0_, *imprimir* mediante un loop el triple de dichos valores. 
+b) Armar un loop que itere sobre los valores únicos de la variable _VEC6_ del dataframe _DFRAME_ e imprima un texto que combine el valor de _VEC6_ y de _VEC0_. 
+c) Reescribir el VEC1 del DATAFRAME para que sus elementos sean: el doble de _VEC_0_ cuando éste sea mayor a 2 e iguales a _VEC_0_ para el resto de los casos. Hint: usar la función ```ifelse()``` 
+
+5) FUNCIONES
+
+a) Crear una función llamada _Hola_Mundo_ que imprima el texto "Hola mundo"
+b) Crear una función _`Sumatoria_enteros`_ que devuelva la sumatoria de los numeros enteros comprendidos entre 1 y un parametro x a definir. Es decir, una función Sumatoria_enteros(x) que devuelva la sumatoria de los enteros de 1 a x. 
+c) Crear una función _primer_elem_matriz_ cuyo parámetro/input X sea una matrix y que devuelva la dimensión de la matriz en cuestión y un texto que diga *"El primer elemento es par"* en caso de que así lo fuera o *"El primer elemento no es par"* en caso contrario. Evaluar la función creada para el dataset _DFRAME_.
+
+## Ejercicio 2
+ 
+1) El INDEC^[Fuente: https://www.indec.gob.ar/indec/web/Institucional-Indec-BasesDeDatos] publica las bases de microdatos de la Encuesta Permanente de Hogares (EPH). Para este ejercicio deberán descargar la base "usu_individual_T120.txt" que corresponde a la base Individual del 1er trimestre de 2020 y se encuentra disponible en el campus. 
+
+a) Levantar y guardar la base en un objeto llamado _individualt120_. La misma usa como separador ";". 
+b) Visualizar el contenido del dataset. Hint: Se puede utilizar la funcion ```glimpse()``` de la libreria tibble para visualizar el contenido de la base, identificando dimensión, tipos de variables y primeros valores de cada una.   
+c) Guardar la base como un archivo de extensión .RDS con la función saveRDS() y volver a levantarla pero desde el nuevo archivo .RDS y asignarla con el nombre _BaseRDS_ ¿tarda más o menos?
+
+2) Crear una función _acumulado_ que calcule el valor acumulado (suma) de una variable numérica a designar X en un dataset también a designar df. Es decir, que brinde el valor resultante de acumulado(df, X). 
+
+a) Evalúela para la columna "PONDERA" del dataframe _individual_T120_.
+b) Utilizar dicha función para calcular el acumulado de PONDERA por Sexo (variable CH04), sabiendo que 1 = varón y 2 = mujer.
+
+3) Modificar la función anterior ( _acumulado2_) para que devuelva un vector que contenga la frecuencia poblacional (el acumulado calculado previamente) y la muestral (número de filas del dataset). 
+
+a) Utilizar la función modificada para calcular la frecuencias frecuencias muestrales y poblacionales por Sexo. 
