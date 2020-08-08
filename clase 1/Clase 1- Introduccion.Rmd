@@ -22,10 +22,10 @@ subtitle: Explicación
 
 [^1]: Más allá de los comandos elementales, comandos más sofisticados tienen muchas versiones, y algunas quedan en desuso en el tiempo.
 
-![fuente: https://gist.github.com/daroczig/3cf06d6db4be2bbe3368](number-of-submitted-packages-to-CRAN.png){width=1000}
+![Fuente: https://gist.github.com/daroczig/3cf06d6db4be2bbe3368](number-of-submitted-packages-to-CRAN.png){width=1000}
 
 
-![https://www.rstudio.com/](RStudiologo.png){width=100}
+![https://www.rstudio.com/](RStudiologo.png){width=200}
 
 Uno de los _entornos_ más cómodos para utilizar el _lenguaje_ __R__ es el _programa_ __R studio__.
 
@@ -37,8 +37,7 @@ Uno de los _entornos_ más cómodos para utilizar el _lenguaje_ __R__ es el _pro
 
 ![Pantalla Rstudio](Pantalla Rstudio.png){width=1000}
 
-
-### Lógica sintáctica.
+### Lógica sintáctica
 
 #### Definición de objetos
 
@@ -67,7 +66,7 @@ B = 2
 B
 ```
 
-__```<-```__ es un operador __Unidireccional__, es decir que:     
+__```<-```__ es un operador __unidireccional__, es decir que:     
 ```A <- B``` implica que __A__ va tomar como valor el contenido del objeto __B__, y no al revés.
 
 ```{r}
@@ -128,7 +127,7 @@ D
 
 #### Funciones:
 
-Las funciones son series de procedimientos estandarizados, que toman como imput determinados argumentos a fijar por el usuario, y devuelven un resultado acorde a la aplicación de dichos procedimientos. Su lógica de funcionamiento es:   
+Las funciones son series de procedimientos estandarizados, que toman como input determinados argumentos a fijar por el usuario, y devuelven un resultado acorde a la aplicación de dichos procedimientos. Su lógica de funcionamiento es:   
 ```funcion(argumento1 = arg1, argumento2 = arg2)```      
 
 A lo largo del curso iremos viendo numerosas funciones, según lo requieran los distintos ejercicios. Sin embargo, veamos ahora algunos ejemplos para comprender su funcionamiento:    
@@ -141,7 +140,7 @@ A lo largo del curso iremos viendo numerosas funciones, según lo requieran los 
 ```{r}
 paste("Pega", "estas", 4, "palabras", sep = " ")
 
-#Puedo concatenar caracteres almacenados en objetos
+# Puedo concatenar caracteres almacenados en objetos
 paste(A, B, C, sep = "**")
 
 # Paste0 pega los caracteres sin separador
@@ -155,7 +154,7 @@ mean(1:5, na.rm = TRUE)
 ```
 
 
-#### Caracteres especiales
+#### Caracteres especiales:
 
 - R es sensible a mayúsculas y minúsculas, tanto para los nombres de las variables, como para las funciones y parámetros.
 - Los __espacios en blanco__ y los __carriage return__ (_enter_) no son considerados por el lenguaje. Los podemos aprovechar para emprolijar el código y que la lectura sea más simple[^2].
@@ -175,27 +174,27 @@ mean(1:5, na.rm = TRUE)
 
 - Las __comas__ ```, ```  se utilizan para separar los parametros al interior de una función. 
 
-### Objetos:    
+### Objetos    
 
-Existe una gran cantidad de objetos distintos en R, en lo que resepcta al curso trabajaremos principalmente con 3 de ellos:
+Existe una gran cantidad de objetos distintos en R, en lo que respecta al curso trabajaremos principalmente con 3 de ellos:
 
-- Valores
-- Vectores
-- Data Frames
-- Listas
+1. Valores
+2. Vectores
+3. Data Frames
+4. Listas
 
-#### Valores
+#### 1. Valores:
 
 Los valores y vectores pueden ser a su vez de distintas _clases_:   
 
-__Numeric__     
+*Numeric*
 
 ```{r}
 A <-  1
 class(A)
 ```
 
-__Character__
+_Character_
 
 ```{r}
 A <-  paste('Soy', 'una', 'concatenación', 'de', 'caracteres', sep = " ")
@@ -203,17 +202,17 @@ A
 class(A)
 ```
 
-__Factor__
+_Factor_
 
 ```{r}
 A <- factor("Soy un factor, con niveles fijos")
 class(A)
 ```
 
-La diferencia entre un _character_ y un _factor_ es que el último tiene solo algunos valores permitidos (levels), con un orden interno predefinido (el cual, por ejemplo, se respetará a la hora de realizar un gráfico)  
+La diferencia entre un _character_ y un _factor_ es que el último tiene solo algunos valores permitidos (levels), con un orden interno predefinido (el cual, por ejemplo, se respetará a la hora de realizar un gráfico).  
 
 
-#### Vectores
+#### 2. Vectores:
 
 Para crear un __vector__ utilizamos el comando ```c()```, de combinar.
 
@@ -261,6 +260,16 @@ elemento2 <- E[2]
 elemento2
 ```
 
+R implicitamente coerciona la longitud de los [vectores](https://es.r4ds.hadley.nz/vectores.html). Esto se denomina __reciclado de vectores__ (*vector recicling*), debido a que el vector de menor longitud se repite, o recicla, hasta igualar la longitud del vector más largo.
+
+```{r}
+# sumamos dos vectores de distinta longitud
+G <- 1:10 + 1:2 
+G 
+```
+
+Vemos que para efectuar la suma el vector menor (1 y 2) se repite para alcanzar la longitud del vector más largo (1 a 10) y le adiciona 1 y 2 a medida que recorre el vector más largo.  
+
 Para __borrar__ un objeto del ambiente de trabajo, utilizamos el comando _```rm()```_
 
 ```{r error=TRUE}
@@ -275,22 +284,23 @@ E[2] <- "Pablo"
 E
 ```
 
-### Data Frames
+#### 3. Data Frames:
 
 Un Data Frame es una tabla de datos, donde cada columna representa una variable, y cada fila una observación.
 
 Este objeto suele ser central en el proceso de trabajo, y suele ser la forma en que se cargan datos externos para trabajar en el ambiente de R, y en que se exportan los resultados de nuestros trabajo.  
 
-También se puede crear como la combinación de N vectores de igual tamaño. Por ejemplo, tomamos algunos valores del [Indice de salarios](http://www.indec.gob.ar/bajarCuadroEstadistico.asp?idc=4020B33440609462654542BD0BC320F1523DA0DC52C396201DB4DD5861FFEDC9AD1436681AC84179)
+También se puede crear como la combinación de N vectores de igual tamaño. Por ejemplo, tomamos algunos valores del [Indice de salarios](https://www.indec.gob.ar/indec/web/Nivel4-Tema-4-31-61)
 
 ```{r}
-INDICE  <- c(100,   100,   100,
-             101.8, 101.2, 100.73,
-             102.9, 102.4, 103.2)
+INDICE  <- c( 286.4,	262.1,	248.5,
+              285.7,	263.5,	250.2,
+              285.1,	264.9,	249.0 )
 
-FECHA  <-  c("Oct-16", "Oct-16", "Oct-16",
-             "Nov-16", "Nov-16", "Nov-16",
-             "Dic-16", "Dic-16", "Dic-16")
+
+FECHA  <-  c("Mar-20", "Mar-20", "Mar-20",
+             "Abr-20", "Abr-20", "Abr-20",
+             "May-20", "May-20", "May-20")
 
 GRUPO  <-  c("Privado_Registrado","Público","Privado_No_Registrado",
              "Privado_Registrado","Público","Privado_No_Registrado",
@@ -321,31 +331,31 @@ Nótese que el último comando tiene un número incorrecto de dimensiones, porqu
 Acorde a lo visto anteriormente, el acceso a los __dataframes__ mediante  ```[ ]``` puede utilizarse para realizar filtros sobre la base, especificando una condición para las filas. Por ejemplo, puedo utilizar los  ```[ ]``` para conservar del __dataframe__ ```Datos ```  unicamente los registros con fecha de Diciembre 2016:
 
 ```{r error=TRUE}
-Datos[Datos$FECHA=="Dic-16",]
+Datos[Datos$FECHA == "May-20",]
 ```
 
-La lógica del paso anterior sería: Accedo al dataframe ```Datos```, pidiendo únicamente conservar las filas (por eso la condición se ubica a la _izquierda_ de la  ```, ```) que cumplan el requisito de pertenecer a la categoría __"Dic-16"__ de la variable __FECHA__.    
+La lógica del paso anterior sería: Accedo al dataframe ```Datos```, pidiendo únicamente conservar las filas (por eso la condición se ubica a la _izquierda_ de la  ```, ```) que cumplan el requisito de pertenecer a la categoría __"May-20"__ de la variable __FECHA__.    
 
 Aún más, podría aplicar el filtro y al mismo tiempo identificar una variable de interés para luego realizar un cálculo sobre aquella. Por ejemplo, podría calcular la media de los indices en el mes de Diciembre. 
 
 ```{r error=TRUE}
-###Por separado
-Indices_Dic <- Datos$INDICE[Datos$FECHA=="Dic-16"]
-Indices_Dic
+# Por separado
+Indices_May <- Datos$INDICE[Datos$FECHA == "May-20"]
+Indices_May
 ```
 
 ```{r error=TRUE}
-mean(Indices_Dic)
+mean(Indices_May)
 ```
 
 ```{r error=TRUE}
-### Todo junto
-mean(Datos$INDICE[Datos$FECHA=="Dic-16"])
+# Todo junto
+mean(Datos$INDICE[Datos$FECHA == "May-20"])
 ```
 
-La lógica de esta sintaxis sería: "Me quedo con la variable __INDICE__, cuando la variable FECHA sea igual a __"Dic-16"__, luego calculo la media de dichos valores".
+La lógica de esta sintaxis sería: "Me quedo con la variable __INDICE__, cuando la variable FECHA sea igual a __"May-20"__, luego calculo la media de dichos valores".
 
-### Listas
+#### 4. Listas
 
 Contienen una concatenación de objetos de cualquier tipo. Así como un vector contiene valores, un dataframe contiene vectores, una lista puede contener dataframes, pero también vectores, o valores, y _todo ello a la vez_.
 
@@ -364,8 +374,8 @@ superlista$DF$FECHA[2]
 
 Hay algunas cosas que tenemos que tener en cuenta respecto del orden del ambiente en el que trabajamos:
 
-- Working Directory: Es el directorio de trabajo. Pueden ver el suyo con `getwd()`, es *hacia donde apunta el código*, por ejemplo, si quieren leer un archivo, la ruta del archivo tiene que estar explicitada como el recorrido desde el Working Directory.
-- Environment: Esto engloba tanto la información que tenemos cargada en *Data* y *Values*, como las librerías que tenemos cargadas mientras trabajamos. 
+- **Working Directory**: Es el directorio de trabajo. Pueden ver el suyo con `getwd()`, es *hacia donde apunta el código*, por ejemplo, si quieren leer un archivo, la ruta del archivo tiene que estar explicitada como el recorrido desde el Working Directory.
+- **Environment**: Esto engloba tanto la información que tenemos cargada en *Data* y *Values*, como las librerías que tenemos cargadas mientras trabajamos. 
 
 Es importante que mantengamos bien delimitadas estas cosas entre diferentes trabajos, sino:
 
@@ -379,6 +389,8 @@ Es importante que mantengamos bien delimitadas estas cosas entre diferentes trab
   - Perdemos espacio de la memoria
   - No estamos seguros de que el script cargue todas las librerías que necesita
 
+#### Proyectos
+
 Rstudio tiene una herramienta muy útil de trabajo que son los **proyectos**. Estos permiten mantener un ambiente de trabajo delimitado por cada uno de nuestros trabajos. Es decir:
 
 - El directorio de trabajo se refiere a donde esta ubicado el archivo .Rproj
@@ -390,8 +402,7 @@ Un proyecto no es un sólo script, sino toda una carpeta de trabajo.
 
 Para crearlo, vamos al logo de nuevo projecto (Arriba a la derecha de la panatalla), y elegimos la carpeta de trabajo. 
 
-
-### Tipos de archivos de R
+#### Tipos de archivos de R
 
 - __Script__: Es un archivo de texto plano, donde podemos poner el código que utilizamos para preservarlo
 - __Rnotebook__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar, e intercalar código con resultados (este archivo es un rnotebook)
