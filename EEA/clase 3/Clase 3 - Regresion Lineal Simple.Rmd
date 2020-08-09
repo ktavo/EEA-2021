@@ -1,0 +1,95 @@
+---
+title: "Regresión Lineal Simple"
+author: "Juan Barriola y Sofía Perini"
+date: "12 de Septiembre de 2020"
+output:
+  html_notebook:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+# Encuesta de Sueldos en el sector IT
+
+Vamos a trabajar con un dataset de openqube^[https://openqube.io/encuesta-sueldos-2020.01#Introduccion%20%20%20https://docs.google.com/spreadsheets/d/e/2PACX-1vTORpz5hc_wOwKdaKEIgVOAI3XVTh9WXB__C2abe_E0aJoYIoqhWQ-HTpBBryAByhIlX_booioqxK0T/pub?gid=1893349211&single=true&output=csv] sobre empleos en el sector IT.
+
+```{r}
+library(data.table)
+library(tidyverse)
+library(readxl)
+encuesta <- read_csv("../Fuentes/Encuesta de remuneracion salarial - 2020.1.csv")
+encuesta %>%
+  glimpse()
+encuesta %>%
+  head(10)
+```
+
+### Filtros 
+
+Se filtran las variables de interes.
+
+```{r}
+df1 <- encuesta[,c(1:5,24:31,47:49)]
+
+library(lubridate)
+class(df1$Timestamp)
+ymd_hms(df1$Timestamp)
+
+```
+
+Aplicar filtros: 
+
+- Donde estás trabajando: GBA y CABA. 
+- Anos de experiencia <= 10
+
+```{r}
+df1 %>%
+  summary()
+
+
+df2 <- df1 %>%
+  filter(`Dónde estás trabajando` %in% c("Ciudad Autónoma de Buenos Aires", "GBA"), `Años de experiencia` <= 10)
+
+df2 %>%
+  head(5)
+
+dim(df2)
+```
+
+### Chequeo valores unicos y faltantes 
+
+```{r}
+tabla2 <- df2 %>% gather(.,
+                         key   = Variables,
+                         value = Valores) %>% 
+  group_by(Variables) %>% 
+  summarise(Valores.unicos = length(unique(Valores)), Valores.faltantes = sum(is.na(Valores)))
+# ordeno la tabla por valores faltantes y luego unicos.
+tabla2 %>% arrange(Valores.faltantes, Valores.unicos)
+```
+
+### Chequeo correlación
+
+```{r}
+library(corrr)
+library(knitr)
+library(kableExtra)
+library(GGally)
+
+# calculo matriz de correlacion para los registros completos (omitiendo faltantes) con ambos métodos 
+# pearson
+matriz.correl.pe <- df2[,c(3,6:9,15:16)] %>% 
+ correlate(use = "complete.obs", method = "pearson") %>% 
+  shave() %>% 
+  fashion()
+matriz.correl.pe
+
+# spearman
+matriz.correl.sp <- df2[,c(3,6:9,15:16)] %>% 
+ correlate(use = "complete.obs", method = "spearman") 
+matriz.correl.sp
+
+
+```
+
