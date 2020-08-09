@@ -4,8 +4,7 @@ output:
   html_notebook:
     toc: yes
     toc_float: yes
-date: ""
-subtitle: Explicación
+date: 05-09-2020
 ---
 
 
@@ -17,8 +16,7 @@ subtitle: Explicación
 - Software Libre
 - Sintaxis Básica: R base 
 - Sintaxis incremental[^1]: El lenguaje se va ampliando por aportes de Universidades, investigadores/as, usuarios/as y empresas privadas, organizados en librerías (o paquetes)
-- Comunidad web muy grande para realizar preguntas y despejar dudas. Por ejemplo, en el caso de Buenos Aires contamos con [R-Ladies Buenos Aires](https://www.meetup.com/es-ES/rladies-buenos-aires/) y [RenBaires](https://www.meetup.com/es-ES/renbaires/).
-- Gráficos con calidad de publicación
+- Comunidad web muy grande para realizar preguntas y despejar dudas. Por ejemplo, en el caso de Buenos Aires contamos con [RenBaires](https://www.meetup.com/es-ES/renbaires/) y [R-Ladies Buenos Aires](https://www.meetup.com/es-ES/rladies-buenos-aires/)
 
 [^1]: Más allá de los comandos elementales, comandos más sofisticados tienen muchas versiones, y algunas quedan en desuso en el tiempo.
 
