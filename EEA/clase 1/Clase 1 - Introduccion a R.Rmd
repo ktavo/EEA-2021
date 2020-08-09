@@ -290,7 +290,7 @@ Un Data Frame es una tabla de datos, donde cada columna representa una variable,
 
 Este objeto suele ser central en el proceso de trabajo, y suele ser la forma en que se cargan datos externos para trabajar en el ambiente de R, y en que se exportan los resultados de nuestros trabajo.  
 
-También se puede crear como la combinación de N vectores de igual tamaño. Por ejemplo, tomamos algunos valores del [Indice de salarios](https://www.indec.gob.ar/indec/web/Nivel4-Tema-4-31-61)
+También se puede crear como la combinación de N vectores de igual tamaño. Por ejemplo, tomamos algunos valores del [Indice de salarios](https://www.indec.gob.ar/indec/web/Nivel4-Tema-4-31-61) del INDEC.
 
 ```{r}
 INDICE  <- c( 286.4,	262.1,	248.5,
