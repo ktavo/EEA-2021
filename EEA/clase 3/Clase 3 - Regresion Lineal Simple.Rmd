@@ -69,6 +69,21 @@ tabla2 <- df2 %>% gather(.,
 tabla2 %>% arrange(Valores.faltantes, Valores.unicos)
 ```
 
+### Chequeo Outliers Univariados
+
+```{r}
+df2[,c(3,6:9,15:16)] %>%
+  gather(.,
+         key = Variables, 
+         value = Valores) %>% 
+  ggplot(aes(x = Variables, y = Valores)) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  facet_wrap( ~ Variables, scales = "free")
+```
+
+Me quedé acá. Tendría que eliminar outliers y luego chequear correlación y demás!!! 
+
 ### Chequeo correlación
 
 ```{r}
@@ -77,7 +92,8 @@ library(knitr)
 library(kableExtra)
 library(GGally)
 
-# calculo matriz de correlacion para los registros completos (omitiendo faltantes) con ambos métodos 
+# calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
+
 # pearson
 matriz.correl.pe <- df2[,c(3,6:9,15:16)] %>% 
  correlate(use = "complete.obs", method = "pearson") %>% 
@@ -90,6 +106,17 @@ matriz.correl.sp <- df2[,c(3,6:9,15:16)] %>%
  correlate(use = "complete.obs", method = "spearman") 
 matriz.correl.sp
 
-
+df2[,c(3,6:9,15:16)] %>%
+   ggpairs(., 
+        title = "Matriz de correlaciones",
+        mapping = aes(colour = df2$`Dónde estás trabajando`))
 ```
 
+Usemos el test de correlación de Spearman
+
+```{r}
+# cor.test(mtcars2$gear,mtcars2$drat, method = "pearson")
+# cor.test(mtcars2$gear,mtcars2$drat, method = "spearman")
+```
+
+Noten que el test de Spearman ya no da tan significativo como el de Pearson
