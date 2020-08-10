@@ -4,8 +4,7 @@ output:
   html_notebook:
     toc: yes
     toc_float: yes
-date: ""
-subtitle: Explicación
+date: 05-09-2020
 ---
 
 
@@ -17,8 +16,7 @@ subtitle: Explicación
 - Software Libre
 - Sintaxis Básica: R base 
 - Sintaxis incremental[^1]: El lenguaje se va ampliando por aportes de Universidades, investigadores/as, usuarios/as y empresas privadas, organizados en librerías (o paquetes)
-- Comunidad web muy grande para realizar preguntas y despejar dudas. Por ejemplo, en el caso de Buenos Aires contamos con [R-Ladies Buenos Aires](https://www.meetup.com/es-ES/rladies-buenos-aires/) y [RenBaires](https://www.meetup.com/es-ES/renbaires/).
-- Gráficos con calidad de publicación
+- Comunidad web muy grande para realizar preguntas y despejar dudas. Por ejemplo, en el caso de Buenos Aires contamos con [RenBaires](https://www.meetup.com/es-ES/renbaires/) y [R-Ladies Buenos Aires](https://www.meetup.com/es-ES/rladies-buenos-aires/)
 
 [^1]: Más allá de los comandos elementales, comandos más sofisticados tienen muchas versiones, y algunas quedan en desuso en el tiempo.
 
@@ -407,4 +405,6 @@ Para crearlo, vamos al logo de nuevo projecto (Arriba a la derecha de la panatal
 - __Script__: Es un archivo de texto plano, donde podemos poner el código que utilizamos para preservarlo
 - __Rnotebook__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar, e intercalar código con resultados (este archivo es un rnotebook)
 - __Rproject__: Es un archivo que define la metadata del proyecto
+- __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
+
 - __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
