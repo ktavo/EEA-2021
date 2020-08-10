@@ -406,3 +406,5 @@ Para crearlo, vamos al logo de nuevo projecto (Arriba a la derecha de la panatal
 - __Rnotebook__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar, e intercalar código con resultados (este archivo es un rnotebook)
 - __Rproject__: Es un archivo que define la metadata del proyecto
 - __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
+
+- __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
