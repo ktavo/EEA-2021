@@ -29,11 +29,10 @@ library(lubridate) # para trabajar con fechas
 library(stringr) # para trabajar con strings
 ```
 
-```
 
 Para mostrar el funcionamiento básico del tidyverse retomaremos el ejemplo de la Clase 1, con lo cual volvemos a crear el set de datos del [Indice de salarios](https://www.indec.gob.ar/indec/web/Nivel4-Tema-4-31-61) del INDEC.
 
-```{r, warning=FALSE}
+``` {r, warning=FALSE}
 
 INDICE  <- c( 286.4,	262.1,	248.5,
               285.7,	263.5,	250.2,
@@ -482,9 +481,6 @@ Vamos a ver un ejemplo a partir de una base pública que nos trae información s
 ```{r}
 tiburones <- read.csv("https://raw.githubusercontent.com/dmuba/dmuba.github.io/3005a7a5e8c9db5c188ca22a7b9269c94db8ced7/Practicos/TPs%20Entregables/TP02/Shark_Attack_Data.csv") %>% 
   select(-c(Case.Number.1, Case.Number.2, original.order, X, X.1))
-# leemos el contenido
-tiburones %>%
-  glimpse()
 ```
 
 Vamos a trabajar un poco con la limpieza y la normalización de esta base ya que al juntar datos de distintas fuentes la información no es homogénea por lo que es dificil hacer cualquier tipo de análisis.
@@ -783,64 +779,3 @@ ggplot(ggdata, aes(x = CH04, y = P21, group = CH04, fill = CH04 )) +
   scale_y_continuous(limits = c(0, 40000))+
   facet_wrap(~ NIVEL_ED, labeller = "label_both") # se abre el gráfico en fragmentos segun nivel educativo
 ```
-
-# Ejercicios para practicar
-
-En la carpeta __Fuentes__ se encuentran los archivos __dolar-diario.csv__ y __ipc-mensual.xlsx__. Con ellos, el objetivo es realizar un análisis exploratorio de estas variables de la economía argentina. La base de datos del dolar tiene frecuencia diaria y comienza en Marzo de 2002. La base de datos del IPC tiene frecuencia mensual y comienza en Abril de 2016.
-
-## Ejerecicio 1: Precios y dólar
-
-Para trabajar con el dòlar en una frecuencia mensual vamos a considerar la cotización del primer día hábil de cada mes como la cotización de dicho mes.
-
-Deben poder mostrar los siguientes gráficos y contestar estas preguntas:
-
-a) Gráfico de la evolución del dólar (construir la frecuencia mensual del dólar con el tipo de cambio del primer día hábil del mes).
-b) Gráfico de la evolución del IPC General
-c) Gráfico de la evolución de los cuatro grupos del IPC
-d) ¿Cuál es la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años?
-e) Gráfico de la evolución del dólar y del IPC General para el período de tiempo que tenemos datos de ambas variables
-f) Gráfico de la evolución del dólar y de los 4 grupos de IPC para el período de tiempo que tenemos datos de ambas variables
-
-Recomendamos que intenten ir resolviendo los problemas que surjan consultandonos a nosotros, los "machetes" de R y otras páginas pero dejamos una guía de pasos y ayudas 
-
-1. Levantar ambos conjuntos de datos
-2. En el dataset del dólar renombramos la variable del tipo de cambio por algo más sencillo
-3. Creamos las variables fecha, año, mes y día 
-4. Seleccionamos el primer día hábil del mes para obtener la primer cotización del mes (para el dolar)
-5. Graficamos la evolución del tipo de cambio
-6. Normalizar los datos del IPC. *Pista*: piensen si tienen que usar $spread$ o $gather$
-7. Creamos las variables fecha, año y mes
-8. Graficamos la evolución del nivel general del IPC
-9. Graficamos la evolución de los 4 grupos
-10. Realizamos un join de ambos conjuntos de datos. Consideren qué tipo de join tienen que usar 
-11. Obtenemos las estadisticas de resumen de la pregunta d)
-11. Graficamos la evoluciòn del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)
-12. Graficamos la evoluciòn del dólar y de los grupos del IPC
-
-## Ejercicio 2: EPH (OPCIONAL)
-
-El Objetivo de estos ejercicios es practicar el uso del $tidyverse$ para la manipulación de los datos, y $ggplot$ para graficar la información. En las consignas, se propone de manera general qué variables se quiere observar. Ustedes deberán levantar y procesar los datos de la Encuesta Permanente de Hogares, y gráficarlos como consideren que mejor se aprecia la relación entre las variables.     
-
-Una __ayuda__ es utilizar el [diseño de registro](../Fuentes/EPH_registro_2_trim_2016.pdf) para codificar las variables
-
-  
-__ejercicios__
-
-- Graficar la distribución del ingreso por ocupación principal (p21) según categoría ocupacional (CAT_OCUP). (opcional: utilizar la librería [ggridges](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html))
-
-- Incorporar en el gráfico anterior la condición de precariedad laboral (PP07H).
-
-- Quedarse sólo con los asalariados (CAT_OCUP = 3), y graficar la relación entre ingreso por ocupación principal(p21), precariedad laboral (PP07H) y tamaño del establecimiento(PP04C99).
-
-- Quedarse con los Cuentapropistas y asalariados (CAT_OCUP = 2 y 3) y comparar, según la condición de precariedad laboral (PP07H) la distribución del ingreso según sexo (CH04)
-
-- Incorporar en el gráfico anterior el tamaño del establecimiento(PP04C99)
-
-
-__yapa:__ Si quisieramos modelar la probabilidad de un evento podemos usar una regresión logísitca (en ggplot ```stat_smooth(method="glm", method.args=list(family="binomial")```).     
-Utilicen este modelo para hacer un gráfico que eche luz sobre el siguiente fenómeno: 
-
-- ¿Cómo se distribuye la probabilidad de querer trabajar más horas (PP03G) según el total de horas trabajadas por semana (PP3E_TOT)? ¿Es diferente el modelo según sexo(CH04)?
-
-
-
