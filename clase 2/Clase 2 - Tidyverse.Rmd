@@ -1,6 +1,6 @@
 ---
 title: "Clase 2. Tidyverse y Ggplot"
-author: "Juan Barriola y Sofía Perini"
+author: "Juan Barriola y Sofía Perini ^[Basado en la [clase](https://diegokoz.github.io/EEA2019/clase%202/Clase%202-%20Tidyverse.nb.html) de Juan Barriola y Diego Kozlowski]"
 date: "12 de Septiembre de 2020"
 output: 
   html_notebook: 
@@ -9,11 +9,11 @@ output:
     depth: 2
 ---
 
-# [Tidyverse](https://www.tidyverse.org/)         
+# [Tidyverse](https://www.tidyverse.org/)          
 
 Este paquete agrupa una serie de paquetes que tienen una misma lógica en su diseño y por ende funcionan en armonía. Primero vamos a ver algunos de los principales comandos y luego vamos a ver algunos ejemplos de cómo podemos usar las funciones de este paquete. 
 
-Entre ellos usaremos principalmente __ggplot__ para realizar gráficos, y __dplyr__ y __tidyr__ para realizar transformaciones sobre nuestro set de datos.
+Entre ellos principalmente usaremos __dplyr__ y __tidyr__ para realizar transformaciones sobre nuestro set de datos, __lubridate__ para trabajar con datos tipo fecha, __stringr__ para trabajar con datos tipo string y  __ggplot__ para realizar gráficos
 
 A continuación cargamos la librería a nuestro ambiente. Para ello debe estar previamente instalada en nuestra pc o se instala con ```install.packages()```.
 
@@ -324,7 +324,7 @@ fecha + days(2)
 fecha - (weeks(1) + hours(2))
 ```
 
-## Stringr: manejo de strings
+## Stringr: manejo de strings ^[Basado en la [clase](https://jmbarriola.github.io/ATR-2019/Clase%205/clase5_strings_y_fechas.nb.html) de Milena Dotta y Juan Barriola]
 
 Vamos a usar un paquete muy útil para manejar variables de tipo string, es decir, variables de texto, llamado ```stringr()```. Este paquete cuenta con una cheat sheet que pueden consultar siguiendo este link.
 
@@ -337,7 +337,7 @@ string1 <- "abcdefghi"
 str_length(string1)
 ```
 
-> Ojo que cuenta los espacios en blanco como un caracter!
+> Cuidado que cuenta los espacios en blanco como un caracter!
 
 ```{r}
 string2 <- "abcd efghi"
@@ -475,7 +475,7 @@ str_detect(pattern = "ñ", string = string7)
 ```
 
 
-# [Ggplot2](http://ggplot2.tidyverse.org/reference/)
+## [Ggplot2](http://ggplot2.tidyverse.org/reference/)
 
 `ggplot` tiene su sintaxis propia. La idea central es pensar los gráficos como una sucesión de capas, que se construyen una a la vez.    
 
@@ -505,7 +505,7 @@ ggplot(data = iris, aes(x = Petal.Length, Petal.Width, color = Species)) +
   facet_wrap(~ Species)
 ```
 
-## Capas del Gráfico
+### Capas del Gráfico
 
 Veamos ahora, el "paso a paso" del armado del mismo. 
 
@@ -536,7 +536,7 @@ g <- g +
 g
 ```
 
-## Extensiones de [GGplot](http://www.ggplot2-exts.org/gallery/)
+### Extensiones de [GGplot](http://www.ggplot2-exts.org/gallery/)
 
 La librería GGplot tiene a su vez muchas otras librerías que extienden sus potencialidades. Entre nuestras favoritas están:
 
@@ -601,7 +601,7 @@ ggplot(ggdata, aes(x = NIVEL_ED, y = P21, group = NIVEL_ED, fill = NIVEL_ED))+
   scale_y_continuous(limits = c(0, 40000)) # definimos escala del eje y
 ```
 
-Si queremos agregar la dimensión _sexo_, podemos hacer un ```facet_wrap()```
+Si queremos agregar la dimensión _sexo_, podemos utilizar el comando ```facet_wrap()```
 
 ```{r}
 ggplot(ggdata, aes(x = NIVEL_ED, y = P21, group = NIVEL_ED, fill = NIVEL_ED))+
@@ -612,7 +612,7 @@ ggplot(ggdata, aes(x = NIVEL_ED, y = P21, group = NIVEL_ED, fill = NIVEL_ED))+
 
 En este gráfico, el foco de atención sigue puesto en las diferencias de nivel educativo, pero _neutralizamos_ el efecto de la variable sexo.     
 
-Si lo que queremos hacer es poner el foco de atención en las diferencias por sexo, _neutralizamos_ el efecto del nivel educativo, facetiando por nivel educativo.
+Si lo que queremos hacer es poner el foco de atención en las diferencias por sexo, _neutralizamos_ el efecto del nivel educativo, realizando la apertura por nivel educativo.
 
 ```{r}
 ggplot(ggdata, aes(x = CH04, y = P21, group = CH04, fill = CH04 )) +
