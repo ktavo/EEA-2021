@@ -1,7 +1,7 @@
 ---
 title: "Regresión Lineal Simple"
 author: "Juan Barriola y Sofía Perini"
-date: "12 de Septiembre de 2020"
+date: "19 de Septiembre de 2020"
 output:
   html_notebook:
     theme: spacelab
@@ -23,6 +23,12 @@ encuesta %>%
   glimpse()
 encuesta %>%
   head(10)
+
+unique(encuesta$`Estoy trabajando en`) # solo Argentina aparece
+unique(encuesta$`Dónde estás trabajando`) # en qué parte del país
+unique(encuesta$`Trabajo de`)
+table(encuesta$`Trabajo de`)
+# unique(encuesta$Carrera)
 ```
 
 ### Filtros 
@@ -30,31 +36,32 @@ encuesta %>%
 Se filtran las variables de interes.
 
 ```{r}
-df1 <- encuesta[,c(1:5,24:31,47:49)]
+df1 <- encuesta[,c(1:5,24:31,35,47:49)]
 
 library(lubridate)
 class(df1$Timestamp)
-ymd_hms(df1$Timestamp)
+ymd_hms(df1$Timestamp) # no se convierten a timestamp
 
 ```
 
 Aplicar filtros: 
 
 - Donde estás trabajando: GBA y CABA. 
-- Anos de experiencia <= 10
+- Tipo de contrato = Full-Time
 
 ```{r}
 df1 %>%
   summary()
 
-
 df2 <- df1 %>%
-  filter(`Dónde estás trabajando` %in% c("Ciudad Autónoma de Buenos Aires", "GBA"), `Años de experiencia` <= 10)
+  filter(`Tipo de contrato` == "Full-Time")
 
 df2 %>%
   head(5)
 
 dim(df2)
+
+glimpse(df2)
 ```
 
 ### Chequeo valores unicos y faltantes 
@@ -120,3 +127,20 @@ Usemos el test de correlación de Spearman
 ```
 
 Noten que el test de Spearman ya no da tan significativo como el de Pearson
+
+
+```{r}
+data_anal <- df1 %>%
+  filter(grepl("Anal", `Trabajo de`)) %>% 
+  filter(`Tipo de contrato` == "Full-Time")
+  
+lm(`Salario mensual NETO (en tu moneda local)` ~ `Años de experiencia`, data_anal) %>%
+  summary()
+
+
+ggplot(data_anal, aes(x = `Años de experiencia`, y = `Salario mensual NETO (en tu moneda local)`)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+
+```
+
