@@ -9,38 +9,36 @@ output:
     depth: 2
 ---
 
-# Ejercicios para practicar
-
-En la carpeta __Fuentes__ se encuentran los archivos __dolar-diario.csv__ y __ipc-mensual.xlsx__. Con ellos, el objetivo es realizar un análisis exploratorio de estas variables de la economía argentina. La base de datos del dolar tiene frecuencia diaria y comienza en Marzo de 2002. La base de datos del IPC tiene frecuencia mensual y comienza en Abril de 2016.
+# Ejercicios Clase 2
 
 ## Ejercicio 1: Precios y dólar
 
-Para trabajar con el dòlar en una frecuencia mensual vamos a considerar la cotización del primer día hábil de cada mes como la cotización de dicho mes.
+En la carpeta __Fuentes__ se encuentran los archivos __dolar_oficial_ambito.csv__ y __ipc-mensual.xlsx__. Con ellos, el objetivo es realizar un análisis exploratorio de estas variables de la economía argentina. La base de datos del dolar tiene frecuencia diaria y comienza en Marzo de 2002. La base de datos del IPC tiene frecuencia mensual y comienza en Diciembre de 2016.
 
-Deben poder mostrar los siguientes gráficos y contestar estas preguntas:
 
-a) Gráfico de la evolución del dólar (construir la frecuencia mensual del dólar con el tipo de cambio del primer día hábil del mes).
-b) Gráfico de la evolución del IPC General
-c) Gráfico de la evolución de los cuatro grupos del IPC
-d) ¿Cuál es la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años?
-e) Gráfico de la evolución del dólar y del IPC General para el período de tiempo que tenemos datos de ambas variables
-f) Gráfico de la evolución del dólar y de los 4 grupos de IPC para el período de tiempo que tenemos datos de ambas variables
+### Dólar
 
-Recomendamos que intenten ir resolviendo los problemas que surjan consultandonos a nosotros, los "machetes" de R y otras páginas pero dejamos una guía de pasos y ayudas 
+1. Leer el dataset
+2. Crear la variable cotización_promedio, realizando el promedio entre compra y venta para cada día
+3. Graficar la evolución diaria de la cotización promedio
+4. Crear las variables fecha, año, mes y día 
+5. Calcular la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)
+6. Graficar la evolución del tipo de cambio por mes
 
-1. Levantar ambos conjuntos de datos
-2. En el dataset del dólar renombramos la variable del tipo de cambio por algo más sencillo
-3. Creamos las variables fecha, año, mes y día 
-4. Seleccionamos el primer día hábil del mes para obtener la primer cotización del mes (para el dolar)
-5. Graficamos la evolución del tipo de cambio
-6. Normalizar los datos del IPC. *Pista*: piensen si tienen que usar $spread$ o $gather$
-7. Creamos las variables fecha, año y mes
-8. Graficamos la evolución del nivel general del IPC
-9. Graficamos la evolución de los 4 grupos
-10. Realizamos un join de ambos conjuntos de datos. Consideren qué tipo de join tienen que usar 
-11. Obtenemos las estadisticas de resumen de la pregunta d)
-11. Graficamos la evoluciòn del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)
-12. Graficamos la evoluciòn del dólar y de los grupos del IPC
+### IPC
+
+1. Leer el dataset 
+2. Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). *Pista*: piensen si tienen que usar $spread$ o $gather$
+3. Crear las variables fecha, año, mes y día 
+4. Graficar la evolución del nivel general del IPC
+5. Graficar la evolución de los 4 grupos
+
+### IPC y Dolar 
+
+1. Realizar un join de ambos conjuntos de datos (dólar mensual e IPC) de manera que queden los meses para los cuáles hay datos de ambas variables 
+2. Calcular la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años
+3. Graficar la evolución del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)
+4. Graficar la evolución del dólar y de los 4 grupos de IPC
 
 ## Ejercicio 2: Trabajo con strings
 

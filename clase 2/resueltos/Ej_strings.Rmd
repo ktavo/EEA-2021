@@ -4,9 +4,7 @@ output: html_notebook
 ---
 
 Vamos a ver un ejemplo a partir de una base pública que nos trae información sobre ataques de tiburones en el mundo en distintos momentos. Cada fila corresponde a un ataque.
-```{r}
-install.packages("tidyverse")
-```
+
 
 ```{r}
 library(tidyverse)
