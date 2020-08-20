@@ -10,7 +10,7 @@ output:
     df_print: paged
 ---
 
-```{r message=FALSE}
+```{r message=FALSE, warning=F}
 library(tidyverse)
 library(openintro)
 library(GGally)
@@ -105,6 +105,24 @@ Veamos la correlación entre las variables:
 
 Miramos el scatter plot y pareciera haber una relación negativa. 
 
+```{r}
+ggplot(mtcars, aes(x = hp, y = mpg)) + 
+  geom_point()
+```
+
+```{r}
+ggplot(mtcars, aes(x = mpg)) +
+  geom_histogram(bins = 10, aes(y = ..density..), position = "identity", alpha = 0.5, fill = "#1B9E77", color = "white")+
+  geom_density(alpha = 0.6)+
+  theme(legend.position="top") + 
+  theme_classic()
+ggplot(mtcars, aes(x = hp)) +
+  geom_histogram(bins = 10, aes(y = ..density..), position = "identity", alpha = 0.5, fill = "#1B9E77", color = "white")+
+  geom_density(alpha = 0.6)+
+  theme(legend.position="top") + 
+  theme_classic()
+```
+
 La mitad superior de la matriz muestra la estimación puntual de la correlación, para todos los datos y considerando cada conjunto por separado. 
 
 Recordemos que la fórmula para calcular ese estimador es:
@@ -138,12 +156,17 @@ Testeando normalidad multivariada:
 mvnormtest::mshapiro.test(t(mtcars[,c("mpg", "hp")])) # chequeo normalidad bivariada
 ```
 
-No se cumple normalidad bivariada. Entonces, el test para la correlación de pearson no sería válido ya que no se cumple el supuesto de normalidad multivariada. En cambio, el de spearman no requiere dicho supuesto y sus conclusiones sí serían válidas.  
+No se cumple normalidad bivariada. Entonces, el test para la correlación de pearson no sería válido ya que no se cumple el supuesto de normalidad multivariada. En cambio, el de spearman no requiere dicho supuesto y sus conclusiones sí serían válidas. Otra alternativa sería buscar normalizar el dataset.  
 
 ¿Y si queremos comparar la relación entre $drat$ y $gear$?
 
 - $drat$: la relación de engranaje del eje trasero. En los vehículos con tracción trasera, la relación de eje trasero es una parte importante de una ecuación de remolque exitosa. Se expresa como la relación entre las revoluciones por minuto del eje de transmisión y las revoluciones por minuto del eje trasero. Una relación "alta", con un número alto de rotaciones del eje de transmisión, es mejor para una aceleración rápida, los grados de ascenso, el transporte de cargas o el remolque. Sin embargo, ofrece menos ahorro de combustible y se produce más ruido cuando el vehículo circula a alta velocidad.
 - $gear$: Número de velocidades hacia adelante.
+
+```{r}
+ggplot(mtcars, aes(x = drat, y = gear)) + 
+  geom_point()
+```
 
 Con `ggpairs()` ya habíamos visto que la relación era diferente entre los automáticos y con transmisión manual. Sabiendo esto, volvamos a calcular los estimadores puntuales de cada grupo. 
 

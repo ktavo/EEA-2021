@@ -79,17 +79,107 @@ tabla2 %>% arrange(Valores.faltantes, Valores.unicos)
 ### Chequeo Outliers Univariados
 
 ```{r}
-df2[,c(3,6:9,15:16)] %>%
+df2[,c(3,6:9,16,17)] %>%
   gather(.,
          key = Variables, 
          value = Valores) %>% 
-  ggplot(aes(x = Variables, y = Valores)) + 
+  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
   geom_boxplot(alpha = 0.5) + 
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
   facet_wrap( ~ Variables, scales = "free")
-```
 
-Me quedé acá. Tendría que eliminar outliers y luego chequear correlación y demás!!! 
+# tratamiento de outliers
+# corrijo datos porque entiendo se trata de un error de carga y hay información para contrastar el dato
+df2$`Años en la empresa actual`[df2$`Años en la empresa actual` == 2016] <- 4
+df2$`Años en la empresa actual`[df2$`Años en la empresa actual` == 88] <- 8
+
+df2 <- df2 %>%
+  mutate(`Salario mensual BRUTO (en tu moneda local)` = round(`Salario mensual BRUTO (en tu moneda local)`), `Salario mensual NETO (en tu moneda local)` = round(`Salario mensual NETO (en tu moneda local)`))
+
+
+# parecen valores mal cargados (corridas las comas)
+# corregir datos o eliminar para que no ensucien la base 
+# ver los que tienen salario neto mayor al bruto (se trata de un error)
+dim(df2 %>%
+  filter(`Salario mensual BRUTO (en tu moneda local)` < `Salario mensual NETO (en tu moneda local)`) %>%
+  mutate(dif = `Salario mensual NETO (en tu moneda local)` - `Salario mensual BRUTO (en tu moneda local)`)) # 125 observaciones con datos mal cargados 
+
+# elimino las lineas erroneas por mal carga de sueldos y otro outlier
+df3 <- df2 %>%
+  filter(`Años en el puesto actual` < 8000, `Salario mensual BRUTO (en tu moneda local)` > `Salario mensual NETO (en tu moneda local)`)
+
+# decidi corregir los datos en relación al salario neto 
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 2140000] <- 214000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 7470084] <- 74700
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 55008226] <- 55000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 3130025] <- 31300
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 1500000] <- 150000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 1250000] <- 125000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 900000] <- 90000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 900007] <- 90000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 700000] <- 70000
+df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 580000] <- 58000
+
+df3[,c(3,6:9,16:17)] %>%
+  gather(.,
+         key = Variables, 
+         value = Valores) %>% 
+  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  facet_wrap( ~ Variables, scales = "free")
+
+# chequeo outliers en variable salario bruto
+df3 %>%
+  filter(`Salario mensual BRUTO (en tu moneda local)` >= 500000)
+
+# chequeo outliers en variable salario neto
+df3 %>%
+  filter(`Salario mensual BRUTO (en tu moneda local)` < 1000)
+
+df3 <- df3 %>%
+  mutate(salario_bruto = 
+           case_when(`Salario mensual BRUTO (en tu moneda local)` < 1000 &
+                       `Salario mensual NETO (en tu moneda local)` < 1000 ~ 
+                       `Salario mensual BRUTO (en tu moneda local)`*1000, 
+                     TRUE ~ `Salario mensual BRUTO (en tu moneda local)`), 
+         salario_neto =           
+           case_when(`Salario mensual BRUTO (en tu moneda local)` < 1000 &
+                       `Salario mensual NETO (en tu moneda local)` < 1000 ~ 
+                       `Salario mensual NETO (en tu moneda local)`*1000, 
+                     TRUE ~ `Salario mensual NETO (en tu moneda local)`))
+
+df3 <- df3 %>%
+  mutate(salario_neto =           
+           case_when(salario_neto < 1000 ~ salario_neto * 1000, 
+                     TRUE ~ salario_neto))
+
+# elimino dos registros erroneos
+df3 <- df3 %>% 
+  filter(salario_neto < salario_bruto)
+
+df3 %>%
+  mutate(dif = salario_neto - salario_bruto) %>%
+  filter(dif < -100000, salario_neto < 100000) %>%
+  select(Timestamp)
+
+df3 %>%
+  filter(salario_neto < 1000)
+
+df3 %>%
+  filter(salario_bruto > 1000000)
+
+df3[,c(3,6:9,18:19)] %>%
+  gather(.,
+         key = Variables, 
+         value = Valores) %>% 
+  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  facet_wrap( ~ Variables, scales = "free")
+
+df3[df3$Timestamp == "1/8/2020 4:11:53","salario_bruto"] <- 45000
+```
 
 ### Chequeo correlación
 
@@ -102,41 +192,44 @@ library(GGally)
 # calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
 
 # pearson
-matriz.correl.pe <- df2[,c(3,6:9,15:16)] %>% 
+matriz.correl.pe <- df3[,c(3,6:9,18:19)] %>% 
  correlate(use = "complete.obs", method = "pearson") %>% 
   shave() %>% 
   fashion()
 matriz.correl.pe
 
 # spearman
-matriz.correl.sp <- df2[,c(3,6:9,15:16)] %>% 
+matriz.correl.sp <- df3[,c(3,6:9,18:19)] %>% 
  correlate(use = "complete.obs", method = "spearman") 
 matriz.correl.sp
 
-df2[,c(3,6:9,15:16)] %>%
-   ggpairs(., 
-        title = "Matriz de correlaciones",
-        mapping = aes(colour = df2$`Dónde estás trabajando`))
+df3[,c(3,6:9,18:19)] %>%
+     ggpairs(.,  mapping = aes(colour = df3$Estado),
+        title = "Matriz de correlaciones")
+        
 ```
 
-Usemos el test de correlación de Spearman
-
 ```{r}
-# cor.test(mtcars2$gear,mtcars2$drat, method = "pearson")
-# cor.test(mtcars2$gear,mtcars2$drat, method = "spearman")
+df3 %>%
+  ggplot(aes(y = salario_neto, x = salario_bruto)) + 
+  geom_point()
+bdims %>% 
+  ggplot(aes(x = wgt/1000, y = hip_gi, col = sex)) + 
+  geom_point()
 ```
 
-Noten que el test de Spearman ya no da tan significativo como el de Pearson
 
 
 ```{r}
-data_anal <- df1 %>%
+data_anal <- df3 %>%
   filter(grepl("Anal", `Trabajo de`)) %>% 
   filter(`Tipo de contrato` == "Full-Time")
+
+data_anal %>%
+  glimpse()
   
 lm(`Salario mensual NETO (en tu moneda local)` ~ `Años de experiencia`, data_anal) %>%
   summary()
-
 
 ggplot(data_anal, aes(x = `Años de experiencia`, y = `Salario mensual NETO (en tu moneda local)`)) + 
   geom_point() +
