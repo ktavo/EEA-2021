@@ -1,51 +1,18 @@
 ---
-title: "Clase 2. Ejercicios de Práctica"
-author: "Juan Barriola y Sofía Perini"
-date: "12 de Septiembre de 2020"
-output: 
-  html_notebook: 
-    toc: true
-    toc_float: true
-    depth: 2
+title: "Ejercicio 2: Strings"
+output: html_notebook
 ---
-
-# Ejercicios Clase 2
-
-## Ejercicio 1: Precios y dólar
-
-En la carpeta __Fuentes__ se encuentran los archivos __dolar_oficial_ambito.csv__ y __ipc-mensual.xlsx__. Con ellos, el objetivo es realizar un análisis exploratorio de estas variables de la economía argentina. La base de datos del dolar tiene frecuencia diaria y comienza en Marzo de 2002. La base de datos del IPC tiene frecuencia mensual y comienza en Diciembre de 2016.
-
-
-### Dólar
-
-1. Leer el dataset
-2. Crear la variable cotización_promedio, realizando el promedio entre compra y venta para cada día
-3. Graficar la evolución diaria de la cotización promedio
-4. Crear las variables fecha, año, mes y día 
-5. Calcular la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)
-6. Graficar la evolución del tipo de cambio por mes
-
-### IPC
-
-1. Leer el dataset 
-2. Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). *Pista*: piensen si tienen que usar $spread$ o $gather$
-3. Crear las variables fecha, año, mes y día 
-4. Graficar la evolución del nivel general del IPC
-5. Graficar la evolución de los 4 grupos
-
-### IPC y Dolar 
-
-1. Realizar un join de ambos conjuntos de datos (dólar mensual e IPC) de manera que queden los meses para los cuáles hay datos de ambas variables 
-2. Calcular la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años
-3. Graficar la evolución del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)
-4. Graficar la evolución del dólar y de los 4 grupos de IPC
-
-## Ejercicio 2: Trabajo con strings
 
 Vamos a ver un ejemplo a partir de una base pública que nos trae información sobre ataques de tiburones en el mundo en distintos momentos. Cada fila corresponde a un ataque.
 
+
 ```{r}
-tiburones <- read.csv("https://raw.githubusercontent.com/dmuba/dmuba.github.io/3005a7a5e8c9db5c188ca22a7b9269c94db8ced7/Practicos/TPs%20Entregables/TP02/Shark_Attack_Data.csv") %>% 
+library(tidyverse)
+```
+
+
+```{r}
+tiburones <- read_csv("https://raw.githubusercontent.com/dmuba/dmuba.github.io/3005a7a5e8c9db5c188ca22a7b9269c94db8ced7/Practicos/TPs%20Entregables/TP02/Shark_Attack_Data.csv") %>% 
   select(-c(Case.Number.1, Case.Number.2, original.order, X, X.1))
 ```
 
@@ -199,28 +166,3 @@ tiburones <- tiburones %>%
          dia_semana = wday(fecha, label = TRUE)) # Obtener el nombre del día
 glimpse(tiburones)
 ```
-
-## Ejercicio 3: EPH (OPCIONAL)
-
-El Objetivo de estos ejercicios es practicar el uso del $tidyverse$ para la manipulación de los datos, y $ggplot$ para graficar la información. En las consignas, se propone de manera general qué variables se quiere observar. Ustedes deberán levantar y procesar los datos de la Encuesta Permanente de Hogares, y gráficarlos como consideren que mejor se aprecia la relación entre las variables.     
-
-Una __ayuda__ es utilizar el [diseño de registro](../Fuentes/EPH_registro_2_trim_2016.pdf) para codificar las variables
-
-  
-__ejercicios__
-
-- Graficar la distribución del ingreso por ocupación principal (p21) según categoría ocupacional (CAT_OCUP). (opcional: utilizar la librería [ggridges](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html))
-
-- Incorporar en el gráfico anterior la condición de precariedad laboral (PP07H).
-
-- Quedarse sólo con los asalariados (CAT_OCUP = 3), y graficar la relación entre ingreso por ocupación principal(p21), precariedad laboral (PP07H) y tamaño del establecimiento(PP04C99).
-
-- Quedarse con los Cuentapropistas y asalariados (CAT_OCUP = 2 y 3) y comparar, según la condición de precariedad laboral (PP07H) la distribución del ingreso según sexo (CH04)
-
-- Incorporar en el gráfico anterior el tamaño del establecimiento(PP04C99)
-
-
-__yapa:__ Si quisieramos modelar la probabilidad de un evento podemos usar una regresión logísitca (en ggplot ```stat_smooth(method="glm", method.args=list(family="binomial")```).     
-Utilicen este modelo para hacer un gráfico que eche luz sobre el siguiente fenómeno: 
-
-- ¿Cómo se distribuye la probabilidad de querer trabajar más horas (PP03G) según el total de horas trabajadas por semana (PP3E_TOT)? ¿Es diferente el modelo según sexo(CH04)?
