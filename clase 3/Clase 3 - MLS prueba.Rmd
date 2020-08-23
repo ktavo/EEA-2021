@@ -103,7 +103,6 @@ df2$`Años en la empresa actual`[df2$`Años en la empresa actual` == 88] <- 8
 df2 <- df2 %>%
   mutate(`Salario mensual BRUTO (en tu moneda local)` = round(`Salario mensual BRUTO (en tu moneda local)`), `Salario mensual NETO (en tu moneda local)` = round(`Salario mensual NETO (en tu moneda local)`))
 
-
 # parecen valores mal cargados (corridas las comas)
 # corregir datos o eliminar para que no ensucien la base 
 # ver los que tienen salario neto mayor al bruto (se trata de un error)
@@ -322,6 +321,9 @@ data_dev <- df3 %>%
 
 data_dev %>%
   glimpse()
+
+data_dev %>%
+  summary()
   
 lm(salario_bruto ~ `Años de experiencia`, data_dev) %>%
   summary()
