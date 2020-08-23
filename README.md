@@ -23,7 +23,8 @@ A definir !!!
 
 ### Clase 1: 05-09
 
-- [Introducción al entorno R.](clase 1/Clase 1- Introduccion.nb.html)
+- [Introducción al entorno R](clase 1/Clase 1 - Introduccion a R.nb.html)
+- [Loops, condicionales y funciones](clase 1/Clase 1 - Loops, condicionales y funciones.nb.html)
 - [Ejercicios intro.](clase 1/Ejercicios - Clase 1.R)
 - [Programación funcional.](clase 1/Clase_1-Programacion funcional.nb)
 - [Ejercicios programación funcional.](clase 1/Ejercicios Clase 1_Programacion funcional.R)
