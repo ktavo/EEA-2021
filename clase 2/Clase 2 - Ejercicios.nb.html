@@ -2872,23 +2872,32 @@ div.tocify {
 <h1>Ejercicios Clase 2</h1>
 <div id="ejercicio-1-precios-y-dolar" class="section level2">
 <h2>Ejercicio 1: Precios y dólar</h2>
-<p>En la carpeta <strong>Fuentes</strong> se encuentran los archivos <strong>dolar_oficial_ambito.csv</strong> y <strong>ipc-mensual.xlsx</strong>. Con ellos, el objetivo es realizar un análisis exploratorio de estas variables de la economía argentina. La base de datos del dolar tiene frecuencia diaria y comienza en Marzo de 2002. La base de datos del IPC tiene frecuencia mensual y comienza en Diciembre de 2016.</p>
+<p>Realizar un informe de la macroeconomía argentina haciendo análisis exploratorios del Indice de Precios al Consumidor (IPC) y el tipo de cambio oficial entre el dólar y el peso argentino según lo reportado por el medio Ámbito Financiero.</p>
+<p>El IPC es un indice que mide la evolución de una canasta de precios definida por el INDEC. Los datos del IPC a analizar tienen como año base diciembre de 2016, al cual le corresponde el índice 100. Los precios se encuentran con cuatro niveles de apertura:</p>
+<ul>
+<li><p>General: Indice de Precios de toda la canasta de bienes y servicios considerada en el análisis</p></li>
+<li><p>Estacional: Bienes y servicios con comportamiento estacional. Por ejemplo: frutas y verduras</p></li>
+<li><p>Regulados: Bienes y servicios cuyos precios están sujetos a regulación o tienen alto componente impositivo. Por ejemplo: electricidad</p></li>
+<li><p>Núcleo: : Resto de los grupos del IPC</p></li>
+</ul>
+<p>Para más información sobre el IPC pueden visitar la siguiente página del INDEC: <a href="https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31" class="uri">https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31</a></p>
+<p>La base de datos del dolar tiene frecuencia diaria y comienza en junio de 2015. Cuenta con el tipo de cambio de compra y venta del dólar.</p>
+<p>En la carpeta <strong>Fuentes</strong> se encuentran los archivos <strong>dolar_oficial_ambito.csv</strong> y <strong>ipc-mensual.csv</strong>.</p>
 <div id="dolar" class="section level3">
 <h3>Dólar</h3>
 <ol style="list-style-type: decimal">
 <li>Leer el dataset</li>
 <li>Crear la variable cotización_promedio, realizando el promedio entre compra y venta para cada día</li>
+<li>Convertir la variable fecha de string a datetime. Crear las variables de año, mes y día</li>
 <li>Graficar la evolución diaria de la cotización promedio</li>
-<li>Crear las variables fecha, año, mes y día</li>
-<li>Calcular la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)</li>
-<li>Graficar la evolución del tipo de cambio por mes</li>
+<li>Crear un dataframe con la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)</li>
 </ol>
 </div>
 <div id="ipc" class="section level3">
 <h3>IPC</h3>
 <ol style="list-style-type: decimal">
 <li>Leer el dataset</li>
-<li>Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). <em>Pista</em>: piensen si tienen que usar <span class="math inline">\(spread\)</span> o <span class="math inline">\(gather\)</span></li>
+<li>Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). <em>Pista</em>: piensen si tienen que usar <code>pivot_longer</code> o <code>pivot_wider</code></li>
 <li>Crear las variables fecha, año, mes y día</li>
 <li>Graficar la evolución del nivel general del IPC</li>
 <li>Graficar la evolución de los 4 grupos</li>
@@ -2898,198 +2907,40 @@ div.tocify {
 <h3>IPC y Dolar</h3>
 <ol style="list-style-type: decimal">
 <li>Realizar un join de ambos conjuntos de datos (dólar mensual e IPC) de manera que queden los meses para los cuáles hay datos de ambas variables</li>
-<li>Calcular la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años</li>
-<li>Graficar la evolución del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)</li>
-<li>Graficar la evolución del dólar y de los 4 grupos de IPC</li>
+<li>Crear el indice de evolución del dólar con base en Diciembre de 2016. La fómula de calculo a utilizar es: <span class="math inline">\(Indice_t = \frac{cotizacion_t * 100}{cotizacion_{dic2016}}\)</span></li>
+<li>Calcular la media, el desvío estándar, la mediana y el rango del indice del dólar y del IPC General para cada uno de los años</li>
+<li>Graficar la evolución del indice del dólar y del nivel general del IPC</li>
+<li>Graficar la evolución del indice del dólar y de los 4 grupos de IPC</li>
 </ol>
 </div>
 </div>
-<div id="ejercicio-2-trabajo-con-strings" class="section level2">
-<h2>Ejercicio 2: Trabajo con strings</h2>
-<p>Vamos a ver un ejemplo a partir de una base pública que nos trae información sobre ataques de tiburones en el mundo en distintos momentos. Cada fila corresponde a un ataque.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGlidXJvbmVzIDwtIHJlYWQuY3N2KFwiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2RtdWJhL2RtdWJhLmdpdGh1Yi5pby8zMDA1YTdhNWU4YzlkYjVjMTg4Y2EyMmE3YjkyNjljOTRkYjhjZWQ3L1ByYWN0aWNvcy9UUHMlMjBFbnRyZWdhYmxlcy9UUDAyL1NoYXJrX0F0dGFja19EYXRhLmNzdlwiKSAlPiUgXG4gIHNlbGVjdCgtYyhDYXNlLk51bWJlci4xLCBDYXNlLk51bWJlci4yLCBvcmlnaW5hbC5vcmRlciwgWCwgWC4xKSlcbmBgYCJ9 -->
-<pre class="r"><code>tiburones &lt;- read.csv(&quot;https://raw.githubusercontent.com/dmuba/dmuba.github.io/3005a7a5e8c9db5c188ca22a7b9269c94db8ced7/Practicos/TPs%20Entregables/TP02/Shark_Attack_Data.csv&quot;) %&gt;% 
-  select(-c(Case.Number.1, Case.Number.2, original.order, X, X.1))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Vamos a trabajar un poco con la limpieza y la normalización de esta base ya que al juntar datos de distintas fuentes la información no es homogénea por lo que es dificil hacer cualquier tipo de análisis.</p>
-<p>Analicemos la variable del país (<em>Country</em>)</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBDcmVhbW9zIHVuYSBsaXN0YSBjb24gbG9zIHZhbG9yZXMgZGUgQ291bnRyeSBwYXJhIHZlciBzaSBoYXkgYWxndW5vcyBwcm9ibGVtYXNcbnRpYnVyb25lcyAlPiUgXG4gIHNlbGVjdChDb3VudHJ5KSAlPiUgIyBTZWxlY2Npb25hbW9zIGxhIHZhcmlhYmxlIGRlbCBwYWlzXG4gIG11dGF0ZShDb3VudHJ5ID0gYXMuY2hhcmFjdGVyKENvdW50cnkpKSAlPiUgIyBMbyBjb252ZXJ0aW1vcyBkZSBmYWN0b3IgYSBzdHJpbmdcbiAgYXJyYW5nZShDb3VudHJ5KSAlPiUgIyBMYSBvcmRlbmFtb3NcbiAgZGlzdGluY3QoKSAlPiUgIyBOb3MgcXVlZGFtb3MgY29uIGxvcyB2YWxvcmVzIHVuaWNvc1xuICBhcy5saXN0KCkgIyBMYSBjb252ZXJ0aW1vcyBlbiBsaXN0YSBwYXJhIHF1ZSBzZWEgbWFzIHNlbmNpbGxhIGRlIHZlclxuYGBgIn0= -->
-<pre class="r"><code># Creamos una lista con los valores de Country para ver si hay algunos problemas
-tiburones %&gt;% 
-  select(Country) %&gt;% # Seleccionamos la variable del pais
-  mutate(Country = as.character(Country)) %&gt;% # Lo convertimos de factor a string
-  arrange(Country) %&gt;% # La ordenamos
-  distinct() %&gt;% # Nos quedamos con los valores unicos
-  as.list() # La convertimos en lista para que sea mas sencilla de ver</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Hay varios problemas, pero veamos dos:</p>
-<ul>
-<li>Hay algunos nombres que no están en mayúscula</li>
-<li>Hay algunos nombres que tienen espacios en blanco a izquierda y derecha</li>
-</ul>
-<p>Llevamos los nombres a mayúscula</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgXG4gIG11dGF0ZShwYWlzID0gc3RyX3RvX3VwcGVyKENvdW50cnkpKVxuaGVhZCh0aWJ1cm9uZXMsIDEwKVxuYGBgIn0= -->
-<pre class="r"><code>tiburones &lt;- tiburones %&gt;% 
-  mutate(pais = str_to_upper(Country))
-head(tiburones, 10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Quitamos los espacios en blanco a izquierda y derecha</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgXG4gIG11dGF0ZShwYWlzID0gc3RyX3RyaW0ocGFpcywgc2lkZSA9IFwiYm90aFwiKSlcbnRpYnVyb25lcyAlPiUgXG4gIHNlbGVjdChwYWlzKSAlPiUgIyBTZWxlY2Npb25hbW9zIGxhIHZhcmlhYmxlIGRlbCBwYWlzXG4gIGFycmFuZ2UocGFpcykgJT4lICMgTGEgb3JkZW5hbW9zXG4gIGRpc3RpbmN0KCkgJT4lICMgTm9zIHF1ZWRhbW9zIGNvbiBsb3MgdmFsb3JlcyB1bmljb3NcbiAgYXMubGlzdCgpICMgTGEgY29udmVydGltb3MgZW4gbGlzdGEgcGFyYSBxdWUgc2VhIG1hcyBzZW5jaWxsYSBkZSB2ZXJcbmBgYCJ9 -->
-<pre class="r"><code>tiburones &lt;- tiburones %&gt;% 
-  mutate(pais = str_trim(pais, side = &quot;both&quot;))
-tiburones %&gt;% 
-  select(pais) %&gt;% # Seleccionamos la variable del pais
-  arrange(pais) %&gt;% # La ordenamos
-  distinct() %&gt;% # Nos quedamos con los valores unicos
-  as.list() # La convertimos en lista para que sea mas sencilla de ver</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Analizando la variable <strong>Date</strong> de nuestro dataset. Primero llevamos esta variable a un pequeño dataset aparte y llevamos la variable al tipo character para poder manejarla como un string.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuRGF0ZSA8LSB0aWJ1cm9uZXMgJT4lIFxuICBzZWxlY3QoQ2FzZS5OdW1iZXIsIERhdGUpICU+JSAjIFNlbGVjY2lvbmFtb3MgdmFyaWFibGVzIG51bWVybyBjYXNvIHkgZmVjaGFcbiAgbXV0YXRlKERhdGUgPSBhcy5jaGFyYWN0ZXIoRGF0ZSkpICMgVHJhbmZvcm1hbW9zIGxhIGZlY2hhIGVuIHN0cmluZ1xuZ2xpbXBzZShEYXRlKVxuaGVhZChEYXRlLDEwKVxuYGBgIn0= -->
-<pre class="r"><code>Date &lt;- tiburones %&gt;% 
-  select(Case.Number, Date) %&gt;% # Seleccionamos variables numero caso y fecha
-  mutate(Date = as.character(Date)) # Tranformamos la fecha en string
-glimpse(Date)
-head(Date,10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Vemos que la variable Date viene en muchos casos con la palabra Reported lo cual nos impide que podamos tratar esa expresión como fecha usando las herramientas que vimos en la sección de lubridate.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuRGF0ZSA8LSBEYXRlICU+JSBcbiAgbXV0YXRlKGRhdGVfY2xlYW4xID0gc3RyX3JlcGxhY2VfYWxsKHN0cmluZyA9IERhdGUsIHBhdHRlcm4gPSAgXCJSZXBvcnRlZCBcIiwgcmVwbGFjZW1lbnQgPSBcIlwiKSlcbmhlYWQoRGF0ZSwxMClcbmBgYCJ9 -->
-<pre class="r"><code>Date &lt;- Date %&gt;% 
-  mutate(date_clean1 = str_replace_all(string = Date, pattern =  &quot;Reported &quot;, replacement = &quot;&quot;))
-head(Date,10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Vamos ahora a ver el caso de la variable <strong>Time</strong>. Vamos a proceder igual que con la variable Date, creando un pequeño dataset para normalizar esta variable.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3RyYWVtb3MgbGEgdmFyaWFibGUgcXVlIG5vcyBpbnRlcmVzYVxuVGltZSA8LSB0aWJ1cm9uZXMgJT4lIFxuICBzZWxlY3QoVGltZSkgJT4lXG4gICMgbGEgbGxldmFtb3MgYSB0aXBvIGNoYXJhY3RlciBwYXJhIHRyYWJhamFybGEgY29tbyBzdHJpbmdcbiAgbXV0YXRlKFRpbWUgPSBhcy5jaGFyYWN0ZXIoVGltZSkpXG4jIGJvcnJvIGVzdGEgZW50cmFkYSBwb3JxdWUgdGllbmUgdW4gZGF0byByYXJvIHF1ZSBubyBub3MgZGVqYSB0cmFiYWphciBcblRpbWVbMTU0NSxdIDwtIFwiXCJcbiMgbGxldmFtb3MgdG9kbyBhIG1pbsO6c2N1bGFzIChjb24gb3RyYSBmdW5jacOzbiBxdWUgdGFtYmnDqW4gaGFjZSBlc28pXG5UaW1lIDwtIFRpbWUgJT4lIFxuICBtdXRhdGUoVGltZSA9IHRvbG93ZXIoVGltZSkpXG5UaW1lXG5gYGAifQ== -->
-<pre class="r"><code>#traemos la variable que nos interesa
-Time &lt;- tiburones %&gt;% 
-  select(Time) %&gt;%
-  # la llevamos a tipo character para trabajarla como string
-  mutate(Time = as.character(Time))
-# borro esta entrada porque tiene un dato raro que no nos deja trabajar 
-Time[1545,] &lt;- &quot;&quot;
-# llevamos todo a minúsculas (con otra función que también hace eso)
-Time &lt;- Time %&gt;% 
-  mutate(Time = tolower(Time))
-Time</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Nuestro objetivo es llevar las horas a una variable categórica con los valores mañana, tarde y noche. Para eso por un lado vamos a tener que extraer la hora de las variables que la tienen cargada en forma númerica para luego agruparlas en esas tres categorías, y por el otro lado normalizar la forma categórica dada en inglés que actualmente tiene cuatro categorías.</p>
-<p>Empecemos trabajando con las entradas que tienen los valores dados en números. Primero vamos a ver que entradas tienen h y vamos a generar una columna con el largo del string.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVGltZSA8LSBUaW1lICU+JSBcbiAgbXV0YXRlKHRpZW5lX2ggPSBncmVwbChwYXR0ZXJuID0gXCJoXCIseCA9IFRpbWUpLFxuICAgICAgICAgbGFyZ28gPSBzdHJfbGVuZ3RoKFRpbWUpKVxuVGltZVxuYGBgIn0= -->
-<pre class="r"><code>Time &lt;- Time %&gt;% 
-  mutate(tiene_h = grepl(pattern = &quot;h&quot;,x = Time),
-         largo = str_length(Time))
-Time</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Ahora creamos una variable que nos va a decir si se trata de un caso con la hora dada en números. Para detectar estos casos, el string tiene que contener la letra h y tener 5 caracteres.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVGltZSA9IFRpbWUgJT4lIFxuICBtdXRhdGUoZXNfaG9yYSA9IGNhc2Vfd2hlbih0aWVuZV9oID09IFRSVUUgJiBsYXJnbyA9PSA1IH4gXCJzaVwiLFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0aWVuZV9oID09IEZBTFNFIHwgbGFyZ28gIT0gNSB+IFwibm9cIikpXG5UaW1lXG5gYGAifQ== -->
-<pre class="r"><code>Time = Time %&gt;% 
-  mutate(es_hora = case_when(tiene_h == TRUE &amp; largo == 5 ~ &quot;si&quot;,
-                             tiene_h == FALSE | largo != 5 ~ &quot;no&quot;))
-Time</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Ahora, si se trata de una entrada con el formato de hora, vamos a traer la primera y segunda posición que corresponden a la hora.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVGltZSA9IFRpbWUgJT4lIG11dGF0ZShob3JhID0gY2FzZV93aGVuKGVzX2hvcmEgPT0gXCJzaVwiIH4gc3Vic3RyKFRpbWUsMSwyKSksXG4gICAgICAgICAgICAgICAgICAgICAgIGhvcmEgPSBhcy5udW1lcmljKGhvcmEpKVxuVGltZVxuYGBgIn0= -->
-<pre class="r"><code>Time = Time %&gt;% mutate(hora = case_when(es_hora == &quot;si&quot; ~ substr(Time,1,2)),
-                       hora = as.numeric(hora))
-Time</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Ahora vamos a llevar los valores numéricos continuos a las variables discretas que mencionamos y vamos a llevar las variables en inglés a las variables en castellano.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVGltZSA9IFRpbWUgJT4lIFxuICBtdXRhdGUoaG9yYV9lc3RhbmRhciA9IGNhc2Vfd2hlbihncmVwbChcImFmdGVybm9vblwiLFRpbWUpID09IFRSVUUgfiBcInRhcmRlXCIsXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGdyZXBsKFwiZGF5XCIsVGltZSkgPT0gVFJVRSB+IFwidGFyZGVcIixcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZ3JlcGwoXCJuaWdodFwiLFRpbWUpPT1UUlVFIH4gXCJub2NoZVwiLFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBncmVwbChcIm1vcm5pbmdcIixUaW1lKT09VFJVRX5cIm1hw7FhbmFcIixcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaG9yYSA+IDUgJiBob3JhIDwgMTIgICAgIH4gXCJtYcOxYW5hXCIsXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhvcmEgPiAxMSAmIGhvcmEgPCAxOSAgICB+IFwidGFyZGVcIixcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaG9yYSA8IDYgfCBob3JhID4gMTggICAgIH4gXCJub2NoZVwiKSlcbiMgUmVlbXBsYXphbW9zIGxvcyBOQSBwb3IgXCJob3JhIGluZGVmaW5pZGFcIiBcblRpbWUgPC0gVGltZSAlPiUgcmVwbGFjZV9uYShsaXN0KGhvcmFfZXN0YW5kYXI9XCJob3JhIGluZGVmaW5pZGFcIikpXG5UaW1lXG5gYGAifQ== -->
-<pre class="r"><code>Time = Time %&gt;% 
-  mutate(hora_estandar = case_when(grepl(&quot;afternoon&quot;,Time) == TRUE ~ &quot;tarde&quot;,
-                                         grepl(&quot;day&quot;,Time) == TRUE ~ &quot;tarde&quot;,
-                                         grepl(&quot;night&quot;,Time)==TRUE ~ &quot;noche&quot;,
-                                         grepl(&quot;morning&quot;,Time)==TRUE~&quot;mañana&quot;,
-                                         hora &gt; 5 &amp; hora &lt; 12     ~ &quot;mañana&quot;,
-                                         hora &gt; 11 &amp; hora &lt; 19    ~ &quot;tarde&quot;,
-                                         hora &lt; 6 | hora &gt; 18     ~ &quot;noche&quot;))
-# Reemplazamos los NA por &quot;hora indefinida&quot; 
-Time &lt;- Time %&gt;% replace_na(list(hora_estandar=&quot;hora indefinida&quot;))
-Time</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Fecha con Lubridate</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTZWxlY2Npb25hbW9zIGFsZ3VuYXMgdmFyaWFibGVzXG50aWJ1cm9uZXMgPC0gdGlidXJvbmVzICU+JSBcbiAgc2VsZWN0KENhc2UuTnVtYmVyLCBUeXBlLERhdGUsIHBhaXMpXG4jIEhhY2Vtb3MgbGEgbGltcGllemEgZGUgbGEgZmVjaGEgY29tbyB2aW1vcyBtw6FzIGFycmliYVxudGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgXG4gIG11dGF0ZShkYXRlX2NsZWFuMSA9IHN0cl9yZXBsYWNlX2FsbChzdHJpbmcgPSBEYXRlLCBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBhdHRlcm4gPSAgXCJSZXBvcnRlZCBcIiwgXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZXBsYWNlbWVudCA9IFwiXCIpKVxuZ2xpbXBzZSh0aWJ1cm9uZXMpXG5gYGAifQ== -->
-<pre class="r"><code># Seleccionamos algunas variables
-tiburones &lt;- tiburones %&gt;% 
-  select(Case.Number, Type,Date, pais)
-# Hacemos la limpieza de la fecha como vimos más arriba
-tiburones &lt;- tiburones %&gt;% 
-  mutate(date_clean1 = str_replace_all(string = Date, 
-                                       pattern =  &quot;Reported &quot;, 
-                                       replacement = &quot;&quot;))
-glimpse(tiburones)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Transformamos la variable fecha de un string a una fecha</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgbXV0YXRlKGZlY2hhPSBkbXkoZGF0ZV9jbGVhbjEpKVxuYGBgIn0= -->
-<pre class="r"><code>tiburones &lt;- tiburones %&gt;% mutate(fecha= dmy(date_clean1))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>El mensaje indica que no pudo convertir a fecha 887 registros.</p>
-<p>Extraemos variables de la fecha</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgXG4gIG11dGF0ZShhw7FvID0geWVhcihmZWNoYSksICMgT2J0ZW5lciBlbCBhw7FvXG4gICAgICAgICBzZW1lc3RyZSA9IHNlbWVzdGVyKGZlY2hhKSwgIyBPYnRlbmVyIGVsIHNlbWVzdHJlXG4gICAgICAgICB0cmltZXN0cmUgPSBxdWFydGVyKGZlY2hhKSwjIE9idGVuZXIgZWwgdHJpbWVzdHJlIFxuICAgICAgICAgbWVzID0gbW9udGgoZmVjaGEsbGFiZWwgPSBUUlVFKSwgIyBPYnRlbmVyIGVsIG5vbWJyZSBkZWwgbWVzXG4gICAgICAgICBkaWEgPSBkYXkoZmVjaGEpLCMgT2J0ZW5lciBlbCBkw61hXG4gICAgICAgICBkaWFfc2VtYW5hID0gd2RheShmZWNoYSwgbGFiZWwgPSBUUlVFKSkgIyBPYnRlbmVyIGVsIG5vbWJyZSBkZWwgZMOtYVxuZ2xpbXBzZSh0aWJ1cm9uZXMpXG5gYGAifQ== -->
-<pre class="r"><code>tiburones &lt;- tiburones %&gt;% 
-  mutate(año = year(fecha), # Obtener el año
-         semestre = semester(fecha), # Obtener el semestre
-         trimestre = quarter(fecha),# Obtener el trimestre 
-         mes = month(fecha,label = TRUE), # Obtener el nombre del mes
-         dia = day(fecha),# Obtener el día
-         dia_semana = wday(fecha, label = TRUE)) # Obtener el nombre del día
-glimpse(tiburones)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<div id="ejercicio-2-trabajo-con-strings-y-fechas" class="section level2">
+<h2>Ejercicio 2: Trabajo con strings y fechas</h2>
+<p>Limpiar una base pública de ataques de tiburones para luego poder hacer algunos análisis exploratorios</p>
+<p>En la carpeta <strong>Fuentes</strong> se encuentra el archivo <strong>ataques_tiburones.csv</strong></p>
+<p>1.a Leer el dataset</p>
+<p>1.b Seleccionar las variables <em><code>Case Number</code></em>, <em>Date</em> y <em>Country</em></p>
+<p><strong>Limpieza variable pais</strong></p>
+<ol start="2" style="list-style-type: decimal">
+<li>Obtener los valores únicos de la variable <em>Country</em> (país). Evaluar que problemas presenta esta variable para normalizarla</li>
+</ol>
+<p>3.a. Llevar los nombres a mayúscula</p>
+<p>3.b. Quitar los espacios en blanco a izquierda y derecha</p>
+<p>3.c. Quitar el signo de pregunta que aparace al final de ciertos nombres</p>
+<p><strong>Limpieza variable fecha</strong></p>
+<ol start="4" style="list-style-type: decimal">
+<li>Revisar la variable <em>Date</em> y evaluar qué problemas presenta esta variable para normalizarla</li>
+<li>Eliminar la palabra “Reported” (con su espacio en blanco) de la fecha</li>
+<li>Convertir la variable fecha de string a datetime. Crear las variables de año, mes y día</li>
+</ol>
+<p><strong>Gráficos</strong></p>
+<ol start="7" style="list-style-type: decimal">
+<li>Quedarse con los ataques desde el año 1800 en adelante</li>
+<li>Crear un dataframe con la cantidad de ataques totales por región desde el 1800 en adelante</li>
+<li>Realizar un gráfico de barras para los 20 países con mayor cantidad de ataques</li>
+<li>Realizar un gráfico de la evolución de ataques por año desde 1800</li>
+<li>Realizar un gráfico del total de ataques por mes para AUSTRALIA y USA (Estados Unidos) para construir el ciclo anual de ataques en estos países</li>
+</ol>
 </div>
 <div id="ejercicio-3-eph-opcional" class="section level2">
 <h2>Ejercicio 3: EPH (OPCIONAL)</h2>
@@ -3112,7 +2963,7 @@ Utilicen este modelo para hacer un gráfico que eche luz sobre el siguiente fen�
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiQ2xhc2UgMi4gRWplcmNpY2lvcyBkZSBQcsOhY3RpY2EiCmF1dGhvcjogIkp1YW4gQmFycmlvbGEgeSBTb2bDrWEgUGVyaW5pIgpkYXRlOiAiMTIgZGUgU2VwdGllbWJyZSBkZSAyMDIwIgpvdXRwdXQ6IAogIGh0bWxfbm90ZWJvb2s6IAogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IHRydWUKICAgIGRlcHRoOiAyCi0tLQoKIyBFamVyY2ljaW9zIENsYXNlIDIKCiMjIEVqZXJjaWNpbyAxOiBQcmVjaW9zIHkgZMOzbGFyCgpFbiBsYSBjYXJwZXRhIF9fRnVlbnRlc19fIHNlIGVuY3VlbnRyYW4gbG9zIGFyY2hpdm9zIF9fZG9sYXJfb2ZpY2lhbF9hbWJpdG8uY3N2X18geSBfX2lwYy1tZW5zdWFsLnhsc3hfXy4gQ29uIGVsbG9zLCBlbCBvYmpldGl2byBlcyByZWFsaXphciB1biBhbsOhbGlzaXMgZXhwbG9yYXRvcmlvIGRlIGVzdGFzIHZhcmlhYmxlcyBkZSBsYSBlY29ub23DrWEgYXJnZW50aW5hLiBMYSBiYXNlIGRlIGRhdG9zIGRlbCBkb2xhciB0aWVuZSBmcmVjdWVuY2lhIGRpYXJpYSB5IGNvbWllbnphIGVuIE1hcnpvIGRlIDIwMDIuIExhIGJhc2UgZGUgZGF0b3MgZGVsIElQQyB0aWVuZSBmcmVjdWVuY2lhIG1lbnN1YWwgeSBjb21pZW56YSBlbiBEaWNpZW1icmUgZGUgMjAxNi4KCgojIyMgRMOzbGFyCgoxLiBMZWVyIGVsIGRhdGFzZXQKMi4gQ3JlYXIgbGEgdmFyaWFibGUgY290aXphY2nDs25fcHJvbWVkaW8sIHJlYWxpemFuZG8gZWwgcHJvbWVkaW8gZW50cmUgY29tcHJhIHkgdmVudGEgcGFyYSBjYWRhIGTDrWEKMy4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkaWFyaWEgZGUgbGEgY290aXphY2nDs24gcHJvbWVkaW8KNC4gQ3JlYXIgbGFzIHZhcmlhYmxlcyBmZWNoYSwgYcOxbywgbWVzIHkgZMOtYSAKNS4gQ2FsY3VsYXIgbGEgbWVkaWFuYSBkZSBsYSBjb3RpemFjacOzbiBwcm9tZWRpbyBwYXJhIGNhZGEgYcOxbyB5IG1lcyAoZXN0YSBzZXLDoSBsYSBjb3RpemFjacOzbiBtZW5zdWFsIGRlbCBkw7NsYXIgb2ZpY2lhbCkKNi4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkZWwgdGlwbyBkZSBjYW1iaW8gcG9yIG1lcwoKIyMjIElQQwoKMS4gTGVlciBlbCBkYXRhc2V0IAoyLiBNb2RpZmljYXIgZWwgZGF0YXNldCBwYXJhIHF1ZSBjdW1wbGEgY29uIGxhIGRlZmluaWNpw7NuIGRlIHRpZHkgZGF0YTogY2FkYSB2YXJpYWJsZSBkZWJlIHNlciB1bmEgY29sdW1uYSAoQXBlcnR1cmEsIEZlY2hhIGUgSW5kaWNlKS4gKlBpc3RhKjogcGllbnNlbiBzaSB0aWVuZW4gcXVlIHVzYXIgJHNwcmVhZCQgbyAkZ2F0aGVyJAozLiBDcmVhciBsYXMgdmFyaWFibGVzIGZlY2hhLCBhw7FvLCBtZXMgeSBkw61hIAo0LiBHcmFmaWNhciBsYSBldm9sdWNpw7NuIGRlbCBuaXZlbCBnZW5lcmFsIGRlbCBJUEMKNS4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkZSBsb3MgNCBncnVwb3MKCiMjIyBJUEMgeSBEb2xhciAKCjEuIFJlYWxpemFyIHVuIGpvaW4gZGUgYW1ib3MgY29uanVudG9zIGRlIGRhdG9zIChkw7NsYXIgbWVuc3VhbCBlIElQQykgZGUgbWFuZXJhIHF1ZSBxdWVkZW4gbG9zIG1lc2VzIHBhcmEgbG9zIGN1w6FsZXMgaGF5IGRhdG9zIGRlIGFtYmFzIHZhcmlhYmxlcyAKMi4gQ2FsY3VsYXIgbGEgbWVkaWEsIGVsIGRlc3bDrW8gZXN0w6FuZGFyLCBsYSBtZWRpYW5hIHkgZWwgcmFuZ28gZGVsIGTDs2xhciB5IGRlbCBJUEMgR2VuZXJhbCBwYXJhIGNhZGEgdW5vIGRlIGxvcyBhw7FvcwozLiBHcmFmaWNhciBsYSBldm9sdWNpw7NuIGRlbCBkw7NsYXIgeSBkZWwgbml2ZWwgZ2VuZXJhbCBkZWwgSVBDICh0ZW5lciBlbiBjdWVudGEgZWwgcmFuZ28gZGUgbGFzIHZhcmlhYmxlcykKNC4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkZWwgZMOzbGFyIHkgZGUgbG9zIDQgZ3J1cG9zIGRlIElQQwoKIyMgRWplcmNpY2lvIDI6IFRyYWJham8gY29uIHN0cmluZ3MKClZhbW9zIGEgdmVyIHVuIGVqZW1wbG8gYSBwYXJ0aXIgZGUgdW5hIGJhc2UgcMO6YmxpY2EgcXVlIG5vcyB0cmFlIGluZm9ybWFjacOzbiBzb2JyZSBhdGFxdWVzIGRlIHRpYnVyb25lcyBlbiBlbCBtdW5kbyBlbiBkaXN0aW50b3MgbW9tZW50b3MuIENhZGEgZmlsYSBjb3JyZXNwb25kZSBhIHVuIGF0YXF1ZS4KCmBgYHtyfQp0aWJ1cm9uZXMgPC0gcmVhZC5jc3YoImh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9kbXViYS9kbXViYS5naXRodWIuaW8vMzAwNWE3YTVlOGM5ZGI1YzE4OGNhMjJhN2I5MjY5Yzk0ZGI4Y2VkNy9QcmFjdGljb3MvVFBzJTIwRW50cmVnYWJsZXMvVFAwMi9TaGFya19BdHRhY2tfRGF0YS5jc3YiKSAlPiUgCiAgc2VsZWN0KC1jKENhc2UuTnVtYmVyLjEsIENhc2UuTnVtYmVyLjIsIG9yaWdpbmFsLm9yZGVyLCBYLCBYLjEpKQpgYGAKClZhbW9zIGEgdHJhYmFqYXIgdW4gcG9jbyBjb24gbGEgbGltcGllemEgeSBsYSBub3JtYWxpemFjacOzbiBkZSBlc3RhIGJhc2UgeWEgcXVlIGFsIGp1bnRhciBkYXRvcyBkZSBkaXN0aW50YXMgZnVlbnRlcyBsYSBpbmZvcm1hY2nDs24gbm8gZXMgaG9tb2fDqW5lYSBwb3IgbG8gcXVlIGVzIGRpZmljaWwgaGFjZXIgY3VhbHF1aWVyIHRpcG8gZGUgYW7DoWxpc2lzLgoKQW5hbGljZW1vcyBsYSB2YXJpYWJsZSBkZWwgcGHDrXMgKCpDb3VudHJ5KikKCmBgYHtyfQojIENyZWFtb3MgdW5hIGxpc3RhIGNvbiBsb3MgdmFsb3JlcyBkZSBDb3VudHJ5IHBhcmEgdmVyIHNpIGhheSBhbGd1bm9zIHByb2JsZW1hcwp0aWJ1cm9uZXMgJT4lIAogIHNlbGVjdChDb3VudHJ5KSAlPiUgIyBTZWxlY2Npb25hbW9zIGxhIHZhcmlhYmxlIGRlbCBwYWlzCiAgbXV0YXRlKENvdW50cnkgPSBhcy5jaGFyYWN0ZXIoQ291bnRyeSkpICU+JSAjIExvIGNvbnZlcnRpbW9zIGRlIGZhY3RvciBhIHN0cmluZwogIGFycmFuZ2UoQ291bnRyeSkgJT4lICMgTGEgb3JkZW5hbW9zCiAgZGlzdGluY3QoKSAlPiUgIyBOb3MgcXVlZGFtb3MgY29uIGxvcyB2YWxvcmVzIHVuaWNvcwogIGFzLmxpc3QoKSAjIExhIGNvbnZlcnRpbW9zIGVuIGxpc3RhIHBhcmEgcXVlIHNlYSBtYXMgc2VuY2lsbGEgZGUgdmVyCmBgYAogIApIYXkgdmFyaW9zIHByb2JsZW1hcywgcGVybyB2ZWFtb3MgZG9zOgoKLSBIYXkgYWxndW5vcyBub21icmVzIHF1ZSBubyBlc3TDoW4gZW4gbWF5w7pzY3VsYQotIEhheSBhbGd1bm9zIG5vbWJyZXMgcXVlIHRpZW5lbiBlc3BhY2lvcyBlbiBibGFuY28gYSBpenF1aWVyZGEgeSBkZXJlY2hhCgpMbGV2YW1vcyBsb3Mgbm9tYnJlcyBhIG1hecO6c2N1bGEKCmBgYHtyfQp0aWJ1cm9uZXMgPC0gdGlidXJvbmVzICU+JSAKICBtdXRhdGUocGFpcyA9IHN0cl90b191cHBlcihDb3VudHJ5KSkKaGVhZCh0aWJ1cm9uZXMsIDEwKQpgYGAKClF1aXRhbW9zIGxvcyBlc3BhY2lvcyBlbiBibGFuY28gYSBpenF1aWVyZGEgeSBkZXJlY2hhCgpgYGB7cn0KdGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgCiAgbXV0YXRlKHBhaXMgPSBzdHJfdHJpbShwYWlzLCBzaWRlID0gImJvdGgiKSkKdGlidXJvbmVzICU+JSAKICBzZWxlY3QocGFpcykgJT4lICMgU2VsZWNjaW9uYW1vcyBsYSB2YXJpYWJsZSBkZWwgcGFpcwogIGFycmFuZ2UocGFpcykgJT4lICMgTGEgb3JkZW5hbW9zCiAgZGlzdGluY3QoKSAlPiUgIyBOb3MgcXVlZGFtb3MgY29uIGxvcyB2YWxvcmVzIHVuaWNvcwogIGFzLmxpc3QoKSAjIExhIGNvbnZlcnRpbW9zIGVuIGxpc3RhIHBhcmEgcXVlIHNlYSBtYXMgc2VuY2lsbGEgZGUgdmVyCmBgYAoKQW5hbGl6YW5kbyBsYSB2YXJpYWJsZSAqKkRhdGUqKiBkZSBudWVzdHJvIGRhdGFzZXQuIFByaW1lcm8gbGxldmFtb3MgZXN0YSB2YXJpYWJsZSBhIHVuIHBlcXVlw7FvIGRhdGFzZXQgYXBhcnRlIHkgbGxldmFtb3MgbGEgdmFyaWFibGUgYWwgdGlwbyBjaGFyYWN0ZXIgcGFyYSBwb2RlciBtYW5lamFybGEgY29tbyB1biBzdHJpbmcuCgpgYGB7cn0KRGF0ZSA8LSB0aWJ1cm9uZXMgJT4lIAogIHNlbGVjdChDYXNlLk51bWJlciwgRGF0ZSkgJT4lICMgU2VsZWNjaW9uYW1vcyB2YXJpYWJsZXMgbnVtZXJvIGNhc28geSBmZWNoYQogIG11dGF0ZShEYXRlID0gYXMuY2hhcmFjdGVyKERhdGUpKSAjIFRyYW5mb3JtYW1vcyBsYSBmZWNoYSBlbiBzdHJpbmcKZ2xpbXBzZShEYXRlKQpoZWFkKERhdGUsMTApCmBgYAoKVmVtb3MgcXVlIGxhIHZhcmlhYmxlIERhdGUgdmllbmUgZW4gbXVjaG9zIGNhc29zIGNvbiBsYSBwYWxhYnJhIFJlcG9ydGVkIGxvIGN1YWwgbm9zIGltcGlkZSBxdWUgcG9kYW1vcyB0cmF0YXIgZXNhIGV4cHJlc2nDs24gY29tbyBmZWNoYSB1c2FuZG8gbGFzIGhlcnJhbWllbnRhcyBxdWUgdmltb3MgZW4gbGEgc2VjY2nDs24gZGUgbHVicmlkYXRlLgoKYGBge3J9CkRhdGUgPC0gRGF0ZSAlPiUgCiAgbXV0YXRlKGRhdGVfY2xlYW4xID0gc3RyX3JlcGxhY2VfYWxsKHN0cmluZyA9IERhdGUsIHBhdHRlcm4gPSAgIlJlcG9ydGVkICIsIHJlcGxhY2VtZW50ID0gIiIpKQpoZWFkKERhdGUsMTApCmBgYAoKVmFtb3MgYWhvcmEgYSB2ZXIgZWwgY2FzbyBkZSBsYSB2YXJpYWJsZSAqKlRpbWUqKi4gVmFtb3MgYSBwcm9jZWRlciBpZ3VhbCBxdWUgY29uIGxhIHZhcmlhYmxlIERhdGUsIGNyZWFuZG8gdW4gcGVxdWXDsW8gZGF0YXNldCBwYXJhIG5vcm1hbGl6YXIgZXN0YSB2YXJpYWJsZS4KCmBgYHtyfQojdHJhZW1vcyBsYSB2YXJpYWJsZSBxdWUgbm9zIGludGVyZXNhClRpbWUgPC0gdGlidXJvbmVzICU+JSAKICBzZWxlY3QoVGltZSkgJT4lCiAgIyBsYSBsbGV2YW1vcyBhIHRpcG8gY2hhcmFjdGVyIHBhcmEgdHJhYmFqYXJsYSBjb21vIHN0cmluZwogIG11dGF0ZShUaW1lID0gYXMuY2hhcmFjdGVyKFRpbWUpKQojIGJvcnJvIGVzdGEgZW50cmFkYSBwb3JxdWUgdGllbmUgdW4gZGF0byByYXJvIHF1ZSBubyBub3MgZGVqYSB0cmFiYWphciAKVGltZVsxNTQ1LF0gPC0gIiIKIyBsbGV2YW1vcyB0b2RvIGEgbWluw7pzY3VsYXMgKGNvbiBvdHJhIGZ1bmNpw7NuIHF1ZSB0YW1iacOpbiBoYWNlIGVzbykKVGltZSA8LSBUaW1lICU+JSAKICBtdXRhdGUoVGltZSA9IHRvbG93ZXIoVGltZSkpClRpbWUKYGBgCgpOdWVzdHJvIG9iamV0aXZvIGVzIGxsZXZhciBsYXMgaG9yYXMgYSB1bmEgdmFyaWFibGUgY2F0ZWfDs3JpY2EgY29uIGxvcyB2YWxvcmVzIG1hw7FhbmEsIHRhcmRlIHkgbm9jaGUuIFBhcmEgZXNvIHBvciB1biBsYWRvIHZhbW9zIGEgdGVuZXIgcXVlIGV4dHJhZXIgbGEgaG9yYSBkZSBsYXMgdmFyaWFibGVzIHF1ZSBsYSB0aWVuZW4gY2FyZ2FkYSBlbiBmb3JtYSBuw7ptZXJpY2EgcGFyYSBsdWVnbyBhZ3J1cGFybGFzIGVuIGVzYXMgdHJlcyBjYXRlZ29yw61hcywgeSBwb3IgZWwgb3RybyBsYWRvIG5vcm1hbGl6YXIgbGEgZm9ybWEgY2F0ZWfDs3JpY2EgZGFkYSBlbiBpbmdsw6lzIHF1ZSBhY3R1YWxtZW50ZSB0aWVuZSBjdWF0cm8gY2F0ZWdvcsOtYXMuCgpFbXBlY2Vtb3MgdHJhYmFqYW5kbyBjb24gbGFzIGVudHJhZGFzIHF1ZSB0aWVuZW4gbG9zIHZhbG9yZXMgZGFkb3MgZW4gbsO6bWVyb3MuIFByaW1lcm8gdmFtb3MgYSB2ZXIgcXVlIGVudHJhZGFzIHRpZW5lbiBoIHkgdmFtb3MgYSBnZW5lcmFyIHVuYSBjb2x1bW5hIGNvbiBlbCBsYXJnbyBkZWwgc3RyaW5nLgoKYGBge3J9ClRpbWUgPC0gVGltZSAlPiUgCiAgbXV0YXRlKHRpZW5lX2ggPSBncmVwbChwYXR0ZXJuID0gImgiLHggPSBUaW1lKSwKICAgICAgICAgbGFyZ28gPSBzdHJfbGVuZ3RoKFRpbWUpKQpUaW1lCmBgYAoKQWhvcmEgY3JlYW1vcyB1bmEgdmFyaWFibGUgcXVlIG5vcyB2YSBhIGRlY2lyIHNpIHNlIHRyYXRhIGRlIHVuIGNhc28gY29uIGxhIGhvcmEgZGFkYSBlbiBuw7ptZXJvcy4gUGFyYSBkZXRlY3RhciBlc3RvcyBjYXNvcywgZWwgc3RyaW5nIHRpZW5lIHF1ZSBjb250ZW5lciBsYSBsZXRyYSBoIHkgdGVuZXIgNSBjYXJhY3RlcmVzLgoKYGBge3J9ClRpbWUgPSBUaW1lICU+JSAKICBtdXRhdGUoZXNfaG9yYSA9IGNhc2Vfd2hlbih0aWVuZV9oID09IFRSVUUgJiBsYXJnbyA9PSA1IH4gInNpIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0aWVuZV9oID09IEZBTFNFIHwgbGFyZ28gIT0gNSB+ICJubyIpKQpUaW1lCmBgYAoKQWhvcmEsIHNpIHNlIHRyYXRhIGRlIHVuYSBlbnRyYWRhIGNvbiBlbCBmb3JtYXRvIGRlIGhvcmEsIHZhbW9zIGEgdHJhZXIgbGEgcHJpbWVyYSB5IHNlZ3VuZGEgcG9zaWNpw7NuIHF1ZSBjb3JyZXNwb25kZW4gYSBsYSBob3JhLgoKYGBge3J9ClRpbWUgPSBUaW1lICU+JSBtdXRhdGUoaG9yYSA9IGNhc2Vfd2hlbihlc19ob3JhID09ICJzaSIgfiBzdWJzdHIoVGltZSwxLDIpKSwKICAgICAgICAgICAgICAgICAgICAgICBob3JhID0gYXMubnVtZXJpYyhob3JhKSkKVGltZQpgYGAKCkFob3JhIHZhbW9zIGEgbGxldmFyIGxvcyB2YWxvcmVzIG51bcOpcmljb3MgY29udGludW9zIGEgbGFzIHZhcmlhYmxlcyBkaXNjcmV0YXMgcXVlIG1lbmNpb25hbW9zIHkgdmFtb3MgYSBsbGV2YXIgbGFzIHZhcmlhYmxlcyBlbiBpbmdsw6lzIGEgbGFzIHZhcmlhYmxlcyBlbiBjYXN0ZWxsYW5vLgoKYGBge3J9ClRpbWUgPSBUaW1lICU+JSAKICBtdXRhdGUoaG9yYV9lc3RhbmRhciA9IGNhc2Vfd2hlbihncmVwbCgiYWZ0ZXJub29uIixUaW1lKSA9PSBUUlVFIH4gInRhcmRlIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBncmVwbCgiZGF5IixUaW1lKSA9PSBUUlVFIH4gInRhcmRlIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBncmVwbCgibmlnaHQiLFRpbWUpPT1UUlVFIH4gIm5vY2hlIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBncmVwbCgibW9ybmluZyIsVGltZSk9PVRSVUV+Im1hw7FhbmEiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhvcmEgPiA1ICYgaG9yYSA8IDEyICAgICB+ICJtYcOxYW5hIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBob3JhID4gMTEgJiBob3JhIDwgMTkgICAgfiAidGFyZGUiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhvcmEgPCA2IHwgaG9yYSA+IDE4ICAgICB+ICJub2NoZSIpKQojIFJlZW1wbGF6YW1vcyBsb3MgTkEgcG9yICJob3JhIGluZGVmaW5pZGEiIApUaW1lIDwtIFRpbWUgJT4lIHJlcGxhY2VfbmEobGlzdChob3JhX2VzdGFuZGFyPSJob3JhIGluZGVmaW5pZGEiKSkKVGltZQpgYGAKCkZlY2hhIGNvbiBMdWJyaWRhdGUKCmBgYHtyfQojIFNlbGVjY2lvbmFtb3MgYWxndW5hcyB2YXJpYWJsZXMKdGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgCiAgc2VsZWN0KENhc2UuTnVtYmVyLCBUeXBlLERhdGUsIHBhaXMpCiMgSGFjZW1vcyBsYSBsaW1waWV6YSBkZSBsYSBmZWNoYSBjb21vIHZpbW9zIG3DoXMgYXJyaWJhCnRpYnVyb25lcyA8LSB0aWJ1cm9uZXMgJT4lIAogIG11dGF0ZShkYXRlX2NsZWFuMSA9IHN0cl9yZXBsYWNlX2FsbChzdHJpbmcgPSBEYXRlLCAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGF0dGVybiA9ICAiUmVwb3J0ZWQgIiwgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJlcGxhY2VtZW50ID0gIiIpKQpnbGltcHNlKHRpYnVyb25lcykKYGBgCgpUcmFuc2Zvcm1hbW9zIGxhIHZhcmlhYmxlIGZlY2hhIGRlIHVuIHN0cmluZyBhIHVuYSBmZWNoYQoKYGBge3J9CnRpYnVyb25lcyA8LSB0aWJ1cm9uZXMgJT4lIG11dGF0ZShmZWNoYT0gZG15KGRhdGVfY2xlYW4xKSkKYGBgCgpFbCBtZW5zYWplIGluZGljYSBxdWUgbm8gcHVkbyBjb252ZXJ0aXIgYSBmZWNoYSA4ODcgcmVnaXN0cm9zLgoKRXh0cmFlbW9zIHZhcmlhYmxlcyBkZSBsYSBmZWNoYQpgYGB7cn0KdGlidXJvbmVzIDwtIHRpYnVyb25lcyAlPiUgCiAgbXV0YXRlKGHDsW8gPSB5ZWFyKGZlY2hhKSwgIyBPYnRlbmVyIGVsIGHDsW8KICAgICAgICAgc2VtZXN0cmUgPSBzZW1lc3RlcihmZWNoYSksICMgT2J0ZW5lciBlbCBzZW1lc3RyZQogICAgICAgICB0cmltZXN0cmUgPSBxdWFydGVyKGZlY2hhKSwjIE9idGVuZXIgZWwgdHJpbWVzdHJlIAogICAgICAgICBtZXMgPSBtb250aChmZWNoYSxsYWJlbCA9IFRSVUUpLCAjIE9idGVuZXIgZWwgbm9tYnJlIGRlbCBtZXMKICAgICAgICAgZGlhID0gZGF5KGZlY2hhKSwjIE9idGVuZXIgZWwgZMOtYQogICAgICAgICBkaWFfc2VtYW5hID0gd2RheShmZWNoYSwgbGFiZWwgPSBUUlVFKSkgIyBPYnRlbmVyIGVsIG5vbWJyZSBkZWwgZMOtYQpnbGltcHNlKHRpYnVyb25lcykKYGBgCgojIyBFamVyY2ljaW8gMzogRVBIIChPUENJT05BTCkKCkVsIE9iamV0aXZvIGRlIGVzdG9zIGVqZXJjaWNpb3MgZXMgcHJhY3RpY2FyIGVsIHVzbyBkZWwgJHRpZHl2ZXJzZSQgcGFyYSBsYSBtYW5pcHVsYWNpw7NuIGRlIGxvcyBkYXRvcywgeSAkZ2dwbG90JCBwYXJhIGdyYWZpY2FyIGxhIGluZm9ybWFjacOzbi4gRW4gbGFzIGNvbnNpZ25hcywgc2UgcHJvcG9uZSBkZSBtYW5lcmEgZ2VuZXJhbCBxdcOpIHZhcmlhYmxlcyBzZSBxdWllcmUgb2JzZXJ2YXIuIFVzdGVkZXMgZGViZXLDoW4gbGV2YW50YXIgeSBwcm9jZXNhciBsb3MgZGF0b3MgZGUgbGEgRW5jdWVzdGEgUGVybWFuZW50ZSBkZSBIb2dhcmVzLCB5IGdyw6FmaWNhcmxvcyBjb21vIGNvbnNpZGVyZW4gcXVlIG1lam9yIHNlIGFwcmVjaWEgbGEgcmVsYWNpw7NuIGVudHJlIGxhcyB2YXJpYWJsZXMuICAgICAKClVuYSBfX2F5dWRhX18gZXMgdXRpbGl6YXIgZWwgW2Rpc2XDsW8gZGUgcmVnaXN0cm9dKC4uL0Z1ZW50ZXMvRVBIX3JlZ2lzdHJvXzJfdHJpbV8yMDE2LnBkZikgcGFyYSBjb2RpZmljYXIgbGFzIHZhcmlhYmxlcwoKICAKX19lamVyY2ljaW9zX18KCi0gR3JhZmljYXIgbGEgZGlzdHJpYnVjacOzbiBkZWwgaW5ncmVzbyBwb3Igb2N1cGFjacOzbiBwcmluY2lwYWwgKHAyMSkgc2Vnw7puIGNhdGVnb3LDrWEgb2N1cGFjaW9uYWwgKENBVF9PQ1VQKS4gKG9wY2lvbmFsOiB1dGlsaXphciBsYSBsaWJyZXLDrWEgW2dncmlkZ2VzXShodHRwczovL2NyYW4uci1wcm9qZWN0Lm9yZy93ZWIvcGFja2FnZXMvZ2dyaWRnZXMvdmlnbmV0dGVzL2ludHJvZHVjdGlvbi5odG1sKSkKCi0gSW5jb3Jwb3JhciBlbiBlbCBncsOhZmljbyBhbnRlcmlvciBsYSBjb25kaWNpw7NuIGRlIHByZWNhcmllZGFkIGxhYm9yYWwgKFBQMDdIKS4KCi0gUXVlZGFyc2Ugc8OzbG8gY29uIGxvcyBhc2FsYXJpYWRvcyAoQ0FUX09DVVAgPSAzKSwgeSBncmFmaWNhciBsYSByZWxhY2nDs24gZW50cmUgaW5ncmVzbyBwb3Igb2N1cGFjacOzbiBwcmluY2lwYWwocDIxKSwgcHJlY2FyaWVkYWQgbGFib3JhbCAoUFAwN0gpIHkgdGFtYcOxbyBkZWwgZXN0YWJsZWNpbWllbnRvKFBQMDRDOTkpLgoKLSBRdWVkYXJzZSBjb24gbG9zIEN1ZW50YXByb3Bpc3RhcyB5IGFzYWxhcmlhZG9zIChDQVRfT0NVUCA9IDIgeSAzKSB5IGNvbXBhcmFyLCBzZWfDum4gbGEgY29uZGljacOzbiBkZSBwcmVjYXJpZWRhZCBsYWJvcmFsIChQUDA3SCkgbGEgZGlzdHJpYnVjacOzbiBkZWwgaW5ncmVzbyBzZWfDum4gc2V4byAoQ0gwNCkKCi0gSW5jb3Jwb3JhciBlbiBlbCBncsOhZmljbyBhbnRlcmlvciBlbCB0YW1hw7FvIGRlbCBlc3RhYmxlY2ltaWVudG8oUFAwNEM5OSkKCgpfX3lhcGE6X18gU2kgcXVpc2llcmFtb3MgbW9kZWxhciBsYSBwcm9iYWJpbGlkYWQgZGUgdW4gZXZlbnRvIHBvZGVtb3MgdXNhciB1bmEgcmVncmVzacOzbiBsb2fDrXNpdGNhIChlbiBnZ3Bsb3QgYGBgc3RhdF9zbW9vdGgobWV0aG9kPSJnbG0iLCBtZXRob2QuYXJncz1saXN0KGZhbWlseT0iYmlub21pYWwiKWBgYCkuICAgICAKVXRpbGljZW4gZXN0ZSBtb2RlbG8gcGFyYSBoYWNlciB1biBncsOhZmljbyBxdWUgZWNoZSBsdXogc29icmUgZWwgc2lndWllbnRlIGZlbsOzbWVubzogCgotIMK/Q8OzbW8gc2UgZGlzdHJpYnV5ZSBsYSBwcm9iYWJpbGlkYWQgZGUgcXVlcmVyIHRyYWJhamFyIG3DoXMgaG9yYXMgKFBQMDNHKSBzZWfDum4gZWwgdG90YWwgZGUgaG9yYXMgdHJhYmFqYWRhcyBwb3Igc2VtYW5hIChQUDNFX1RPVCk/IMK/RXMgZGlmZXJlbnRlIGVsIG1vZGVsbyBzZWfDum4gc2V4byhDSDA0KT8=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiQ2xhc2UgMi4gRWplcmNpY2lvcyBkZSBQcsOhY3RpY2EiCmF1dGhvcjogIkp1YW4gQmFycmlvbGEgeSBTb2bDrWEgUGVyaW5pIgpkYXRlOiAiMTIgZGUgU2VwdGllbWJyZSBkZSAyMDIwIgpvdXRwdXQ6IAogIGh0bWxfbm90ZWJvb2s6IAogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IHRydWUKICAgIGRlcHRoOiAyCi0tLQoKIyBFamVyY2ljaW9zIENsYXNlIDIKCiMjIEVqZXJjaWNpbyAxOiBQcmVjaW9zIHkgZMOzbGFyCgpSZWFsaXphciB1biBpbmZvcm1lIGRlIGxhIG1hY3JvZWNvbm9tw61hIGFyZ2VudGluYSBoYWNpZW5kbyBhbsOhbGlzaXMgZXhwbG9yYXRvcmlvcyBkZWwgSW5kaWNlIGRlIFByZWNpb3MgYWwgQ29uc3VtaWRvciAoSVBDKSB5IGVsIHRpcG8gZGUgY2FtYmlvIG9maWNpYWwgZW50cmUgZWwgZMOzbGFyIHkgZWwgcGVzbyBhcmdlbnRpbm8gc2Vnw7puIGxvIHJlcG9ydGFkbyBwb3IgZWwgbWVkaW8gw4FtYml0byBGaW5hbmNpZXJvLiAKCkVsIElQQyBlcyB1biBpbmRpY2UgcXVlIG1pZGUgbGEgZXZvbHVjacOzbiBkZSB1bmEgY2FuYXN0YSBkZSBwcmVjaW9zIGRlZmluaWRhIHBvciBlbCBJTkRFQy4gTG9zIGRhdG9zIGRlbCBJUEMgYSBhbmFsaXphciB0aWVuZW4gY29tbyBhw7FvIGJhc2UgZGljaWVtYnJlIGRlIDIwMTYsIGFsIGN1YWwgbGUgY29ycmVzcG9uZGUgZWwgw61uZGljZSAxMDAuIExvcyBwcmVjaW9zIHNlIGVuY3VlbnRyYW4gY29uIGN1YXRybyBuaXZlbGVzIGRlIGFwZXJ0dXJhOgoKICAqIEdlbmVyYWw6IEluZGljZSBkZSBQcmVjaW9zIGRlIHRvZGEgbGEgY2FuYXN0YSBkZSBiaWVuZXMgeSBzZXJ2aWNpb3MgY29uc2lkZXJhZGEgZW4gZWwgYW7DoWxpc2lzCgogICogRXN0YWNpb25hbDogQmllbmVzIHkgc2VydmljaW9zIGNvbiBjb21wb3J0YW1pZW50byBlc3RhY2lvbmFsLiBQb3IgZWplbXBsbzogZnJ1dGFzIHkgdmVyZHVyYXMKCiAgKiBSZWd1bGFkb3M6IEJpZW5lcyB5IHNlcnZpY2lvcyBjdXlvcyBwcmVjaW9zIGVzdMOhbiBzdWpldG9zIGEgcmVndWxhY2nDs24gbyB0aWVuZW4gYWx0byBjb21wb25lbnRlIGltcG9zaXRpdm8uIFBvciBlamVtcGxvOiBlbGVjdHJpY2lkYWQKCiAgKiBOw7pjbGVvOiA6IFJlc3RvIGRlIGxvcyBncnVwb3MgZGVsIElQQwogIApQYXJhIG3DoXMgaW5mb3JtYWNpw7NuIHNvYnJlIGVsIElQQyBwdWVkZW4gdmlzaXRhciBsYSBzaWd1aWVudGUgcMOhZ2luYSBkZWwgSU5ERUM6IGh0dHBzOi8vd3d3LmluZGVjLmdvYi5hci9pbmRlYy93ZWIvTml2ZWw0LVRlbWEtMy01LTMxCgpMYSBiYXNlIGRlIGRhdG9zIGRlbCBkb2xhciB0aWVuZSBmcmVjdWVuY2lhIGRpYXJpYSB5IGNvbWllbnphIGVuIGp1bmlvIGRlIDIwMTUuIEN1ZW50YSBjb24gZWwgdGlwbyBkZSBjYW1iaW8gZGUgY29tcHJhIHkgdmVudGEgZGVsIGTDs2xhci4KCkVuIGxhIGNhcnBldGEgX19GdWVudGVzX18gc2UgZW5jdWVudHJhbiBsb3MgYXJjaGl2b3MgX19kb2xhcl9vZmljaWFsX2FtYml0by5jc3ZfXyB5IF9faXBjLW1lbnN1YWwuY3N2X18uCgojIyMgRMOzbGFyCgoxLiBMZWVyIGVsIGRhdGFzZXQKMi4gQ3JlYXIgbGEgdmFyaWFibGUgY290aXphY2nDs25fcHJvbWVkaW8sIHJlYWxpemFuZG8gZWwgcHJvbWVkaW8gZW50cmUgY29tcHJhIHkgdmVudGEgcGFyYSBjYWRhIGTDrWEKMy4gQ29udmVydGlyIGxhIHZhcmlhYmxlIGZlY2hhIGRlIHN0cmluZyBhIGRhdGV0aW1lLiBDcmVhciBsYXMgdmFyaWFibGVzIGRlIGHDsW8sIG1lcyB5IGTDrWEgCjQuIEdyYWZpY2FyIGxhIGV2b2x1Y2nDs24gZGlhcmlhIGRlIGxhIGNvdGl6YWNpw7NuIHByb21lZGlvCjUuIENyZWFyIHVuIGRhdGFmcmFtZSBjb24gbGEgbWVkaWFuYSBkZSBsYSBjb3RpemFjacOzbiBwcm9tZWRpbyBwYXJhIGNhZGEgYcOxbyB5IG1lcyAoZXN0YSBzZXLDoSBsYSBjb3RpemFjacOzbiBtZW5zdWFsIGRlbCBkw7NsYXIgb2ZpY2lhbCkKCiMjIyBJUEMKCjEuIExlZXIgZWwgZGF0YXNldCAKMi4gTW9kaWZpY2FyIGVsIGRhdGFzZXQgcGFyYSBxdWUgY3VtcGxhIGNvbiBsYSBkZWZpbmljacOzbiBkZSB0aWR5IGRhdGE6IGNhZGEgdmFyaWFibGUgZGViZSBzZXIgdW5hIGNvbHVtbmEgKEFwZXJ0dXJhLCBGZWNoYSBlIEluZGljZSkuICpQaXN0YSo6IHBpZW5zZW4gc2kgdGllbmVuIHF1ZSB1c2FyIGBwaXZvdF9sb25nZXJgIG8gYHBpdm90X3dpZGVyYAozLiBDcmVhciBsYXMgdmFyaWFibGVzIGZlY2hhLCBhw7FvLCBtZXMgeSBkw61hIAo0LiBHcmFmaWNhciBsYSBldm9sdWNpw7NuIGRlbCBuaXZlbCBnZW5lcmFsIGRlbCBJUEMKNS4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkZSBsb3MgNCBncnVwb3MKCiMjIyBJUEMgeSBEb2xhciAKCjEuIFJlYWxpemFyIHVuIGpvaW4gZGUgYW1ib3MgY29uanVudG9zIGRlIGRhdG9zIChkw7NsYXIgbWVuc3VhbCBlIElQQykgZGUgbWFuZXJhIHF1ZSBxdWVkZW4gbG9zIG1lc2VzIHBhcmEgbG9zIGN1w6FsZXMgaGF5IGRhdG9zIGRlIGFtYmFzIHZhcmlhYmxlcyAKMi4gQ3JlYXIgZWwgaW5kaWNlIGRlIGV2b2x1Y2nDs24gZGVsIGTDs2xhciBjb24gYmFzZSBlbiBEaWNpZW1icmUgZGUgMjAxNi4gTGEgZsOzbXVsYSBkZSBjYWxjdWxvIGEgdXRpbGl6YXIgZXM6CiRJbmRpY2VfdCA9IFxmcmFje2NvdGl6YWNpb25fdCAqIDEwMH17Y290aXphY2lvbl97ZGljMjAxNn19JAozLiBDYWxjdWxhciBsYSBtZWRpYSwgZWwgZGVzdsOtbyBlc3TDoW5kYXIsIGxhIG1lZGlhbmEgeSBlbCByYW5nbyBkZWwgaW5kaWNlIGRlbCBkw7NsYXIgeSBkZWwgSVBDIEdlbmVyYWwgcGFyYSBjYWRhIHVubyBkZSBsb3MgYcOxb3MKNC4gR3JhZmljYXIgbGEgZXZvbHVjacOzbiBkZWwgaW5kaWNlIGRlbCBkw7NsYXIgeSBkZWwgbml2ZWwgZ2VuZXJhbCBkZWwgSVBDIAo1LiBHcmFmaWNhciBsYSBldm9sdWNpw7NuIGRlbCBpbmRpY2UgZGVsIGTDs2xhciB5IGRlIGxvcyA0IGdydXBvcyBkZSBJUEMKCiMjIEVqZXJjaWNpbyAyOiBUcmFiYWpvIGNvbiBzdHJpbmdzIHkgZmVjaGFzCgpMaW1waWFyIHVuYSBiYXNlIHDDumJsaWNhIGRlIGF0YXF1ZXMgZGUgdGlidXJvbmVzIHBhcmEgbHVlZ28gcG9kZXIgaGFjZXIgYWxndW5vcyBhbsOhbGlzaXMgZXhwbG9yYXRvcmlvcwoKRW4gbGEgY2FycGV0YSBfX0Z1ZW50ZXNfXyBzZSBlbmN1ZW50cmEgZWwgYXJjaGl2byBfX2F0YXF1ZXNfdGlidXJvbmVzLmNzdl9fCgoxLmEgTGVlciBlbCBkYXRhc2V0CgoxLmIgU2VsZWNjaW9uYXIgbGFzIHZhcmlhYmxlcyAqYENhc2UgTnVtYmVyYCosICpEYXRlKiB5ICpDb3VudHJ5KgoKKipMaW1waWV6YSB2YXJpYWJsZSBwYWlzKioKCjIuIE9idGVuZXIgbG9zIHZhbG9yZXMgw7puaWNvcyBkZSBsYSB2YXJpYWJsZSAqQ291bnRyeSogKHBhw61zKS4gRXZhbHVhciBxdWUgcHJvYmxlbWFzIHByZXNlbnRhIGVzdGEgdmFyaWFibGUgcGFyYSBub3JtYWxpemFybGEKCjMuYS4gTGxldmFyIGxvcyBub21icmVzIGEgbWF5w7pzY3VsYQoKMy5iLiBRdWl0YXIgbG9zIGVzcGFjaW9zIGVuIGJsYW5jbyBhIGl6cXVpZXJkYSB5IGRlcmVjaGEKCjMuYy4gUXVpdGFyIGVsIHNpZ25vIGRlIHByZWd1bnRhIHF1ZSBhcGFyYWNlIGFsIGZpbmFsIGRlIGNpZXJ0b3Mgbm9tYnJlcwoKKipMaW1waWV6YSB2YXJpYWJsZSBmZWNoYSoqCgo0LiBSZXZpc2FyIGxhIHZhcmlhYmxlICpEYXRlKiB5IGV2YWx1YXIgcXXDqSBwcm9ibGVtYXMgcHJlc2VudGEgZXN0YSB2YXJpYWJsZSBwYXJhIG5vcm1hbGl6YXJsYQo1LiBFbGltaW5hciBsYSBwYWxhYnJhICJSZXBvcnRlZCAiIChjb24gc3UgZXNwYWNpbyBlbiBibGFuY28pIGRlIGxhIGZlY2hhCjYuIENvbnZlcnRpciBsYSB2YXJpYWJsZSBmZWNoYSBkZSBzdHJpbmcgYSBkYXRldGltZS4gQ3JlYXIgbGFzIHZhcmlhYmxlcyBkZSBhw7FvLCBtZXMgeSBkw61hIAoKKipHcsOhZmljb3MqKgoKNy4gUXVlZGFyc2UgY29uIGxvcyBhdGFxdWVzIGRlc2RlIGVsIGHDsW8gMTgwMCBlbiBhZGVsYW50ZQo4LiBDcmVhciB1biBkYXRhZnJhbWUgY29uIGxhIGNhbnRpZGFkIGRlIGF0YXF1ZXMgdG90YWxlcyBwb3IgcmVnacOzbiBkZXNkZSBlbCAxODAwIGVuIGFkZWxhbnRlCjkuIFJlYWxpemFyIHVuIGdyw6FmaWNvIGRlIGJhcnJhcyBwYXJhIGxvcyAyMCBwYcOtc2VzIGNvbiBtYXlvciBjYW50aWRhZCBkZSBhdGFxdWVzCjEwLiBSZWFsaXphciB1biBncsOhZmljbyBkZSBsYSBldm9sdWNpw7NuIGRlIGF0YXF1ZXMgcG9yIGHDsW8gZGVzZGUgMTgwMAoxMS4gUmVhbGl6YXIgdW4gZ3LDoWZpY28gZGVsIHRvdGFsIGRlIGF0YXF1ZXMgcG9yIG1lcyBwYXJhIEFVU1RSQUxJQSB5IFVTQSAoRXN0YWRvcyBVbmlkb3MpIHBhcmEgY29uc3RydWlyIGVsIGNpY2xvIGFudWFsIGRlIGF0YXF1ZXMgZW4gZXN0b3MgcGHDrXNlcwoKIyMgRWplcmNpY2lvIDM6IEVQSCAoT1BDSU9OQUwpCgpFbCBPYmpldGl2byBkZSBlc3RvcyBlamVyY2ljaW9zIGVzIHByYWN0aWNhciBlbCB1c28gZGVsICR0aWR5dmVyc2UkIHBhcmEgbGEgbWFuaXB1bGFjacOzbiBkZSBsb3MgZGF0b3MsIHkgJGdncGxvdCQgcGFyYSBncmFmaWNhciBsYSBpbmZvcm1hY2nDs24uIEVuIGxhcyBjb25zaWduYXMsIHNlIHByb3BvbmUgZGUgbWFuZXJhIGdlbmVyYWwgcXXDqSB2YXJpYWJsZXMgc2UgcXVpZXJlIG9ic2VydmFyLiBVc3RlZGVzIGRlYmVyw6FuIGxldmFudGFyIHkgcHJvY2VzYXIgbG9zIGRhdG9zIGRlIGxhIEVuY3Vlc3RhIFBlcm1hbmVudGUgZGUgSG9nYXJlcywgeSBncsOhZmljYXJsb3MgY29tbyBjb25zaWRlcmVuIHF1ZSBtZWpvciBzZSBhcHJlY2lhIGxhIHJlbGFjacOzbiBlbnRyZSBsYXMgdmFyaWFibGVzLiAgICAgCgpVbmEgX19heXVkYV9fIGVzIHV0aWxpemFyIGVsIFtkaXNlw7FvIGRlIHJlZ2lzdHJvXSguLi9GdWVudGVzL0VQSF9yZWdpc3Ryb18yX3RyaW1fMjAxNi5wZGYpIHBhcmEgY29kaWZpY2FyIGxhcyB2YXJpYWJsZXMKCiAgCl9fZWplcmNpY2lvc19fCgotIEdyYWZpY2FyIGxhIGRpc3RyaWJ1Y2nDs24gZGVsIGluZ3Jlc28gcG9yIG9jdXBhY2nDs24gcHJpbmNpcGFsIChwMjEpIHNlZ8O6biBjYXRlZ29yw61hIG9jdXBhY2lvbmFsIChDQVRfT0NVUCkuIChvcGNpb25hbDogdXRpbGl6YXIgbGEgbGlicmVyw61hIFtnZ3JpZGdlc10oaHR0cHM6Ly9jcmFuLnItcHJvamVjdC5vcmcvd2ViL3BhY2thZ2VzL2dncmlkZ2VzL3ZpZ25ldHRlcy9pbnRyb2R1Y3Rpb24uaHRtbCkpCgotIEluY29ycG9yYXIgZW4gZWwgZ3LDoWZpY28gYW50ZXJpb3IgbGEgY29uZGljacOzbiBkZSBwcmVjYXJpZWRhZCBsYWJvcmFsIChQUDA3SCkuCgotIFF1ZWRhcnNlIHPDs2xvIGNvbiBsb3MgYXNhbGFyaWFkb3MgKENBVF9PQ1VQID0gMyksIHkgZ3JhZmljYXIgbGEgcmVsYWNpw7NuIGVudHJlIGluZ3Jlc28gcG9yIG9jdXBhY2nDs24gcHJpbmNpcGFsKHAyMSksIHByZWNhcmllZGFkIGxhYm9yYWwgKFBQMDdIKSB5IHRhbWHDsW8gZGVsIGVzdGFibGVjaW1pZW50byhQUDA0Qzk5KS4KCi0gUXVlZGFyc2UgY29uIGxvcyBDdWVudGFwcm9waXN0YXMgeSBhc2FsYXJpYWRvcyAoQ0FUX09DVVAgPSAyIHkgMykgeSBjb21wYXJhciwgc2Vnw7puIGxhIGNvbmRpY2nDs24gZGUgcHJlY2FyaWVkYWQgbGFib3JhbCAoUFAwN0gpIGxhIGRpc3RyaWJ1Y2nDs24gZGVsIGluZ3Jlc28gc2Vnw7puIHNleG8gKENIMDQpCgotIEluY29ycG9yYXIgZW4gZWwgZ3LDoWZpY28gYW50ZXJpb3IgZWwgdGFtYcOxbyBkZWwgZXN0YWJsZWNpbWllbnRvKFBQMDRDOTkpCgoKX195YXBhOl9fIFNpIHF1aXNpZXJhbW9zIG1vZGVsYXIgbGEgcHJvYmFiaWxpZGFkIGRlIHVuIGV2ZW50byBwb2RlbW9zIHVzYXIgdW5hIHJlZ3Jlc2nDs24gbG9nw61zaXRjYSAoZW4gZ2dwbG90IGBgYHN0YXRfc21vb3RoKG1ldGhvZD0iZ2xtIiwgbWV0aG9kLmFyZ3M9bGlzdChmYW1pbHk9ImJpbm9taWFsIilgYGApLiAgICAgClV0aWxpY2VuIGVzdGUgbW9kZWxvIHBhcmEgaGFjZXIgdW4gZ3LDoWZpY28gcXVlIGVjaGUgbHV6IHNvYnJlIGVsIHNpZ3VpZW50ZSBmZW7Ds21lbm86IAoKLSDCv0PDs21vIHNlIGRpc3RyaWJ1eWUgbGEgcHJvYmFiaWxpZGFkIGRlIHF1ZXJlciB0cmFiYWphciBtw6FzIGhvcmFzIChQUDAzRykgc2Vnw7puIGVsIHRvdGFsIGRlIGhvcmFzIHRyYWJhamFkYXMgcG9yIHNlbWFuYSAoUFAzRV9UT1QpPyDCv0VzIGRpZmVyZW50ZSBlbCBtb2RlbG8gc2Vnw7puIHNleG8oQ0gwNCk/</div>
 
 
 </div>

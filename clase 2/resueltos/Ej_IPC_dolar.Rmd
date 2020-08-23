@@ -3,7 +3,7 @@ title: "Ejercicio Tidyverse"
 output: html_notebook
 ---
 
-```{r}
+```{r, echo=FALSE}
 #Librerias
 library(tidyverse)
 library(lubridate)
@@ -44,10 +44,12 @@ ggplot(dolar, aes(x=fecha, y=cotizacion_promedio,)) +
   theme_bw()
 ```
 
-5. Calcular la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)
+5. Crear un dataframe con la mediana de la cotización promedio para cada año y mes (esta será la cotización mensual del dólar oficial)
 
 ```{r}
-dolar_mensual = dolar %>% group_by(año, mes) %>% summarise(cotizacion_mensual = median(cotizacion_promedio))
+dolar_mensual = dolar %>% group_by(año, mes) %>%
+  summarise(cotizacion_mensual = median(cotizacion_promedio)) %>% 
+  ungroup() # Evitar que mantenga el grupo para otras operaciones
 glimpse(dolar_mensual)
 ```
 
@@ -61,7 +63,7 @@ ipc = read_csv('~/EEA-2020/Fuentes/ipc-mensual.csv')
 glimpse(ipc)
 ```
 
-2. Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). *Pista*: piensen si tienen que usar $spread$ o $gather$
+2. Modificar el dataset para que cumpla con la definición de tidy data: cada variable debe ser una columna (Apertura, Fecha e Indice). *Pista*: piensen si tienen que usar `pivot_longer` o `pivot_wider`
 
 ```{r}
 ipc = ipc %>% pivot_longer(-Apertura, names_to = "fecha", values_to = "indice")
@@ -109,22 +111,27 @@ ipc_dolar = ipc %>% inner_join(dolar_mensual, by=c('año', 'mes'))
 glimpse(ipc_dolar)
 ```
 
+2. Crear el indice de evolución del dólar con base en Diciembre de 2016. La fómula de calculo a utilizar es:
+$Indice_t = \frac{cotizacion_t * 100}{cotizacion_{dic2016}}$
+
 ```{r}
-ipc_dolar = ipc_dolar %>% mutate(indice_dolar = cotizacion_mensual * 100 / 15.9300)
+
+cotizacion_mes_base = dolar_mensual %>%
+  filter(mes==12, año==2016) %>%
+  pull(cotizacion_mensual) # Pull nos permite seleccionar el valor como un número, select lo traería como un dataframe 
+
+ipc_dolar = ipc_dolar %>% mutate(indice_dolar = cotizacion_mensual * 100 / cotizacion_mes_base)
 ```
 
-
-2. Calcular la media, el desvío estándar, la mediana y el rango del dólar y del IPC General para cada uno de los años
-
-Realizamos algunas estadísticas descriptivas por año y mes para el IPC general y para el tipo de cambio
+3. Calcular la media, el desvío estándar, la mediana y el rango del indice del dólar y del IPC General para cada uno de los años
 
 ```{r}
 resumen=ipc_dolar %>% filter(Apertura=="Nivel general") %>%
               group_by(año) %>% 
-              summarise(dolar_promedio=mean(cotizacion_mensual),
-                        desvio_dolar=sd(cotizacion_mensual),
-                        mediana_dolar=median(cotizacion_mensual),
-                        rango_dolar=max(cotizacion_mensual)-min(cotizacion_mensual),
+              summarise(dolar_promedio=mean(indice_dolar),
+                        desvio_dolar=sd(indice_dolar),
+                        mediana_dolar=median(indice_dolar),
+                        rango_dolar=max(indice_dolar)-min(indice_dolar),
                         ipc_promedio=mean(indice),
                         desvio_ipc=sd(indice),
                         mediana_ipc=median(indice),
@@ -133,31 +140,27 @@ resumen=ipc_dolar %>% filter(Apertura=="Nivel general") %>%
 resumen
 ```
 
-3. Graficar la evolución del dólar y del nivel general del IPC (tener en cuenta el rango de las variables)
-
-Como los rangos de las variables son muy diferentes, tenemos que utilizar un segundo eje.
+4. Graficar la evolución del indice del dólar y del nivel general del IPC 
 
 ```{r}
 ggplot()+
-  geom_line(data = ipc_dolar %>% filter(Apertura=="Nivel general"),aes(x=fecha,y=indice, color ="Nivel general"))+
+  geom_line(data = ipc_dolar %>% filter(Apertura=="Nivel general"),aes(x=fecha,y=indice, color ="IPC Nivel general"))+
   geom_line(data = ipc_dolar,aes(fecha,indice_dolar, color ="Dolar"))+
-  labs(x="Fecha", y="IPC", title="Evolución del IPC y Dolar")+
-  theme_bw()+
-  scale_y_continuous(sec.axis = sec_axis(~., name = "Dolar"))
+  scale_colour_manual("Variable",values=c("darkgreen", "steelblue"))+
+  labs(x="Fecha", y="Indice", title="Evolución del IPC y Dolar")+
+  theme_bw()
 
 ```
 
-4. Graficar la evolución del dólar y de los 4 grupos de IPC
-
+5. Graficar la evolución del dólar y de los 4 grupos de IPC
 
 ```{r}
 ggplot()+
-  geom_line(data = ipc_dolar,aes(fecha,indice))+
-  geom_line(data = ipc_dolar,aes(fecha,indice_dolar, color ="Dolar"))+
-  scale_y_continuous(sec.axis = sec_axis(~., name = "Dolar"))+
-  scale_colour_manual("Color",values=c("darkgreen"))+
+  geom_line(data = ipc_dolar,aes(x=fecha,y=indice))+
+  geom_line(data = ipc_dolar,aes(x=fecha,y=indice_dolar, color ="Dolar"))+
+  scale_colour_manual("Variable",values=c("darkgreen"))+
   theme_bw()+
-  labs(x="Fecha", y="IPC", title="Evolución del IPC y Dolar por grupo")+
+  labs(x="Fecha", y="Indice", title="Evolución del IPC y Dolar por grupo")+
   facet_wrap(.~Apertura)
 
 ```
