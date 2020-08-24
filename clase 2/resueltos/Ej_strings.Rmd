@@ -1,13 +1,21 @@
 ---
-title: "Ejercicio 2: Strings"
+title: 'Ejercicio 2: Strings'
 author: "Juan Barriola y Sofía Perini"
 date: "12 de Septiembre de 2020"
-output: 
-  html_notebook: 
-    toc: true
-    toc_float: true
-    depth: 2
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
 ---
+
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 ```{r, echo=FALSE}
 library(tidyverse)

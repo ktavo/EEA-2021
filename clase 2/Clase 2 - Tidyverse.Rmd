@@ -9,6 +9,14 @@ output:
     depth: 2
 ---
 
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
 # [Tidyverse](https://www.tidyverse.org/)          
 
 Este paquete agrupa una serie de paquetes que tienen una misma lógica en su diseño y por ende funcionan en armonía. Primero vamos a ver algunos de los principales comandos y luego vamos a ver algunos ejemplos de cómo podemos usar las funciones de este paquete. 
@@ -22,7 +30,7 @@ Entre ellos principalmente usaremos:
 
 A continuación cargamos la librería a nuestro ambiente. Para ello debe estar previamente instalada en nuestra pc o se instala con ```install.packages()```.
 
-```{r message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(lubridate) # para trabajar con fechas
 ```

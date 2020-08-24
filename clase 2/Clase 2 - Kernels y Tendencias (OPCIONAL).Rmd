@@ -9,6 +9,14 @@ output:
     depth: 2
 ---
 
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
 ### Kernels (OPCIONAL)
 
 Podemos hacer una nueva versión del gráfico 2. Utilizando un procesamiento similar al que hicimos antes.
@@ -54,7 +62,6 @@ ggplot(datagraf2, aes(
   theme(legend.position = "bottom",
         plot.title      = element_text(size=12))+
   facet_wrap(~ CH04, scales = "free") # se distingue por sexo
-ggsave(filename = "Resultados/Kernel_1.png", scale = 2)
 ```
 
 En este tipo de gráficos, importa mucho qué variable se utiliza para _facetear_ y qué variable para agrupar, ya que la construcción de la distribución es diferente. 
@@ -75,8 +82,6 @@ ggplot(datagraf2, aes(
   theme(legend.position = "bottom",
         plot.title      = element_text(size=12))+
   facet_wrap(~Tipo_ingreso, scales = "free") # se separa por ingreso
-
-ggsave(filename = "Resultados/Kernel_2.png", scale = 2)
 
 ```
 
@@ -168,8 +173,6 @@ ggplot(ggdata, aes(CH06, P21, colour = Establecimiento, weight = PONDIIO)) +
   subtitle = 'Según edad, nivel educativo, sexo y tipo de establecimiento') +
   theme_minimal()+
   facet_grid(Sexo ~ NIVEL_ED)
-
-ggsave(filename = "Resultados/regresion lineal.png", scale = 2)
 
 ```
 
