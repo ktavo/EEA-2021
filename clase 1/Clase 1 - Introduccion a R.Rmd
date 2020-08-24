@@ -1,12 +1,21 @@
 ---
 title: Introducción a R
-output:
-  html_notebook:
-    toc: yes
-    toc_float: yes
-date: 05-09-2020
+author: "Juan Barriola y Sofía Perini ^[Basado en la [clase](https://diegokoz.github.io/EEA2019/clase%201/Clase%201-%20Introduccion.nb.html) de Juan Barriola y Diego Kozlowski]"
+date: "5 de Septiembre de 2020"
+output: 
+  html_notebook: 
+    toc: true
+    toc_float: true
+    depth: 2
 ---
 
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 ![https://cran.r-project.org/](Rlogo.png){width=100}
 
@@ -57,7 +66,7 @@ A+6
 
 Al correr una linea con el nombre del objeto, la consola del programa nos muestra su contenido. Entre corchetes observamos el número de orden del elemento en cuestión. Si corremos una operación, la consola nos muestra el resultado de la misma.
 
-El operador __```=```__ es __equivalente__ a __```<-```__, pero en la práctica no se utiliza para la definición de objetos.   
+El operador __```=```__ es __equivalente__ a __```<-```__.   
 
 ```{r}
 B = 2
@@ -405,6 +414,4 @@ Para crearlo, vamos al logo de nuevo projecto (Arriba a la derecha de la panatal
 - __Script__: Es un archivo de texto plano, donde podemos poner el código que utilizamos para preservarlo
 - __Rnotebook__: También sirve para guardar el código, pero a diferencia de los scripts, se puede compilar, e intercalar código con resultados (este archivo es un rnotebook)
 - __Rproject__: Es un archivo que define la metadata del proyecto
-- __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
-
 - __RDS y Rdata__: Dos formatos de archivos propios de R para guardar datos. 
