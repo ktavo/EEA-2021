@@ -1,7 +1,7 @@
 ---
 title: "Regresión Lineal Simple"
 author: "Juan Barriola y Sofía Perini"
-date: "12 de Septiembre de 2020"
+date: "19 de Septiembre de 2020"
 output:
   html_notebook:
     theme: spacelab
@@ -10,113 +10,334 @@ output:
     df_print: paged
 ---
 
-# Encuesta de Sueldos en el sector IT
+## Base de Datos: Encuesta de Sueldos en el sector IT
 
 Vamos a trabajar con un dataset de openqube^[https://openqube.io/encuesta-sueldos-2020.01#Introduccion%20%20%20https://docs.google.com/spreadsheets/d/e/2PACX-1vTORpz5hc_wOwKdaKEIgVOAI3XVTh9WXB__C2abe_E0aJoYIoqhWQ-HTpBBryAByhIlX_booioqxK0T/pub?gid=1893349211&single=true&output=csv] sobre empleos en el sector IT.
 
-```{r}
+```{r, warning=F}
 library(data.table)
 library(tidyverse)
 library(readxl)
+library(lubridate)
+library(corrr)
+library(knitr)
+library(kableExtra)
+library(GGally)
+library(RColorBrewer)
+```
+
+### Preparación de Datos
+
+```{r}
+# leo la base
 encuesta <- read_csv("../Fuentes/Encuesta de remuneracion salarial - 2020.1.csv")
+# inspecciono el contenido
 encuesta %>%
   glimpse()
+# 5.982 observaciones y 70 columnas
 encuesta %>%
   head(10)
+unique(encuesta$`Estoy trabajando en`) # solo Argentina aparece
+unique(encuesta$`Dónde estás trabajando`) # en qué parte del país
+# unique(encuesta$`Trabajo de`)
+
 ```
 
 ### Filtros 
 
-Se filtran las variables de interes.
+Se seleccionan las variables de interes.
 
 ```{r}
-df1 <- encuesta[,c(1:5,24:31,47:49)]
-
-library(lubridate)
-class(df1$Timestamp)
-ymd_hms(df1$Timestamp)
-
+df1 <- encuesta[,c(1:5,24:31,35,47:49)] # me quedo con 17 variables 
+df1 %>%
+  summary()
 ```
 
 Aplicar filtros: 
 
-- Donde estás trabajando: GBA y CABA. 
-- Anos de experiencia <= 10
+- Tipo de contrato = Full-Time
 
 ```{r}
-df1 %>%
-  summary()
-
-
 df2 <- df1 %>%
-  filter(`Dónde estás trabajando` %in% c("Ciudad Autónoma de Buenos Aires", "GBA"), `Años de experiencia` <= 10)
-
-df2 %>%
-  head(5)
-
-dim(df2)
+  filter(`Tipo de contrato` == "Full-Time")
+dim(df2) # me quedo con 5068 registros
 ```
 
-### Chequeo valores unicos y faltantes 
+### Análisis exploratorio
+
+#### Valores unicos y faltantes. 
+
+Chequeamos presencia de valores faltantes y distribución de variables analizando los valores únicos.
 
 ```{r}
-tabla2 <- df2 %>% gather(.,
-                         key   = Variables,
-                         value = Valores) %>% 
+tabla2 <- df2 %>%
+  gather(., 
+         key = "Variables", 
+         value = "Valores") %>%
   group_by(Variables) %>% 
   summarise(Valores.unicos = length(unique(Valores)), Valores.faltantes = sum(is.na(Valores)))
 # ordeno la tabla por valores faltantes y luego unicos.
-tabla2 %>% arrange(Valores.faltantes, Valores.unicos)
+tabla2 %>% 
+  arrange(Valores.faltantes, Valores.unicos)
 ```
 
-### Chequeo Outliers Univariados
+Elimino observaciones con salario neto nulo. Quedan 4899 observaciones. 
 
 ```{r}
-df2[,c(3,6:9,15:16)] %>%
-  gather(.,
-         key = Variables, 
-         value = Valores) %>% 
-  ggplot(aes(x = Variables, y = Valores)) + 
+df2 <- df2 %>%
+  filter(!is.na(`Salario mensual NETO (en tu moneda local)`)) 
+df2 %>%
+  glimpse()
+table(df2$`Me identifico`) # clases desbalanceadas, mayoría hombres
+```
+
+#### Outliers
+
+Analizamos presencia de outliers univariados. 
+
+```{r, warning=F}
+df2[,c(3,6:9,16,17)] %>%
+  pivot_longer(cols = 1:ncol(df2[,c(3,6:9,16,17)]),
+         names_to = "Variables", 
+         values_to  = "Valores") %>% 
+  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
   geom_boxplot(alpha = 0.5) + 
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
   facet_wrap( ~ Variables, scales = "free")
 ```
 
-Me quedé acá. Tendría que eliminar outliers y luego chequear correlación y demás!!! 
+Eliminamos aquellas observaciones que corresponden a datos atípicos mal cargados, dado que están fuera del rango de las variables. También se podría optar por corregir esos datos si existe información suficiente como para chequear y corregir el número. Dependiendo el interés/tiempo y el problema en estudio, habría que análizar qué es más conveniente, dependiendo también de la cantidad de datos con que se cuente.
 
-### Chequeo correlación
+Por ejemplo, eliminamos los valores atípicos que no corresponden al rango de las variables de años en la empresa o puesto actual que superan a los años de experiencia total (máximos menores a 50 anos). 
 
 ```{r}
-library(corrr)
-library(knitr)
-library(kableExtra)
-library(GGally)
+# eliminamos los valores atípicos que no corresponden al rango de las variables 
+df2 <- df2 %>%
+  filter(`Años en la empresa actual` < 50, `Años en el puesto actual` < 50)
+# ver los que tienen salario neto mayor al bruto (se trata de un error)
+# creamos variables salario_neto y salario_bruto con datos redondeados
+df2 <- df2 %>%
+  mutate(salario_bruto = round(`Salario mensual BRUTO (en tu moneda local)`), salario_neto = round(`Salario mensual NETO (en tu moneda local)`))
+df2 %>%
+  filter(salario_bruto < salario_neto) %>%
+  mutate(dif = salario_neto - salario_bruto) # calculamos las diferencias 
+# 125 observaciones con datos mal cargados
+# eliminamos registros erróneos y nos quedamos solo con los salarios brutos mayores a netos
+df2 <- df2 %>%
+  filter(salario_bruto > salario_neto)
+```
 
-# calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
+Vovlemos a graficar boxplots paralelos para chequear si aún existen outliers. Se observa aún la presencia de valores atípicos en la variable salario_bruto. 
 
+```{r}
+df2[,c(3,6:9,16,17)] %>%
+  pivot_longer(cols = 1:ncol(df2[,c(3,6:9,16,17)]),
+         names_to = "Variables", 
+         values_to  = "Valores") %>% 
+  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
+  geom_boxplot(alpha = 0.5) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  facet_wrap( ~ Variables, scales = "free")
+# veo diferencias entre salario bruto y neto
+df2 <- df2 %>%
+  mutate(dif = salario_bruto - salario_neto)
+# filtro aquellas mayores a 200000
+df2 %>%
+  filter(dif > 200000)
+# elimino esos datos atípicos 
+df2 <- df2 %>%
+  filter(dif < 200000)
+```
+
+#### Creación de variables
+
+Para trabajar con el nivel educativo alcanzado, unifico las variables nivel de estudios y estado. 
+
+Reduzco a 4 categorías el nivel educativo (posgrado incluye posdoc y doc). 
+
+```{r}
+unique(df2$`Nivel de estudios alcanzado`)
+unique(df2$Estado)
+# creo nueva variable nivel_educativo de 4 categorías, unificando posgrado en una sola
+df2 <- df2 %>% 
+  mutate(nivel_educativo = case_when(`Nivel de estudios alcanzado` %in% c("Posgrado", "Posdoctorado", "Doctorado") ~ "Posgrado", 
+                                     TRUE ~ `Nivel de estudios alcanzado`)) 
+# unifico nivel educativo y estado 
+df2 <- df2 %>% 
+  mutate(nivel_edu_alcanzado = paste0(nivel_educativo, " ", Estado))
+unique(df2$nivel_edu_alcanzado) # quedan 12 categorías
+```
+
+
+#### Correlación
+
+Calculamos la matriz de correlacion para los registros completos (omitiendo faltantes) y para variables numéricas con ambos métodos (Pearson y Spearman). Hay diferencias?
+
+```{r}
 # pearson
-matriz.correl.pe <- df2[,c(3,6:9,15:16)] %>% 
+matriz.correl.pe <- df2[,c(3,6:9,18:19)] %>% 
  correlate(use = "complete.obs", method = "pearson") %>% 
   shave() %>% 
   fashion()
 matriz.correl.pe
-
 # spearman
-matriz.correl.sp <- df2[,c(3,6:9,15:16)] %>% 
- correlate(use = "complete.obs", method = "spearman") 
+matriz.correl.sp <- df2[,c(3,6:9,18:19)] %>% 
+ correlate(use = "complete.obs", method = "spearman") %>% 
+  shave() %>% 
+  fashion()
 matriz.correl.sp
-
-df2[,c(3,6:9,15:16)] %>%
-   ggpairs(., 
-        title = "Matriz de correlaciones",
-        mapping = aes(colour = df2$`Dónde estás trabajando`))
 ```
 
-Usemos el test de correlación de Spearman
+* Como era de esperar la asociación lineal entre salario bruto y neto es casi perfecta (0.96). 
+
+Graficamos Correlograma con Ggpairs, distinguiendo por identificación sexual
 
 ```{r}
-# cor.test(mtcars2$gear,mtcars2$drat, method = "pearson")
-# cor.test(mtcars2$gear,mtcars2$drat, method = "spearman")
+df2[,c(3,6:9,18:19)] %>%
+     ggpairs(.,  mapping = aes(colour = df2$`Me identifico`),
+        title = "Matriz de correlaciones")
 ```
 
-Noten que el test de Spearman ya no da tan significativo como el de Pearson
+#### Scatter plots
+
+Graficamos salario bruto y neto antes y después de tratamiento de outliers. 
+
+```{r, warning=F}
+df1 %>%
+  ggplot(aes(y = `Salario mensual NETO (en tu moneda local)`, x = `Salario mensual BRUTO (en tu moneda local)`)) + 
+  geom_point()
+df2 %>%
+  ggplot(aes(y = salario_neto, x = salario_bruto)) + 
+  geom_point()
+```
+
+Graficamos salario bruto y anos de experiencia. 
+
+```{r}
+df2 %>%
+  ggplot(aes(y = salario_bruto, x = `Años de experiencia`)) + 
+  geom_point()
+```
+
+Graficamos salario bruto y nivel educativo. 
+
+```{r, warning=F}
+df2 %>%
+  ggplot(aes(y = salario_bruto, fill = nivel_edu_alcanzado)) + 
+  geom_boxplot() +
+  labs(title = "Boxplots de salario por nivel educativo alcanzado") +
+  theme(legend.position = 'none') +
+  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(12)) +
+  scale_y_continuous() +
+  facet_wrap(~ nivel_edu_alcanzado)
+```
+
+## Modelo Lineal Simple^[Fuente: Apunte de Regresión Lineal - María Eugenia Szretter Noste] 
+
+El modelo lineal (simple pues sólo vincula una variable predictora con Y) propone que:
+
+$$
+Y = \beta_0 + \beta_1X + \epsilon
+$$
+donde $\epsilon$ es el término del error, $\beta_0$ y $\beta_1$ son constantes desconocidas que se denominan parámetros del modelo, o coeficientes de la ecuación. El modelo se denomina lineal pues propone que la Y depende linealmente de X. 
+
+El modelo en términos de las observaciones (Xi; Yi):
+
+$$
+Y_i = \beta_0 + \beta_1X_i + \epsilon_i
+$$
+donde $\epsilon_i$ es el término del error para el individuo i-ésimo, que no es observable.
+
+### Supuestos del modelo lineal
+
+Se pueden resumir como $\epsilon_i$ ~ $N(0,\sigma^2)$ 1<i<n, independientes entre sí.
+
+El modelo en términos de la esperanza de Y condicional a las X's que notaremos
+E(Y|X):
+
+$$
+E(Y|X) = \beta_0 + \beta_1X
+$$
+
+Se la suele llamar función de respuesta, es una recta.
+
+### Ajuste del Modelo
+
+Se quiere ajustar un modelo para el salario bruto en función de los años de experiencia. 
+
+$$ \hat{Y} = \hat{\beta_0} + \hat{\beta_1}X $$
+```{r, warning=F}
+# ajustamos modelo lineal simple
+lm1 <- lm(salario_bruto ~ `Años de experiencia`, df2) 
+lm1 %>%
+  summary()
+# graficamos la recta ajustada
+ggplot(df2, aes(x = `Años de experiencia`, y = salario_bruto)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = T, col = "dodgerblue") + 
+  theme_minimal() 
+```
+
+La recta ajustada a esos datos es:
+
+$$ \hat{Y} =  61.270,2 + 3.143,9X $$
+Es decir, la ordenada al origen estimada resulta ser 61.270,2 y la pendiente de la recta estimada es 3.143,9. 
+
+### Significado de los coeficientes estimados 
+
+El valor de la ordenada al origen es el valor de salario bruto esperado para alguien sin experiencia laboral (0 años de experiencia). La pendiente de la recta es 3.143,9, lo que implica que por cada año adicional de experiencia, el sueldo bruto aumenta $3.143,9 en promedio. 
+
+### Intervalos de Confianza y de Predicción
+
+Calculemos los intervalos de confianza de nivel 0,95 para $E(Y_h/X = x_h)$ y de predicción para una nueva observación $Y_h$ realizada cuando $X = x_h$.
+
+¿Cuál es mayor? ¿Por qué?
+
+```{r}
+# armamos un data frame con nuevos datos de ejemplo
+nuevos_datos <- c(5,17,23) # anos de experiencia
+nuevos_datos <- data.frame(nuevos_datos) %>%
+  rename("Años de experiencia" = nuevos_datos)
+# calculamos intervalos de confianza y predicción
+IC <- predict(lm1, newdata = nuevos_datos, interval = "confidence", level = 0.95)
+IP <- predict(lm1, newdata = nuevos_datos, interval = "prediction", level = 0.95)
+IC
+IP
+```
+
+* **Estimación** (es decir, el cálculo del intervalo de confianza para la esperanza de Y condicional al valor de X $E(Y_h/X = x_h)$): Es una regla para calcular a partir de los datos un valor que nos permita "adivinar" el valor que puede tomar un parámetro poblacional, en este caso, la esperanza de Y cuando la variable X toma el valor $x_h$. En el ejemplo, el parámetro es el sueldo bruto medio de todos los empleados con $x_h$ (por ejemplo, 5) anos de experiencia.
+* **Predicción** (es decir, el cálculo del intervalo de predicción de una nueva observación $Y_h$(nueva) medida cuando $X = x_h$): Es una regla para calcular a partir de los datos un valor que nos permita "adivinar" el valor que puede tomar una variable aleatoria.
+
+```{r}
+# armamos data frame con datos de intervalo de predicción
+new_df <- cbind(df2[,c("salario_bruto", "Años de experiencia")], predict(lm1, interval = "prediction"))
+# graficamos la recta ajustada con los IP e IC. 
+ggplot(new_df, aes(x = `Años de experiencia`, y = salario_bruto)) + 
+  geom_point() +
+  # agregamos rectas de intervalo de predicción 0.95
+  geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+  geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+  # recta ajustada con intervalo de confianza de 0.95
+  geom_smooth(method = "lm", se = T, col = "dodgerblue") + 
+    theme_minimal()
+```
+
+Verificamos el valor de los intervalos con el ejemplo anterior. ¿Coinciden? Si. 
+
+```{r, warning=F}
+ggplot(df2, aes(y = salario_bruto, x = `Años de experiencia`, colour = `Me identifico`, shape =  `Me identifico`)) +
+  geom_smooth(method = "lm") + 
+  labs(x = 'Años de experiencia',
+    y = "Salario Bruto", 
+    title = 'Salario bruto según años de experiencia',
+    subtitle = 'Según años, sexo y nivel educativo') +
+  theme_minimal()+
+  scale_alpha(guide = FALSE)+
+  facet_grid(. ~ nivel_educativo)
+```
+
+```{r}
+
+
+```
+

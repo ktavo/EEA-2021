@@ -1,11 +1,13 @@
 ---
-title: "Clase 3 - PURRR"
+title: "PURRR"
 author: "Juan Barriola y Sofía Perini"
-date: ""
+date: "19 de Septiembre de 2020"
 output:
   html_notebook:
+    theme: spacelab
     toc: yes
     toc_float: yes
+    df_print: paged
 ---
 
 Librerias que se utilizan en esta clase:
