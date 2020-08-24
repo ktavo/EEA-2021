@@ -8,6 +8,14 @@ output:
     toc_float: yes
 ---
 
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
 ## Ejercicio 1
  
 #### 1) Dataset state.x77

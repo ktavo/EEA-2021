@@ -8,11 +8,13 @@ output:
     toc_float: yes
 ---
 
-Librerias que se utilizan en esta clase:
-
-```{r message=FALSE, warning=FALSE}
-library(tidyverse)
-```
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 # Loops
 
