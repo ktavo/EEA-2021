@@ -1,12 +1,33 @@
 ---
-title: "Ejercicio Tidyverse"
-output: html_notebook
+title: "Ejercicio 1: Tidyverse"
+author: "Juan Barriola y Sofía Perini"
+date: "12 de Septiembre de 2020"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
 ---
 
-```{r, echo=FALSE}
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+```{r}
 #Librerias
 library(tidyverse)
 library(lubridate)
+
+```
+
+
+```{r}
+?options
 ```
 
 ### Dólar
@@ -15,7 +36,7 @@ library(lubridate)
 
 Realizamos la lectura de los datasets y miramos su estructura
 
-```{r}
+```{r, message=FALSE}
 dolar = read_csv(file='~/EEA-2020/Fuentes/dolar_oficial_ambito.csv')
 glimpse(dolar)
 ```
