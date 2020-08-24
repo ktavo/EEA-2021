@@ -1,5 +1,5 @@
 ---
-title: "Ejercicio Tidyverse"
+title: "Ejercicio 1: Tidyverse"
 author: "Juan Barriola y Sofía Perini"
 date: "12 de Septiembre de 2020"
 output:
