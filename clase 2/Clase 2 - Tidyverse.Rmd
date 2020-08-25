@@ -3,30 +3,37 @@ title: "Clase 2. Tidyverse y Ggplot"
 author: "Juan Barriola y Sofía Perini ^[Basado en la [clase](https://diegokoz.github.io/EEA2019/clase%202/Clase%202-%20Tidyverse.nb.html) de Juan Barriola y Diego Kozlowski]"
 date: "12 de Septiembre de 2020"
 output: 
-  html_notebook: 
-    toc: true
+  html_document:
+    df_print: paged
+    toc: yes
     toc_float: true
     depth: 2
 ---
+
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 # [Tidyverse](https://www.tidyverse.org/)          
 
 Este paquete agrupa una serie de paquetes que tienen una misma lógica en su diseño y por ende funcionan en armonía. Primero vamos a ver algunos de los principales comandos y luego vamos a ver algunos ejemplos de cómo podemos usar las funciones de este paquete. 
 
-Entre ellos principalmente usaremos __dplyr__ y __tidyr__ para realizar transformaciones sobre nuestro set de datos, __lubridate__ para trabajar con datos tipo fecha, __stringr__ para trabajar con datos tipo string y  __ggplot__ para realizar gráficos
+Entre ellos principalmente usaremos:
+
+* [__dplyr__](https://dplyr.tidyverse.org/) y [__tidyr__](https://tidyr.tidyverse.org/) para consultar, realizar transformaciones y agregaciones sobre los sets de datos
+* [__lubridate__](https://lubridate.tidyverse.org/) para trabajar con datos tipo fecha
+* [__stringr__](https://stringr.tidyverse.org/) para trabajar con datos tipo string
+* [__gplot2__](https://ggplot2.tidyverse.org/) para realizar gráficos
 
 A continuación cargamos la librería a nuestro ambiente. Para ello debe estar previamente instalada en nuestra pc o se instala con ```install.packages()```.
 
-```{r,eval=FALSE, echo=F}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
-```
-
-```{r message=FALSE, warning=FALSE}
-library(dplyr)
-library(tidyr)
-library(ggplot2) # para graficar
 library(lubridate) # para trabajar con fechas
-library(stringr) # para trabajar con strings
 ```
 
 
@@ -52,7 +59,7 @@ Datos
 
 ```
 
-## Dplyr
+## [Dplyr](https://dplyr.tidyverse.org/)
 
 El caracter principal para utilizar este paquete es ```%>%``` , _pipe_ (de tubería).
 
@@ -123,7 +130,7 @@ Permite definir una variable, la cual toma un valor particular para cada condici
 
 En caso de no cumplir ninguna de las condiciones establecidas la variable tomara valor __NA__
 
-La sintaxis de la función es  ```case_when( _condicion lógica1_ __~__ _valor asignado1_, _condicion lógica2_ __~__ _valor asignado2_) ```.
+La sintaxis de la función es  ```case_when(condicion lógica1 ~ valor asignado1, condicion lógica2 ~ valor asignado2)```.
 
 ```{r}
 Datos <- Datos %>% 
@@ -132,7 +139,7 @@ Datos <- Datos %>%
 Datos
 ```
 
-Una forma de manejar la asignación de valores faltantes es crear una "condición" que sea igual a TRUE. Esto funciona como la parte de **else** de una estructura condicional y la sintaxis es ```case_when(_condicion lógica1_ __~__ _valor asignado1_, _TRUE_ __~__ _valor asignado en caso de no cumplirse la/s condicion/es previas_)```.
+Una forma de manejar la asignación de valores faltantes es crear una "condición" que sea igual a TRUE. Esto funciona como la parte de **else** de una estructura condicional y la sintaxis es ```case_when(condicion lógica1 ~ valor asignado1, TRUE ~ valor asignado en caso de no cumplirse la/s condicion/es previas)```.
 
 ```{r}
 Datos %>% 
@@ -223,18 +230,30 @@ Datos_Indice_Gral <- Datos_join %>%
 Datos_Indice_Gral
 ```
 
-## Tidyr
+## [Tidyr](https://tidyr.tidyverse.org/)
 
-El paquete tidyr esta pensado para facilitar el emprolijamiento de los datos.
+El paquete tidyr esta pensado para "emprolijar los datos". Tiene un conjunto de funciones para implementar las nociones de Tidy Data desarrolladas por Hadley Wickham en su [paper](http://www.jstatsoft.org/v59/i10/paper).
 
-__Gather__ es una función que nos permite pasar los datos de forma horizontal a una forma vertical. 
+En el enfoque de *tidy data*:
 
-__spread__ es una función que nos permite pasar los datos de forma vertical a una forma horizontal.
+1. Cada variable conforma una columna
+2. Cada observación conforma una fila
+3. Cada tipo de unidad observacional conforma una tabla 
 
-![Fuente: http://www.gis-blog.com/data-management-with-r-tidyr-part-1/](spreadVSgather.png)
+Veremos dos funciones muy útiles para trabajar con este enfoque:
+
+__pivot_longer__ (previamente __gather__): es una función que nos permite pasar los datos de forma horizontal a una forma vertical. 
+
+__pivot_wider__ (previamente __spread__): es una función que nos permite pasar los datos de forma vertical a una forma horizontal.
+
+La funcionalidad es similar entre estas dos versiones, aunque __pivot_longer__ y __pivot_wider__ corresponden a un enfoque actualizado de las otras funciones, diseñado para ser más simple de usar y para manejar más casos de uso. Cabe destacar, que __gather__ y __spread__ ya no cuentan con mantenimiento y los autores de la librería recomiendan enfáticamente el uso de las nuevas versiones.
+
+![Fuente: https://fromthebottomoftheheap.net/2019/10/25/pivoting-tidily/](original-dfs-tidy.png){width=500}
+
+En la siguiente tabla (iris) cada observación es una planta con la medición del largo y ancho de su sépalo y pétalo y el tipo de especie a la cual pertenece.
 
 ```{r}
-# Utilzamos un conjunto de datos que viene con la librería datasets
+# Utilizamos un conjunto de datos que viene con la librería datasets
 library(datasets)
 data(iris)
 iris <- iris %>% 
@@ -243,31 +262,31 @@ iris <- iris %>%
 iris
 ```
 
-### Gather 
+### Pivot_longer (ex gather) 
+
+Ahora se considera que cada observación es la medición de cada uno de los 4 atributos de la planta para cada una de las plantas, entonces deberíamos "pivotear" la tabla para tener el tipo de medición como una variable.
 
 ```{r}
 iris_vertical <- iris %>% 
-  gather(., # el . llama a lo que esta atras del %>% 
-         key = Variables, # la llave es la columna que agrupará variables 
-         value = Valores, # columna de valores
-         2:5) # le indico que columnas juntar
+                    pivot_longer(cols = c(Sepal.Length, Sepal.Width, Petal.Length,Petal.Width), # Columnas a pivotear al formato "largo
+                                 names_to = "tipo_medicion", # nombre de la nueva columna sobre la que pivoteo el dataframe
+                                 values_to = "valor" # nombre de la nueva columna de valores
+                                )
 iris_vertical
 ```
 
-### Spread
+### Pivot_wider (ex spread)
 
-Podemos deshacer el __gather__ con un __Spread__
+Podemos deshacer el __pivot_longer__ con un __pivot_wider__
 
 ```{r}
 iris_horizontal <- iris_vertical %>%
-  spread(. ,
-         # la llave es la variable que va a dar los nombres de columna
-         key   = Variables, 
-         value = Valores) # los valores con que se llenan las celdas
+                      pivot_wider(names_from = tipo_medicion, # nombre de la variable a expandir
+                                  values_from = valor) # nombre de la columna con valores
 iris_horizontal
 ```
 
-## Lubridate
+## [Lubridate](https://lubridate.tidyverse.org/)
 
 El paquete lubridate está pensado para trabajar con los datos tipo fecha(date) o fecha-hora(datetime) para cambiarles el formato, realizar operaciones y extraer información.
 
@@ -324,9 +343,11 @@ fecha + days(2)
 fecha - (weeks(1) + hours(2))
 ```
 
-## Stringr: manejo de strings ^[Basado en la [clase](https://jmbarriola.github.io/ATR-2019/Clase%205/clase5_strings_y_fechas.nb.html) de Milena Dotta y Juan Barriola]
+## [Stringr](https://stringr.tidyverse.org/)
 
-Vamos a usar un paquete muy útil para manejar variables de tipo string, es decir, variables de texto, llamado ```stringr()```. Este paquete cuenta con una cheat sheet que pueden consultar siguiendo este link.
+Basado en la [clase](https://jmbarriola.github.io/ATR-2019/Clase%205/clase5_strings_y_fechas.nb.html) de Milena Dotta y Juan Barriola
+
+Vamos a usar un paquete muy útil para manejar variables de tipo string, es decir, variables de texto, llamado ```stringr()```. Este paquete cuenta con una cheat sheet que pueden consultar siguiendo este [link](http://edrub.in/CheatSheets/cheatSheetStringr.pdf).
 
 ### str_length
 
@@ -475,7 +496,7 @@ str_detect(pattern = "ñ", string = string7)
 ```
 
 
-## [Ggplot2](http://ggplot2.tidyverse.org/reference/)
+## [Ggplot2](https://ggplot2.tidyverse.org/)
 
 `ggplot` tiene su sintaxis propia. La idea central es pensar los gráficos como una sucesión de capas, que se construyen una a la vez.    
 
@@ -490,7 +511,7 @@ str_detect(pattern = "ñ", string = string7)
     - Escalas de los ejes ```scale_y_continuous```,```scale_x_discrete``` 
     - División en subconjuntos ```facet_wrap()```,```facet_grid()```
 
-ggplot tiene __muchos__ comandos, y no tiene sentido saberlos de memoria, es siempre útil reutilizar gráficos viejos y tener a mano el [machete](https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf).
+`ggplot` tiene __muchos__ comandos, y no tiene sentido saberlos de memoria, es siempre útil reutilizar gráficos viejos y tener a mano el [machete](https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf).
 
 ```{r}
 # usando el dataset iris anterior
