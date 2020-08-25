@@ -59,7 +59,7 @@ Datos
 
 ```
 
-## [Dplyr](https://dplyr.tidyverse.org/)
+## Dplyr
 
 El caracter principal para utilizar este paquete es ```%>%``` , _pipe_ (de tubería).
 
@@ -230,7 +230,7 @@ Datos_Indice_Gral <- Datos_join %>%
 Datos_Indice_Gral
 ```
 
-## [Tidyr](https://tidyr.tidyverse.org/)
+## Tidyr
 
 El paquete tidyr esta pensado para "emprolijar los datos". Tiene un conjunto de funciones para implementar las nociones de Tidy Data desarrolladas por Hadley Wickham en su [paper](http://www.jstatsoft.org/v59/i10/paper).
 
@@ -343,7 +343,7 @@ fecha + days(2)
 fecha - (weeks(1) + hours(2))
 ```
 
-## [Stringr](https://stringr.tidyverse.org/)
+## Stringr
 
 Basado en la [clase](https://jmbarriola.github.io/ATR-2019/Clase%205/clase5_strings_y_fechas.nb.html) de Milena Dotta y Juan Barriola
 
@@ -496,7 +496,7 @@ str_detect(pattern = "ñ", string = string7)
 ```
 
 
-## [Ggplot2](https://ggplot2.tidyverse.org/)
+## Ggplot2
 
 `ggplot` tiene su sintaxis propia. La idea central es pensar los gráficos como una sucesión de capas, que se construyen una a la vez.    
 
