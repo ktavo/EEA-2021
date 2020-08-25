@@ -2,13 +2,17 @@
 
 ### Clase 1: 05-09
 
+Fundamentos de programación en R: entorno, objectos, estructuras de datos, loops, control flow y funciones
+
 - [Introducción al entorno R](clase 1/Clase 1 - Introduccion a R.nb.html)
 - [Loops, condicionales y funciones](clase 1/Clase 1 - Loops, condicionales y funciones.nb.html)
 - [Ejercicios](clase 1/Clase 1 - Ejercicios -Consignas .nb.html)
 
 ### Clase 2: 12-09
 
-- [Tidyverse y gráficos](clase 2/Clase 2 - Tidyverse.html )
+Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fechas (`lubridate`), strings (`stringr`) y gráficos (`ggplot2`)
+
+- [Tidyverse](clase 2/Clase 2 - Tidyverse.html )
 - [Ejercicios](clase 2/Clase 2 - Ejercicios.nb.html )
 
 #### Material opcional
