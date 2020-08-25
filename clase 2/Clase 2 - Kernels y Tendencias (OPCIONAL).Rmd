@@ -1,6 +1,6 @@
 ---
 title: "Clase 2. Kernels y Tendencia (OPCIONAL)"
-author: "Juan Barriola y Sofía Perini"
+author: "Juan Barriola y Sofía Perini^[Basado en la [clase](https://diegokoz.github.io/EEA2019/clase%202/Clase%202-%20Tidyverse.nb.html) de Juan Barriola y Diego Kozlowski]"
 date: "12 de Septiembre de 2020"
 output: 
   html_notebook: 

@@ -130,7 +130,7 @@ Permite definir una variable, la cual toma un valor particular para cada condici
 
 En caso de no cumplir ninguna de las condiciones establecidas la variable tomara valor __NA__
 
-La sintaxis de la función es  ```case_when( _condicion lógica1_ __~__ _valor asignado1_, _condicion lógica2_ __~__ _valor asignado2_) ```.
+La sintaxis de la función es  ```case_when(condicion lógica1 ~ valor asignado1, condicion lógica2 ~ valor asignado2)```.
 
 ```{r}
 Datos <- Datos %>% 
@@ -139,7 +139,7 @@ Datos <- Datos %>%
 Datos
 ```
 
-Una forma de manejar la asignación de valores faltantes es crear una "condición" que sea igual a TRUE. Esto funciona como la parte de **else** de una estructura condicional y la sintaxis es ```case_when(_condicion lógica1_ __~__ _valor asignado1_, _TRUE_ __~__ _valor asignado en caso de no cumplirse la/s condicion/es previas_)```.
+Una forma de manejar la asignación de valores faltantes es crear una "condición" que sea igual a TRUE. Esto funciona como la parte de **else** de una estructura condicional y la sintaxis es ```case_when(condicion lógica1 ~ valor asignado1, TRUE ~ valor asignado en caso de no cumplirse la/s condicion/es previas)```.
 
 ```{r}
 Datos %>% 
@@ -246,14 +246,14 @@ __pivot_longer__ (previamente __gather__): es una función que nos permite pasar
 
 __pivot_wider__ (previamente __spread__): es una función que nos permite pasar los datos de forma vertical a una forma horizontal.
 
-La funcionalidad es similar entre estas versiones es similar, aunque __pivot_longer__ y __pivot_wider__ tienen algunos cambios útiles,   pero __gather__ y __spread__ ya no cuentan con mantenimiento y los autores de la librería recomiendan enfáticamente el uso de las nuevas versiones
+La funcionalidad es similar entre estas dos versiones, aunque __pivot_longer__ y __pivot_wider__ corresponden a un enfoque actualizado de las otras funciones, diseñado para ser más simple de usar y para manejar más casos de uso. Cabe destacar, que __gather__ y __spread__ ya no cuentan con mantenimiento y los autores de la librería recomiendan enfáticamente el uso de las nuevas versiones.
 
-![Fuente: http://www.gis-blog.com/data-management-with-r-tidyr-part-1/](spreadVSgather.png)
+![Fuente: https://fromthebottomoftheheap.net/2019/10/25/pivoting-tidily/](original-dfs-tidy.png){width=500}
 
-En la siguiente tabla cada observación es una planta con la medición del largo y ancho de su sépalo y pétalo y el tipo de especie al cual pertenece
+En la siguiente tabla (iris) cada observación es una planta con la medición del largo y ancho de su sépalo y pétalo y el tipo de especie a la cual pertenece.
 
 ```{r}
-# Utilzamos un conjunto de datos que viene con la librería datasets
+# Utilizamos un conjunto de datos que viene con la librería datasets
 library(datasets)
 data(iris)
 iris <- iris %>% 
@@ -262,20 +262,20 @@ iris <- iris %>%
 iris
 ```
 
-### Pivot_longer (ex Gather) 
+### Pivot_longer (ex gather) 
 
-Ahora se considera que cada observación es la medición de cada uno de los 4 atributos de la planta para cada una de las plantas, entonces deberíamos "pivotear" la tabla para tener el tipo de medición como una variable
+Ahora se considera que cada observación es la medición de cada uno de los 4 atributos de la planta para cada una de las plantas, entonces deberíamos "pivotear" la tabla para tener el tipo de medición como una variable.
 
 ```{r}
 iris_vertical <- iris %>% 
-                    pivot_longer(cols=c(Sepal.Length, Sepal.Width, Petal.Length,Petal.Width), # Columnas a pivotear al formato "largo
+                    pivot_longer(cols = c(Sepal.Length, Sepal.Width, Petal.Length,Petal.Width), # Columnas a pivotear al formato "largo
                                  names_to = "tipo_medicion", # nombre de la nueva columna sobre la que pivoteo el dataframe
                                  values_to = "valor" # nombre de la nueva columna de valores
                                 )
 iris_vertical
 ```
 
-### Pivot_wider (ex Spred)
+### Pivot_wider (ex spread)
 
 Podemos deshacer el __pivot_longer__ con un __pivot_wider__
 
@@ -343,11 +343,11 @@ fecha + days(2)
 fecha - (weeks(1) + hours(2))
 ```
 
-## [__Stringr__](https://stringr.tidyverse.org/)
+## [Stringr](https://stringr.tidyverse.org/)
 
 Basado en la [clase](https://jmbarriola.github.io/ATR-2019/Clase%205/clase5_strings_y_fechas.nb.html) de Milena Dotta y Juan Barriola
 
-Vamos a usar un paquete muy útil para manejar variables de tipo string, es decir, variables de texto, llamado ```stringr()```. Este paquete cuenta con una cheat sheet que pueden consultar siguiendo este link.
+Vamos a usar un paquete muy útil para manejar variables de tipo string, es decir, variables de texto, llamado ```stringr()```. Este paquete cuenta con una cheat sheet que pueden consultar siguiendo este [link](http://edrub.in/CheatSheets/cheatSheetStringr.pdf).
 
 ### str_length
 
@@ -511,7 +511,7 @@ str_detect(pattern = "ñ", string = string7)
     - Escalas de los ejes ```scale_y_continuous```,```scale_x_discrete``` 
     - División en subconjuntos ```facet_wrap()```,```facet_grid()```
 
-ggplot tiene __muchos__ comandos, y no tiene sentido saberlos de memoria, es siempre útil reutilizar gráficos viejos y tener a mano el [machete](https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf).
+`ggplot` tiene __muchos__ comandos, y no tiene sentido saberlos de memoria, es siempre útil reutilizar gráficos viejos y tener a mano el [machete](https://www.rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf).
 
 ```{r}
 # usando el dataset iris anterior

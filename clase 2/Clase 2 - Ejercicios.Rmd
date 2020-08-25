@@ -70,9 +70,9 @@ Limpiar una base pública de ataques de tiburones para luego poder hacer algunos
 
 En la carpeta __Fuentes__ se encuentra el archivo __ataques_tiburones.csv__
 
-1.a Leer el dataset
+1.a. Leer el dataset
 
-1.b Seleccionar las variables *`Case Number`*, *Date* y *Country*
+1.b. Seleccionar las variables *`Case Number`*, *Date* y *Country*
 
 **Limpieza variable pais**
 
