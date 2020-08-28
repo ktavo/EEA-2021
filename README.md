@@ -21,8 +21,8 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 
 ### Clase 3: 19-09
 
-- [Práctica PURRR](clase 3/programacion_funcional)
-- [Correlación](clase 3/correlacion.nb.html)
+- [Tidyverse: PURRR](clase 3/Clase 3 - PURRR.nb.html)
+- [Correlación](clase 3/Clase 3 - Correlacion.nb.html)
 
 ### Clase 4: 26-09
 
