@@ -1,48 +1,30 @@
-
-#### [Materiales clases teóricas](teorica)
-
-*Primer parcial: 31-10*
-
-## [Trabajos Prácticos](trabajos_practicos)
-
-### [Ejercicios modelo lineal](ejercicios_modelo_lineal)
-
 # Materiales para las clases prácticas:
-
-
-Ejectuar la siguiente linea de código en R
-```r
-usethis::use_course('https://https://github.com/eea-uba/EEA-2020/archive/master.zip')
-```
-
-O alternativamente descargar el siguiente archivo:
-
-[![](img/Download.png)](https://github.com/eea-uba/EEA-2020/archive/master.zip)
-
-A definir !!! 
 
 ### Clase 1: 05-09
 
+Fundamentos de programación en R: entorno, objectos, estructuras de datos, loops, control flow y funciones
+
 - [Introducción al entorno R](clase 1/Clase 1 - Introduccion a R.nb.html)
 - [Loops, condicionales y funciones](clase 1/Clase 1 - Loops, condicionales y funciones.nb.html)
-- [Ejercicios intro.](clase 1/Ejercicios - Clase 1.R)
-- [Programación funcional.](clase 1/Clase_1-Programacion funcional.nb)
-- [Ejercicios programación funcional.](clase 1/Ejercicios Clase 1_Programacion funcional.R)
+- [Ejercicios](clase 1/Clase 1 - Ejercicios -Consignas .nb.html)
 
-### Clase 2: 14-09
+### Clase 2: 12-09
 
-- [Tidyverse y gráficos](clase 2/Clase 2- Tidyverse.nb.html)
-- [resueltos](clase 2/resueltos)
+Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fechas (`lubridate`), strings (`stringr`) y gráficos (`ggplot2`)
 
-### Clase 3: 28-09
+- [Tidyverse](clase 2/Clase_2_-_Tidyverse.html )
+- [Ejercicios](clase 2/Clase 2 - Ejercicios.nb.html )
 
+#### Material opcional
 
-- [Práctica PURRR](clase 3/programacion_funcional)
-- [Correlación](clase 3/correlacion.nb.html)
-- [Shiny apps](clase 3/shiny)
+- [Gráficos de kernels y tendencias](Clase 2 - Kernels y Tendencias (OPCIONAL).nb.html)
 
+### Clase 3: 19-09
 
-### Clase 4: 5-10
+- [Tidyverse: PURRR](clase 3/Clase 3 - PURRR.nb.html)
+- [Correlación](clase 3/Clase 3 - Correlacion.nb.html)
+
+### Clase 4: 26-09
 
 - [Regresión Lineal Simple (primera parte)](clase 4/modelo_basico.nb.html)
 
@@ -83,4 +65,16 @@ A definir !!!
 
 - [Redes II: Convolutional Neural Networks](clase 12/mnist102.nb.html)
 
-[Preguntas parcial](https://images.mentalfloss.com/sites/default/files/styles/mf_image_16x9/public/red-nose-clown-hed.jpg?itok=ZX1GxhNK&resize=1100x1100)
+
+## [Trabajos Prácticos](trabajos_practicos)
+
+### [Ejercicios modelo lineal](ejercicios_modelo_lineal)
+
+Ejectuar la siguiente linea de código en R
+```r
+usethis::use_course('https://https://github.com/eea-uba/EEA-2020/archive/master.zip')
+```
+
+O alternativamente descargar el siguiente archivo:
+
+[![](img/Download.png)](https://github.com/eea-uba/EEA-2020/archive/master.zip)
