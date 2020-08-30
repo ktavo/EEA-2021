@@ -1,0 +1,106 @@
+---
+title: "Regresión Lineal Múltiple"
+author: "Juan Barriola y Sofía Perini"
+date: "3 de Octubre de 2020"
+output:
+  html_notebook:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+# Encuesta de Sueldos en el sector IT
+
+Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst. 
+
+```{r, warning=F}
+library(data.table)
+library(tidyverse)
+library(readxl) 
+```
+
+## Levantamos Dataset
+
+```{r}
+encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
+encuesta %>%
+  glimpse()
+```
+
+### Aplicamos Filtros
+
+```{r}
+encuesta_ds <- encuesta %>%
+  filter(trabajo_de %in% c("Data Scientist / Data Engineer", "BI Analyst / Data Analyst")) %>%
+  rename(edad = tengo, 
+         salario_bruto = salario_mensual_bruto_en_tu_moneda_local,
+         salario_neto = salario_mensual_neto_en_tu_moneda_local)
+edad_laboral_minima = 14
+df <- encuesta_ds %>% 
+  filter(between(salario_neto, 21350.00, 137000),
+        sueldo_dolarizado == 0, #Eliminamos los sueldos dolarizados 
+        edad - anos_de_experiencia > edad_laboral_minima, # Eliminamos registros inconsistentes con la edad laboral
+        salario_bruto > salario_neto, # Inconsistencia en los sueldos
+        anos_en_la_empresa_actual < 70) # Error de carga 
+df
+```
+
+### Seleccionamos variables de interés
+
+```{r}
+df <- df %>%
+  select(me_identifico, edad, donde_estas_trabajando, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual, gente_a_cargo, trabajo_de, nivel_de_estudios_alcanzado, estado, salario_bruto, salario_neto) 
+df %>%
+  head()
+
+
+```
+
+
+## Partición del dataset en train y test
+
+Realizamos una partición entre dataset de entrenamiento (70%) y testeo (30%) usando la función resample_partition del paquete modelr.
+
+```{r}
+# fijo semilla
+set.seed(44)
+# Partición Train y Test
+train_test <- df %>% 
+  modelr::resample_partition(c(train = 0.7, test = 0.3))
+
+df_train <- train_test$train %>% as_tibble()
+df_test <- train_test$test %>% as_tibble()
+
+# veo el contenido
+df_train %>%
+  glimpse() # 170 filas
+df_test %>%
+  glimpse() # 74 filas
+```
+
+## Modelo Múltiple 
+
+### Variables numéricas
+
+Armemos un modelo para predecir el salario_bruto en función de los anos de experiencia y la edad.
+
+```{r}
+lm1 <- lm(salario_bruto ~ anos_de_experiencia + edad, data = df_train)
+# Resumen del modelo
+summary(lm1)
+```
+
+
+```{r}
+unique(df$nivel_de_estudios_alcanzado)
+df2 <- df %>% 
+  mutate(nivel_educativo = case_when(nivel_de_estudios_alcanzado %in% c("Posgrado", "Posdoctorado", "Doctorado") ~ "Posgrado", 
+                                     TRUE ~ nivel_de_estudios_alcanzado))
+# unificamos nivel educativo y estado 
+df2 <- df2 %>% 
+  mutate(nivel_edu_alcanzado = paste0(nivel_educativo, " ", Estado))
+unique(df2$nivel_edu_alcanzado) # quedan 12 categorías
+
+```
+
