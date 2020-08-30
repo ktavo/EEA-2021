@@ -15,7 +15,7 @@ El **RNotebook** debe:
 * Mostrar todo el código que escriban. NO USAR `echo=FALSE`
 * Ser ordenado de acuerdo a las consignas propuestas
 
-Una vez terminado el notebook deberán subirlo a RPubs e indicar el link en el archivo que les compartiremos.
+Una vez terminado el notebook deberán entregarlo en formato HTML, según se indica en la guía de procedimiento.
 
 ## CRITERIOS DE EVALUACION
 
