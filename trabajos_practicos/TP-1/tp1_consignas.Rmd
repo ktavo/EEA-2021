@@ -7,7 +7,7 @@ Datos provistos por [Properati Argentina](https://www.properati.com.ar)
 
 ## INSTRUCCIONES
 
-Deberán realizar el trabajo en un **RNotebook** publicado en [RPubs](http://rpubs.com/).
+Deberán realizar el trabajo en un **RNotebook** y entregarlo en formato HTML.
 
 El **RNotebook** debe:
 
@@ -15,7 +15,7 @@ El **RNotebook** debe:
 * Mostrar todo el código que escriban. NO USAR `echo=FALSE`
 * Ser ordenado de acuerdo a las consignas propuestas
 
-Una vez terminado el notebook deberán subirlo a RPubs e indicar el link en el archivo que les compartiremos.
+Una vez terminado el notebook deberán enviarlo por mail al profesor que les sea asignado, según se indica en la guía de procedimiento.
 
 ## CRITERIOS DE EVALUACION
 
