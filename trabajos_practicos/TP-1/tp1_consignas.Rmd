@@ -1,5 +1,5 @@
 ---
-title: "TP 1: Analisis exploratorio e Introduccion a Regresión lineal"
+title: "TP 1: Análisis Exploratorio e Introducción a Regresión lineal"
 output: html_notebook
 ---
 
@@ -11,7 +11,7 @@ Deberán realizar el trabajo en un **RNotebook** publicado en [RPubs](http://rpu
 
 El **RNotebook** debe:
 
-* Tener el siguiente nombre: eea2019_tp1_(apellido)_(nombre)
+* Tener el siguiente nombre: eea2020_tp1_(apellido)_(nombre)
 * Mostrar todo el código que escriban. NO USAR `echo=FALSE`
 * Ser ordenado de acuerdo a las consignas propuestas
 
@@ -28,40 +28,41 @@ En caso que los resultados no sean los esperados y no logremos identificar las f
 
 ## CONSIGNAS
 
-1) Preparacion de los datos (I)
+1) **Preparación de los datos (I)**
     a) Leer el archivo *ar_properties.csv* y mostrar su estructura
     b) Quedarse con aquellos registros que:
         i) Pertenecen a Argentina y Capital Federal
-        ii) Cuyo precio esta en dolares (USD)
+        ii) Cuyo precio esta en dólares (USD)
         iii) El tipo de propiedad sea: Departamento, PH o Casa
         iv) El tipo de operacion sea Venta
-    c) Seleccionar las variables **id**, **l3**, **rooms**, **bedrooms**, **bathrooms**, **surface_total**, **surface_covered**, **price** y **property_type**
+    c) Seleccionar las variables **id**, **l3**, **rooms**, **bedrooms**, **bathrooms**, **surface_total**, **surface_covered**, **price** y **property_type**.
   
-Deberian llegar a un dataset con 61905 observaciones y 9 variables
+Deberian llegar a un dataset con 61.905 observaciones y 9 variables.
  
-2) Analisis exploratorios (I)
-    a) Obtener la cantidad de valores unicos y de valores faltantes (NAs) para cada una de estas variables
-    b) Obtener la matriz de correlacion para las variables numericas. Pista: usen 'complete.obs' para poder omitir los valores faltantes.
-  
-3) Preparacion de los datos (II)
-    a) En el punto 2 deberian haber encontrado que la variable **bedrooms** presenta una alta proporción de valores faltantes y que presenta una fuerte correlacion con la variable **rooms**. Por lo tanto, vamos a eliminarla.
-    b) Eliminar todos los registros que presentan valores faltantes
-  
-Deberian llegar a un dataset con 51210 observaciones y 8 variables
-  
-4) Analisis exploratorios (II)
-    a) Obtener estadisticas descriptivas para la variable precio (cuartiles, promedio, minimo y maximo) y realizar un histograma de la variable
-    b) Obtener estadisticas descriptivas para la variable precio (cuartiles, promedio, minimo y maximo) por cada tipo de propiedad. 
-    c) Realizar un grafico de boxplot de la variable precio por tipo de propiedad
-    d) Realizar un correlagrama usando `GGAlly`
-  
-5) Outliers
-    a) Eliminar los outliers de la variable **precio** con algún criterio que elijan: puede ser por valores de corte, eliminar el x% a izquierda y derecha,etc.
+2) **Análisis exploratorios (I)**
+    a) Obtener la cantidad de valores únicos y de valores faltantes (NAs) para cada una de estas variables.
+    b) Obtener la matriz de correlaciones para las variables numéricas. Pista: usen 'complete.obs' para poder omitir los valores faltantes. 
+    c) Grafique la matriz de correlaciones usando la librería `corrr`.
+    c) ¿Cómo es la correlación entre las variables *surface_total* y *surface_covered*? ¿Y la correlación entre *rooms* y *bathrooms*?   
     
-6) Analisis exploratorios (III)
-    a) Repetir los 4 análisis exploratorios realizados en el punto 4 y realizar unos breves comentarios sobre los cambios que encontraron
+3) **Limpieza de datos**
+    a) En el punto 2 deberían haber encontrado que la variable **bedrooms** presenta una alta proporción de valores faltantes y que presenta una fuerte correlación con la variable **rooms**. Por lo tanto, vamos a eliminarla.
+    b) Eliminar todos los registros que presentan valores faltantes.
   
-7) Modelo lineal
-    a) Realizar un modelo lineal simple para explicar el precio en función de las habitaciones (rooms) y otro modelo que explique el precio en función de la superficie total (surface_total)
-    b) Usar la función `summary()` para obtener informacion de ambos modelos. Explicar los valores de los coeficientes estimados.
+Deberían llegar a un dataset con 51.210 observaciones y 8 variables.
+  
+4) **Análisis exploratorios (II)**
+    a) Crear una nueva variable **precio_en_miles** que sea la variable *price* divida por 1000. Obtener estadísticas descriptivas para esta nueva variable (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+    b) Obtener las mismas estadísticas descriptivas de la nueva variable **precio_en_miles** para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad? 
+
+5) **Outliers**
+    a) Graficar un scatterplot de la variable **precio_en_miles** y **superficie_total**. ¿Detectan alguna anomalía?
+    b) Eliminar los outliers univariados severos de las variables **precio_en_miles**, **rooms** y **surface_total** usando el método de 3 desvíos del rango intercuartil. 
+    
+6) **Análisis exploratorios (III)**
+    a) Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar. 
+  
+7) **Modelo lineal**
+    a) Realizar un modelo lineal simple para explicar el **precio_en_miles** en función de las habitaciones (*rooms*) y otro modelo que explique el precio en función de la superficie total (*surface_total*).
+    b) Usar la función `summary()` para obtener informacion de ambos modelos. Explicar el significado de los valores de los coeficientes estimados en cada caso. 
     c) ¿Cuál modelo usarían para predecir el precio? ¿Por qué?
