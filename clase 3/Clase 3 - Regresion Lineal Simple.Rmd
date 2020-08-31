@@ -10,227 +10,293 @@ output:
     df_print: paged
 ---
 
-## Base de Datos: Encuesta de Sueldos en el sector IT
+# Encuesta de Sueldos en el sector IT
 
-Vamos a trabajar con un dataset de openqube^[https://openqube.io/encuesta-sueldos-2020.01#Introduccion%20%20%20https://docs.google.com/spreadsheets/d/e/2PACX-1vTORpz5hc_wOwKdaKEIgVOAI3XVTh9WXB__C2abe_E0aJoYIoqhWQ-HTpBBryAByhIlX_booioqxK0T/pub?gid=1893349211&single=true&output=csv] sobre empleos en el sector IT.
+Vamos a trabajar con un dataset de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver (acá)[https://sueldos.openqube.io/encuesta-sueldos-2020.01/]
 
-```{r, warning=F}
-library(data.table)
+Nuestro objetivo es crear un modelo para explicar el sueldo neto de Data Analysts, Data Scientists y Data Engineers en Argentina
+
+
+```{r}
+# Carga de librerías
 library(tidyverse)
-library(readxl)
-library(lubridate)
 library(corrr)
 library(knitr)
 library(kableExtra)
 library(GGally)
-library(RColorBrewer)
 ```
 
-### Preparación de Datos
+
+## Preparación de Datos
+
+Comenzamos leyendo los datos y viendo su estructura
 
 ```{r}
-# leo la base
-encuesta <- read_csv("../Fuentes/Encuesta de remuneracion salarial - 2020.1.csv")
-# inspecciono el contenido
+encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
 encuesta %>%
   glimpse()
-# 5.982 observaciones y 70 columnas
-encuesta %>%
-  head(10)
-unique(encuesta$`Estoy trabajando en`) # solo Argentina aparece
-unique(encuesta$`Dónde estás trabajando`) # en qué parte del país
-# unique(encuesta$`Trabajo de`)
-
 ```
+
+Existen 5.982 respuestas de 53 preguntas distintas. Nos vamos a quedar con las respuestas de las personas que trabajan como Data Analysts, Data Scientists y Data Engineers.
+
+```{r}
+# Filtro de los perfiles de interes
+encuesta_ds = encuesta %>%
+                filter(trabajo_de %in% c("Data Scientist / Data Engineer", "BI Analyst / Data Analyst"))
+
+# Función para describir las dimensiones
+dim_desc(encuesta_ds)
+```
+
+Existen 321 respuestas que cumplen con este criterio
+
+## Análisis exploratorio
+
+Realicemos algunos análisis exploratorios para conocer mejor el dataset.
+
+### Valores únicos y faltantes
+
+Una de las primeras características para revisar en un dataset es la cantidad de valores únicos y porcentaje de valores faltantes que tiene cada variable.
+
+```{r}
+tabla_exploratorios =  encuesta_ds %>%
+                                      gather(., 
+                                            key = "variables", 
+                                            value = "valores") %>% # agrupamos por las variables del set
+                                      group_by(variables) %>% 
+                                      summarise(valores_unicos = n_distinct(valores),
+                                      porcentaje_faltantes = sum(is.na(valores))/nrow(encuesta_ds)*100) %>% 
+                                      arrange(desc(porcentaje_faltantes), valores_unicos) # ordenamos por porcentaje de faltantes y valores unicos
+tabla_exploratorios
+```
+
+Vemos que varias variables presentan un alto porcentaje de faltantes
+
+
+
+```{r}
+tabla_exploratorios %>% filter(porcentaje_faltantes>0) %>% 
+ggplot(., aes(x=reorder(variables, -porcentaje_faltantes), y=porcentaje_faltantes, fill=porcentaje_faltantes)) +
+  geom_bar(stat = "identity") +
+  scale_fill_continuous("reds") +
+  scale_x_discrete(label = function(x) stringr::str_trunc(x, 18)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=80, vjust=0.5)) +
+  labs(title='Porcentaje de valores faltantes', y='Porcentaje de faltantes', x='') 
+```
+
 
 ### Filtros 
 
 Se seleccionan las variables de interes.
 
 ```{r}
-df1 <- encuesta[,c(1:5,24:31,35,47:49)] # me quedo con 17 variables 
-df1 %>%
-  summary()
+encuesta_ds_relevantes = encuesta_ds %>%
+                              select(tengo, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual,
+                                     trabajo_de, salario_mensual_bruto_en_tu_moneda_local,
+                                     salario_mensual_neto_en_tu_moneda_local, sueldo_dolarizado) %>% 
+                              rename(edad = tengo,
+                                     salario_bruto = salario_mensual_bruto_en_tu_moneda_local,
+                                     salario_neto = salario_mensual_neto_en_tu_moneda_local)
 ```
 
-Aplicar filtros: 
 
-- Tipo de contrato = Full-Time
+Descripcion
+
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_relevantes %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
+```
+
+## Limpieza de datos
+
+### Limites del estudio
+
+#### Sueldo dolarizado
+
+Eliminar aquellas observaciones con el sueldo dolarizado para no incluir variaciones vinculadas al tipo de cambio en nuestro set de datos
 
 ```{r}
-df2 <- df1 %>%
-  filter(`Tipo de contrato` == "Full-Time")
-dim(df2) # me quedo con 5068 registros
+encuesta_ds_relevantes %>% filter(sueldo_dolarizado==1)
 ```
 
-### Análisis exploratorio
 
-#### Valores unicos y faltantes. 
+### Datos inconsistentes
 
-Chequeamos presencia de valores faltantes y distribución de variables analizando los valores únicos.
+Comencemos analizando aquellos registros que presentan datos que no son consistentes. 
+
+#### Edad vs años de experiencia
+
+Parecen existir algunos registros en los cuales la experiencia laboral supera la edad. 
 
 ```{r}
-tabla2 <- df2 %>%
-  gather(., 
-         key = "Variables", 
-         value = "Valores") %>%
-  group_by(Variables) %>% 
-  summarise(Valores.unicos = length(unique(Valores)), Valores.faltantes = sum(is.na(Valores)))
-# ordeno la tabla por valores faltantes y luego unicos.
-tabla2 %>% 
-  arrange(Valores.faltantes, Valores.unicos)
+ggplot(encuesta_ds_relevantes, aes(x=edad, y=anos_de_experiencia, color=edad-anos_de_experiencia)) +
+        geom_point() +
+        theme_bw()
 ```
 
-Elimino observaciones con salario neto nulo. Quedan 4899 observaciones. 
+Sabiendo que la edad mínima para trabajar en Argentina es 14 años, podemos revisar en que registros la diferencia entre la edad y los años de experiencia es menor a dicho umbral.
 
 ```{r}
-df2 <- df2 %>%
-  filter(!is.na(`Salario mensual NETO (en tu moneda local)`)) 
-df2 %>%
-  glimpse()
-table(df2$`Me identifico`) # clases desbalanceadas, mayoría hombres
+edad_laboral_minima = 14
+encuesta_ds_relevantes %>% filter(edad-anos_de_experiencia<edad_laboral_minima)
 ```
 
-#### Outliers
+**Caso particular: Años de experiencia en la empresa actual**
 
-Analizamos presencia de outliers univariados. 
-
-```{r, warning=F}
-df2[,c(3,6:9,16,17)] %>%
-  pivot_longer(cols = 1:ncol(df2[,c(3,6:9,16,17)]),
-         names_to = "Variables", 
-         values_to  = "Valores") %>% 
-  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
-  geom_boxplot(alpha = 0.5) + 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  facet_wrap( ~ Variables, scales = "free")
-```
-
-Eliminamos aquellas observaciones que corresponden a datos atípicos mal cargados, dado que están fuera del rango de las variables. También se podría optar por corregir esos datos si existe información suficiente como para chequear y corregir el número. Dependiendo el interés/tiempo y el problema en estudio, habría que análizar qué es más conveniente, dependiendo también de la cantidad de datos con que se cuente.
-
-Por ejemplo, eliminamos los valores atípicos que no corresponden al rango de las variables de años en la empresa o puesto actual que superan a los años de experiencia total (máximos menores a 50 anos). 
+Hay un caso particular en el cual una persona contestó que lleva 2016 años en la empresa actual
 
 ```{r}
-# eliminamos los valores atípicos que no corresponden al rango de las variables 
-df2 <- df2 %>%
-  filter(`Años en la empresa actual` < 50, `Años en el puesto actual` < 50)
-# ver los que tienen salario neto mayor al bruto (se trata de un error)
-# creamos variables salario_neto y salario_bruto con datos redondeados
-df2 <- df2 %>%
-  mutate(salario_bruto = round(`Salario mensual BRUTO (en tu moneda local)`), salario_neto = round(`Salario mensual NETO (en tu moneda local)`))
-df2 %>%
-  filter(salario_bruto < salario_neto) %>%
-  mutate(dif = salario_neto - salario_bruto) # calculamos las diferencias 
-# 125 observaciones con datos mal cargados
-# eliminamos registros erróneos y nos quedamos solo con los salarios brutos mayores a netos
-df2 <- df2 %>%
-  filter(salario_bruto > salario_neto)
-```
-
-Vovlemos a graficar boxplots paralelos para chequear si aún existen outliers. Se observa aún la presencia de valores atípicos en la variable salario_bruto. 
-
-```{r}
-df2[,c(3,6:9,16,17)] %>%
-  pivot_longer(cols = 1:ncol(df2[,c(3,6:9,16,17)]),
-         names_to = "Variables", 
-         values_to  = "Valores") %>% 
-  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
-  geom_boxplot(alpha = 0.5) + 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  facet_wrap( ~ Variables, scales = "free")
-# veo diferencias entre salario bruto y neto
-df2 <- df2 %>%
-  mutate(dif = salario_bruto - salario_neto)
-# filtro aquellas mayores a 200000
-df2 %>%
-  filter(dif > 200000)
-# elimino esos datos atípicos 
-df2 <- df2 %>%
-  filter(dif < 200000)
-```
-
-#### Creación de variables
-
-Para trabajar con el nivel educativo alcanzado, unifico las variables nivel de estudios y estado. 
-
-Reduzco a 4 categorías el nivel educativo (posgrado incluye posdoc y doc). 
-
-```{r}
-unique(df2$`Nivel de estudios alcanzado`)
-unique(df2$Estado)
-# creo nueva variable nivel_educativo de 4 categorías, unificando posgrado en una sola
-df2 <- df2 %>% 
-  mutate(nivel_educativo = case_when(`Nivel de estudios alcanzado` %in% c("Posgrado", "Posdoctorado", "Doctorado") ~ "Posgrado", 
-                                     TRUE ~ `Nivel de estudios alcanzado`)) 
-# unifico nivel educativo y estado 
-df2 <- df2 %>% 
-  mutate(nivel_edu_alcanzado = paste0(nivel_educativo, " ", Estado))
-unique(df2$nivel_edu_alcanzado) # quedan 12 categorías
+encuesta_ds_relevantes %>% filter(anos_en_la_empresa_actual>70)
 ```
 
 
-#### Correlación
-
-Calculamos la matriz de correlacion para los registros completos (omitiendo faltantes) y para variables numéricas con ambos métodos (Pearson y Spearman). Hay diferencias?
+### Salario neto superior al bruto
 
 ```{r}
+ggplot(encuesta_ds_relevantes, aes(x=salario_mensual_bruto_en_tu_moneda_local, y=salario_mensual_neto_en_tu_moneda_local)) +
+         geom_point() + theme_bw()
+```
+
+
+```{r}
+encuesta_ds_relevantes %>% mutate(dif=(salario_mensual_bruto_en_tu_moneda_local-salario_mensual_neto_en_tu_moneda_local)/salario_mensual_bruto_en_tu_moneda_local) %>% arrange(desc(dif))
+```
+
+
+```{r}
+encuesta_ds_relevantes %>% filter(salario_bruto<salario_neto)
+```
+
+
+```{r}
+encuesta_ds_filtrada = encuesta_ds_relevantes %>%
+                          filter(sueldo_dolarizado==0, #Eliminamos los sueldos dolarizados
+                                 edad-anos_de_experiencia>edad_laboral_minima, # Eliminamos registros inconsistentes con la edad laboral
+                                 salario_bruto>salario_neto, # Inconsistencia en los sueldos
+                                 anos_en_la_empresa_actual<70) # Error de carga
+```
+
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_filtrada %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
+```
+
+### Chequeo Outliers Univariados
+
+Chequeamos outliers del salario neto por mes.
+
+Boxplot
+
+```{r}
+ggplot(encuesta_ds_filtrada, aes(y=salario_neto)) + geom_boxplot() + theme_bw()
+```
+
+```{r}
+tabla_cuantiles <- function(x, q = c(0.25, 0.5, 0.75)) {
+  tibble("{{ x }}" := quantile(x, q), "{{ x }}_q" := q)
+}
+
+vector_salario_neto = encuesta_ds_filtrada$salario_neto
+
+tabla_cuantiles(vector_salario_neto, c(seq(0,1,0.05)))
+```
+
+```{r}
+IQR(encuesta_ds_filtrada$salario_neto) * 1.5 + quantile(encuesta_ds_filtrada$salario_neto, 0.75)
+```
+
+
+```{r}
+quantile(encuesta_ds_filtrada$salario_neto, 0.25) - IQR(encuesta_ds_filtrada$salario_neto) * 1.5  
+```
+
+
+```{r}
+ggplot(encuesta_ds_filtrada, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
+```
+
+
+```{r}
+encuesta_ds_final = encuesta_ds_filtrada %>% filter(between(salario_neto, 21350.00, 137000))
+```
+
+```{r}
+ggplot(encuesta_ds_final, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
+```
+
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_final %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
+```
+
+### Chequeo correlación
+
+```{r}
+
+# calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
+
 # pearson
-matriz.correl.pe <- df2[,c(3,6:9,18:19)] %>% 
+matriz.correl.pe <- encuesta_ds_final %>%
+  select_if(is.numeric) %>% 
  correlate(use = "complete.obs", method = "pearson") %>% 
   shave() %>% 
   fashion()
 matriz.correl.pe
+
 # spearman
-matriz.correl.sp <- df2[,c(3,6:9,18:19)] %>% 
- correlate(use = "complete.obs", method = "spearman") %>% 
-  shave() %>% 
-  fashion()
+matriz.correl.sp <- encuesta_ds_final %>%
+  select_if(is.numeric) %>% 
+ correlate(use = "complete.obs", method = "spearman") 
 matriz.correl.sp
 ```
 
-* Como era de esperar la asociación lineal entre salario bruto y neto es casi perfecta (0.96). 
+## Modelos
 
-Graficamos Correlograma con Ggpairs, distinguiendo por identificación sexual
+$salarioNeto = \beta_0 +\beta_1x+\epsilon$
 
-```{r}
-df2[,c(3,6:9,18:19)] %>%
-     ggpairs(.,  mapping = aes(colour = df2$`Me identifico`),
-        title = "Matriz de correlaciones")
-```
-
-#### Scatter plots
-
-Graficamos salario bruto y neto antes y después de tratamiento de outliers. 
-
-```{r, warning=F}
-df1 %>%
-  ggplot(aes(y = `Salario mensual NETO (en tu moneda local)`, x = `Salario mensual BRUTO (en tu moneda local)`)) + 
-  geom_point()
-df2 %>%
-  ggplot(aes(y = salario_neto, x = salario_bruto)) + 
-  geom_point()
-```
-
-Graficamos salario bruto y anos de experiencia. 
+### Modelo edad
 
 ```{r}
-df2 %>%
-  ggplot(aes(y = salario_bruto, x = `Años de experiencia`)) + 
-  geom_point()
+lm(salario_neto ~ anos_de_experiencia, encuesta_ds_final) %>%
+  summary()
 ```
 
-Graficamos salario bruto y nivel educativo. 
-
-```{r, warning=F}
-df2 %>%
-  ggplot(aes(y = salario_bruto, fill = nivel_edu_alcanzado)) + 
-  geom_boxplot() +
-  labs(title = "Boxplots de salario por nivel educativo alcanzado") +
-  theme(legend.position = 'none') +
-  scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(12)) +
-  scale_y_continuous() +
-  facet_wrap(~ nivel_edu_alcanzado)
+```{r}
+encuesta_ds_final %>% ggplot(., aes(x = edad, y = salario_neto)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
 ```
+
+### Modelo años de experiencia
+
+```{r}
+lm(salario_neto ~ anos_de_experiencia + trabajo_de, encuesta_ds_final) %>%
+  summary()
+```
+
+```{r}
+encuesta_ds_final %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
+```
+
+```{r}
+encuesta_ds_final %>% filter(trabajo_de =="Data Scientist / Data Engineer") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
+```
+
+```{r}
+encuesta_ds_final %>% filter(trabajo_de =="BI Analyst / Data Analyst") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
+```
+
 
 ## Modelo Lineal Simple^[Fuente: Apunte de Regresión Lineal - María Eugenia Szretter Noste] 
 
