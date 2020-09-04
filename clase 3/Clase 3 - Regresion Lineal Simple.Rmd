@@ -3,14 +3,10 @@ title: "Regresión Lineal Simple"
 author: "Juan Barriola y Sofía Perini"
 date: "19 de Septiembre de 2020"
 output:
-  html_notebook:
-    df_print: paged
-    theme: spacelab
-    toc: yes
-    toc_float: yes
   html_document:
     df_print: paged
     toc: yes
+    toc_float: yes
 ---
 
 # Encuesta de Sueldos en el sector IT
@@ -105,7 +101,7 @@ encuesta_ds_relevantes = encuesta_ds %>%
                                      salario_neto = salario_mensual_neto_en_tu_moneda_local)
 ```
 
-### Analisis exploratorio I
+### Analisis exploratorios I
 
 Realizamos un primer análisis descriptivo de nuestro dataset de columnas relevantes. Para ello utilizamos la función `ggpairs` sobre las variables numéricas con una apertura por la variable de perfil.
 
@@ -257,7 +253,9 @@ Comenzamos graficando el boxplot de la variable.
 ```{r}
 ggplot(encuesta_ds_filtrada, aes(y=salario_neto)) +
   geom_boxplot() +
-  theme_bw()
+  theme_bw() +
+  labs(title="Distribución salario neto", y="Salario Neto")
+
 ```
 
 El gráfico nos indica que existen outliers "superiores" de acuerdo al criterio del boxplot. 
@@ -274,6 +272,40 @@ $q< Q_1 - 1.5 \cdot IQR$
 
 Siendo $Q_1$: primer cuartil, $Q_3$: tercer cuartil e $IQR=Q_3 - Q_1$: rango intercuartil
 
+Construimos el límite superior e inferior para identificar y filtrar outliers
+
+```{r}
+limite_superior_outliers = IQR(encuesta_ds_filtrada$salario_neto) * 1.5 + quantile(encuesta_ds_filtrada$salario_neto, 0.75)[[1]]
+limite_superior_outliers
+```
+
+Veamos cuántos registros superan dicho límite
+
+```{r}
+encuesta_ds_filtrada %>% filter(salario_neto>limite_superior_outliers)
+```
+
+Son 10 registros en total. Existen 2 registros (filas 3 y 10) que parecen ser errores de carga, los registros restantes parecen ser outliers "genuinos".
+
+Construimos el limite inferior
+
+```{r}
+limite_inferior_outliers =quantile(encuesta_ds_filtrada$salario_neto, 0.25)[[1]] - IQR(encuesta_ds_filtrada$salario_neto) * 1.5
+limite_inferior_outliers 
+```
+
+El límite inferior es negativo, por lo tanto no tiene sentido filtrar por dicho valor.
+Eliminamos los outliers superiores según este criterio
+
+```{r}
+encuesta_ds_sin_outliers = encuesta_ds_filtrada %>% filter(salario_neto<=limite_superior_outliers)
+```
+
+#### Percentiles
+
+Dada la distribución de los datos deberíamos estudiar que sucede en la cola izquierda de la distribución.
+Creamos una función que nos permita observar los percentiles de una variable en una tabla.
+
 ```{r}
 # Funcion para crear una tabla con los percentiles deseados de la variable
 crear_tabla_percentiles <- function(vector, q = c(0.25, 0.5, 0.75)) {
@@ -281,39 +313,45 @@ crear_tabla_percentiles <- function(vector, q = c(0.25, 0.5, 0.75)) {
 }
 
 # Creamos el vector del salario
-salario_neto_vec = encuesta_ds_filtrada$salario_neto
+salario_neto_vec = encuesta_ds_sin_outliers$salario_neto
 
 # Creamos la tabla de percentiles en intervalos de a 5%
-crear_tabla_percentiles(salario_neto_vec, c(seq(0,1,0.05)))
+percentiles_salario_neto = crear_tabla_percentiles(salario_neto_vec, c(seq(0,.1,0.01)))
+percentiles_salario_neto
 ```
+
+Vemos que hasta el percentil 3 los valores son anormalmente bajos pero no podían ser filtrados por el criterio anterior. Un valor apropiado para filtrar valores bajos es el del percentil 5
 
 ```{r}
-IQR(encuesta_ds_filtrada$salario_neto) * 1.5 + quantile(encuesta_ds_filtrada$salario_neto, 0.75)
+# Seleccionamos el valor del salario neto del percentil 5
+limite_inferior_percentil = percentiles_salario_neto %>% 
+                                filter(salario_neto_vec_q==0.05) %>%
+                                select(salario_neto_vec) %>%
+                                as.numeric()
 ```
 
+Eliminamos los outliers superiores según este criterio. Al tratarse del percentil 5, sabemos que estamos perdiendo 5% de los datos
 
 ```{r}
-quantile(encuesta_ds_filtrada$salario_neto, 0.25) - IQR(encuesta_ds_filtrada$salario_neto) * 1.5  
+encuesta_ds_final = encuesta_ds_sin_outliers %>%
+  filter(salario_neto >= limite_inferior_percentil)
 ```
 
+### Análisis exploratorio III
 
-```{r}
-ggplot(encuesta_ds_filtrada, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
+Habiendo eliminado los outliers univariados de la variable respuesta realizamos un último análisis exploratorio con ggpairs 
+
+```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+encuesta_ds_final %>%
+  ggpairs(aes(color=perfil), legend = 25) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 ```
 
-
-```{r}
-encuesta_ds_final = encuesta_ds_filtrada %>% filter(between(salario_neto, 21350.00, 137000))
-```
-
-```{r}
-ggplot(encuesta_ds_final, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
-```
-
-```{r, message=FALSE, warning=FALSE}
-encuesta_ds_final %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
-  theme_bw()
-```
+Ahora, respecto de nuestra variable a predecir, el **salario neto**, observamos:
+  * Existe una correlación positiva moderada con la edad y los años de experiencia
+  * Existe una correlación positiva baja con los años en la empresa y los años en el puesto. Respecto a esta última variable existe una gran diferencia en la correlación entre los dos perfiles 
+  * Ya no existen outliers
 
 ### Chequeo correlación
 
@@ -343,40 +381,26 @@ $salarioNeto = \beta_0 +\beta_1x+\epsilon$
 ### Modelo edad
 
 ```{r}
-lm(salario_neto ~ anos_de_experiencia, encuesta_ds_final) %>%
-  summary()
+modelo_edad = lm(salario_neto ~ anos_de_experiencia, encuesta_ds_final)
+modelo_edad %>% summary()
 ```
 
 ```{r}
 encuesta_ds_final %>% ggplot(., aes(x = edad, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red") + 
+  geom_abline(method = "lm", col = "red") + 
   theme_bw()
 ```
 
 ### Modelo años de experiencia
 
 ```{r}
-lm(salario_neto ~ anos_de_experiencia + trabajo_de, encuesta_ds_final) %>%
+lm(salario_neto ~ anos_de_experiencia, encuesta_ds_final) %>%
   summary()
 ```
 
 ```{r}
 encuesta_ds_final %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
-  geom_point() +
-  stat_smooth(method = "lm", col = "red") + 
-  theme_bw()
-```
-
-```{r}
-encuesta_ds_final %>% filter(trabajo_de =="Data Scientist / Data Engineer") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
-  geom_point() +
-  stat_smooth(method = "lm", col = "red") + 
-  theme_bw()
-```
-
-```{r}
-encuesta_ds_final %>% filter(trabajo_de =="BI Analyst / Data Analyst") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red") + 
   theme_bw()
