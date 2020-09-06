@@ -10,12 +10,12 @@ bases.dir      <-  "../Fuentes/"
 resultados.dir <- "../Resultados/"
 
 
-Individual_t117 <- read.table(paste0(bases.dir,"usu_individual_t117.txt"),
+Individual_T120 <- read.table(paste0(bases.dir,"usu_individual_T120.txt"),
                               sep=";", dec=",", header = TRUE, fill = TRUE)
 
 #### - Graficar la distribución del ingreso por ocupación principal (p21) según categoría ocupacional (CAT_OCUP) ####
 
-ggdata <- Individual_t117 %>% 
+ggdata <- Individual_T120 %>% 
   select(P21, CAT_OCUP, PONDIH) %>% 
   filter(P21>0) %>% 
   mutate(CAT_OCUP = as.factor(case_when(CAT_OCUP == 1 ~ "Patrón",
@@ -43,7 +43,7 @@ ggplot(ggdata, aes(x = P21, y = CAT_OCUP, weights = PONDIH,
 
 #### Incorporar en el gráfico anterior la condición de precariedad laboral (PP07H). ####
 
-ggdata <- Individual_t117 %>% 
+ggdata <- Individual_T120 %>% 
   select(P21, CAT_OCUP, PONDIH, PP07H) %>% 
   filter(P21>0) %>% 
   mutate(CAT_OCUP = as.factor(case_when(CAT_OCUP == 1 ~ "Patrón",
@@ -80,7 +80,7 @@ ggplot(ggdata, aes(x = P21, y = CAT_OCUP, weights = PONDIH,
 #### Quedarse sólo con los asalariados (CAT_OCUP = 3), y graficar la relación entre ingreso por ocupación principal(p21), ####
 ### precariedad laboral (PP07H) y tamaño del establecimiento(PP04C99). 
 
-ggdata <- Individual_t117 %>% 
+ggdata <- Individual_T120 %>% 
   select(P21, CAT_OCUP, PONDIH, PP07H, PP04C99, ESTADO) %>% 
   filter(P21>0, CAT_OCUP ==3, ESTADO == 1, PP04C99 %in% 1:3) %>% 
   mutate(PP07H    = as.factor(case_when(PP07H == 1 ~ "Recibe aportes \n jubilatorios",
@@ -113,7 +113,7 @@ ggplot(ggdata, aes(x = P21, y = PP04C99, weights = PONDIH,
 ### - Hacer boxplots del ingreso por ocuapción principal, según sexo
 ### y condición de precariedad.
 
-ggdata <- Individual_t117 %>% 
+ggdata <- Individual_T120 %>% 
   select(P21, CH04, PONDIH, PP07H, CAT_OCUP) %>% 
   filter(P21>0, CAT_OCUP %in% c(2,3)) %>% 
   mutate(PP07H    = as.factor(case_when(PP07H == 1 ~ "Obrero \n Recibe aportes \n jubilatorios",
@@ -140,7 +140,7 @@ ggplot(ggdata, aes(x = CH04 , y = P21, fill = CH04)) +
 
 ### - Incluir en el gráfico anteriro la dimensión de tamaño del establecimiento.
 
-ggdata <- Individual_t117 %>% 
+ggdata <- Individual_T120 %>% 
   select(P21, CH04, PONDIH, PP07H, CAT_OCUP, PP04C99) %>% 
   filter(P21>0, CAT_OCUP %in% c(2,3), PP04C99 !=0) %>% 
   mutate(PP07H    = as.factor(case_when(PP07H == 1 ~ "Obrero \n Recibe aportes \n jubilatorios",
@@ -179,7 +179,7 @@ variables <- c('CH04',        # Sexo
                'PP3E_TOT',    # Horas trabajadas
                'PP03G')       # La semana pasada, ¿quería trabajar más horas? 1-Si 2-No
 
-datos <- Individual_t117 %>% 
+datos <- Individual_T120 %>% 
   select(., one_of(variables))
 
 # Me quedo con los asalariados que respondieron sobre su ingreso
