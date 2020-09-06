@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -1479,13 +1478,13 @@ window.initializeCodeFolding = function(show) {
   var currentIndex = 1;
 
   // select all R code blocks
-  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia');
+  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia, pre.foldable');
   rCodeBlocks.each(function() {
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
-    if (show || $(this)[0].classList.contains('fold-show'))
-      div.addClass('in');
+    show = (show || $(this).hasClass('fold-show')) && !$(this).hasClass('fold-hide');
+    if (show) div.addClass('in');
     var id = 'rcode-643E0F36' + currentIndex++;
     div.attr('id', id);
     $(this).before(div);
@@ -1699,6 +1698,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -1752,14 +1752,14 @@ summary {
 <p>Datos provistos por <a href="https://www.properati.com.ar">Properati Argentina</a></p>
 <div id="instrucciones" class="section level2">
 <h2>INSTRUCCIONES</h2>
-<p>Deberán realizar el trabajo en un <strong>RNotebook</strong> publicado en <a href="http://rpubs.com/">RPubs</a>.</p>
+<p>Deberán realizar el trabajo en un <strong>RNotebook</strong> y entregarlo en formato HTML.</p>
 <p>El <strong>RNotebook</strong> debe:</p>
 <ul>
-<li>Tener el siguiente nombre: eea2019_tp2_(apellido)_(nombre)</li>
+<li>Tener el siguiente nombre: eea2020_tp2_(apellido)_(nombre)</li>
 <li>Mostrar todo el código que escriban. NO USAR <code>echo=FALSE</code></li>
 <li>Ser ordenado de acuerdo a las consignas propuestas</li>
 </ul>
-<p>Una vez terminado el notebook deberán subirlo a RPubs e indicar el link en el archivo de carga de trabajos.</p>
+<p>Una vez terminado el notebook deberán enviarlo por mail al profesor que les sea asignado, según se indica en la guía de procedimiento.</p>
 </div>
 <div id="criterios-de-evaluacion" class="section level2">
 <h2>CRITERIOS DE EVALUACION</h2>
@@ -1771,55 +1771,63 @@ summary {
 </ul>
 </div>
 <div id="datos" class="section level2">
-<h2>Datos</h2>
-<p>Utilizar el nuevo dataset, ya filtrado, que se encuentra en <a href="https://diegokoz.github.io/EEA2019/trabajos_practicos/TP-2/ar_properties.rds" class="uri">https://diegokoz.github.io/EEA2019/trabajos_practicos/TP-2/ar_properties.rds</a></p>
+<h2>DATOS</h2>
+<p>Utilizar el nuevo dataset, ya filtrado, que se encuentra en <a href="https://eea-uba.github.io/EEA-2020/trabajos_practicos/TP-2/ar_properties.rds" class="uri">https://eea-uba.github.io/EEA-2020/trabajos_practicos/TP-2/ar_properties.rds</a></p>
 </div>
 <div id="consignas" class="section level2">
 <h2>CONSIGNAS</h2>
 <ol style="list-style-type: decimal">
-<li>Regresión lineal múltiple</li>
+<li><strong>Preparación de datos</strong></li>
 </ol>
 <ol style="list-style-type: lower-alpha">
-<li>Crear un modelo para predecir el precio con todas las covariables.</li>
-<li>Analizar los resultados del modelo:
+<li>Cargar el dataset y observar su estructura.</li>
+<li>Dividir aleatoriamente el conjunto de datos: 70% para entrenamiento y 30% para test.</li>
+</ol>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Modelo Regresión lineal múltiple</strong></li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li><p>Crear un modelo para predecir el precio con todas las covariables.</p></li>
+<li><p>Analizar los resultados del modelo:</p>
 <ol style="list-style-type: lower-roman">
 <li>Interpretación de los coeficientes estimados</li>
 <li>¿Qué observan respecto de la significatividad de las variables dummy?</li>
 <li>Medidas de evaluación del modelo</li>
 </ol></li>
-<li>¿Qué es preferible tener para vender?:
+<li><p>¿Qué es preferible tener para vender?:</p>
 <ol style="list-style-type: decimal">
 <li>un departamento de 120 mts cuadrados cubiertos en abasto, con 3 dormitorios y 2 baños</li>
 <li>Un PH en balvanera, con 80 mts cuadrados cubiertos, 20 mts cuadrados no cubiertos, 2 dormitorios y 3 baños.</li>
 </ol></li>
-<li><p>Realizar un modelo sin la covariable <code>l3</code> e interpretar sus resultados (todas las partes de la salida que consideren relevantes)</p></li>
+<li><p>Realizar un modelo sin la covariable <code>l3</code> e interpretar sus resultados (todas las partes de la salida que consideren relevantes).</p></li>
 <li><p>¿Cuál es el modelo que mejor explica la variabilidad del precio?</p></li>
 </ol>
 <ol start="2" style="list-style-type: decimal">
-<li>Creación de variables:
+<li><strong>Creación de variables</strong>
 <ol style="list-style-type: lower-alpha">
 <li>En el ejercicio anterior encontramos que algunos barrios son significativos, aunque no todos. Crear una nueva variable <code>barrios</code> que divida a los barrios según el precio por metro cuadrado promedio de las propiedades en ellos, con los grupos c(‘alto’, ‘medio’, ‘bajo’). Realizar un análisis exploratorio para definir los puntos de corte de la nueva variable y explicar los criterios utilizados en la construcción de la misma.</li>
-<li>Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes)</li>
+<li>Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes).</li>
 <li>¿Qué modelo explica mejor la variabilidad de los datos, el que utiliza la variable <code>l3</code> o el que utiliza <code>barrio</code>? En su opinión, ¿Qué modelo es más útil? ¿Porqué?</li>
-<li>La interpretación de los coeficientes de las variables <code>surface_covered</code> y <code>surface_total</code> puede ser un poco problemática ya que se encuentran correlacionadas. Entonces, podemos construir una nueva variable <code>surface_patio</code> para la diferencia entre ambas superficies:
+<li>La interpretación de los coeficientes de las variables <code>surface_covered</code> y <code>surface_total</code> puede ser un poco problemática ya que se encuentran altamente correlacionadas. Entonces, podemos construir una nueva variable <code>sup_descubierta</code> para la diferencia entre ambas superficies:
 <ol style="list-style-type: lower-roman">
-<li>Construir una nueva variable <code>surface_patio</code>. Dado que algunos registros pueden contener la contradicción de que surface_total&lt;surface_covered, explicitar cómo se procede para dichos casos.</li>
-<li>Calcular nuevamente el modelo lineal para todas las covariables previas (excepto <code>surface_total</code>), <code>surface_covered</code> y <code>surface_patio</code> e interpretar los coeficientes de estas dos últimas variables</li>
+<li>Construir una nueva variable <code>sup_descubierta</code>. Dado que algunos registros pueden contener la contradicción de que surface_total &lt; surface_covered, explicitar cómo se procede para dichos casos.</li>
+<li>Calcular nuevamente el modelo lineal para todas las covariables previas (excepto <code>surface_total</code>), <code>surface_covered</code> y <code>sup_descubierta</code> e interpretar los coeficientes de estas dos últimas variables.</li>
 </ol></li>
 </ol></li>
-<li>Evaluación del modelo:
+<li><strong>Evaluación del modelo</strong>:
 <ol style="list-style-type: lower-alpha">
-<li>Analizar los residuos del modelo elaborado en 2.d</li>
-<li>Calcular el modelo <span class="math display">\[
-log(price) = \beta_0 + \beta_1log(rooms) + \beta_2log(bathrooms) + \beta_3log(surface\_covered) + \beta_4property\_type + \beta_5barrio + \beta_6surface\_patio
-\]</span> Comparar la performance del modelo de 2.d con éste, tanto en términos de la variabilidad explicada cómo de su relación con los supuestos del modelo lineal. Re-interpretar los parámetros del modelo.</li>
+<li>Analizar los residuos del modelo elaborado en 2.d utilizando el dataset de train por un lado y el de test. Recordar que hay que crear la variable <code>sup_descubierta</code> en este último dataset también.</li>
 </ol></li>
+<li><strong>Modelo Log(price)</strong></li>
 </ol>
+<p><span class="math display">\[
+log(price) = \beta_0 + \beta_1log(rooms) + \beta_2log(bathrooms) + \beta_3log(surface\_covered) + \beta_4property\_type + \beta_5barrio + \beta_6surface\_patio
+\]</span> a) Crear un modelo para log(price) y comparar la performance del modelo de 2.d con éste, tanto en términos de la variabilidad explicada cómo de su relación con los supuestos del modelo lineal. Re-interpretar los parámetros del modelo.</p>
 <ul>
 <li>Les recomendamos como referencia para la interpretación de los parámetros el <a href="https://diegokoz.github.io/EEA2019/teorica/Wooldrige.pdf">Wooldridge, J. M. (2006). Introducción a la econometría: un enfoque moderno. Editorial Paraninfo.</a></li>
 </ul>
-<ol start="4" style="list-style-type: decimal">
-<li>Dataframes anidados
+<ol start="5" style="list-style-type: decimal">
+<li><strong>Dataframes anidados</strong>
 <ol style="list-style-type: lower-alpha">
 <li>Anidar por la variable <strong>property_type</strong></li>
 <li>Construir para cada tipo de propiedad el modelo de 2.d e interpretar los resultados en cada caso. Qué diferencias encuentran entre los distintos modelos?</li>
@@ -1828,7 +1836,7 @@ log(price) = \beta_0 + \beta_1log(rooms) + \beta_2log(bathrooms) + \beta_3log(su
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiVFAgMjogUmVncmVzacOzbiBsaW5lYWwgTcO6bHRpcGxlIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpEYXRvcyBwcm92aXN0b3MgcG9yIFtQcm9wZXJhdGkgQXJnZW50aW5hXShodHRwczovL3d3dy5wcm9wZXJhdGkuY29tLmFyKQoKIyMgSU5TVFJVQ0NJT05FUwoKRGViZXLDoW4gcmVhbGl6YXIgZWwgdHJhYmFqbyBlbiB1biAqKlJOb3RlYm9vayoqIHB1YmxpY2FkbyBlbiBbUlB1YnNdKGh0dHA6Ly9ycHVicy5jb20vKS4KCkVsICoqUk5vdGVib29rKiogZGViZToKCiogVGVuZXIgZWwgc2lndWllbnRlIG5vbWJyZTogZWVhMjAxOV90cDJfKGFwZWxsaWRvKV8obm9tYnJlKQoqIE1vc3RyYXIgdG9kbyBlbCBjw7NkaWdvIHF1ZSBlc2NyaWJhbi4gTk8gVVNBUiBgZWNobz1GQUxTRWAKKiBTZXIgb3JkZW5hZG8gZGUgYWN1ZXJkbyBhIGxhcyBjb25zaWduYXMgcHJvcHVlc3RhcwoKVW5hIHZleiB0ZXJtaW5hZG8gZWwgbm90ZWJvb2sgZGViZXLDoW4gc3ViaXJsbyBhIFJQdWJzIGUgaW5kaWNhciBlbCBsaW5rIGVuIGVsIGFyY2hpdm8gZGUgY2FyZ2EgZGUgdHJhYmFqb3MuCgojIyBDUklURVJJT1MgREUgRVZBTFVBQ0lPTgoKKiBFeHBsaWNhciBsb3MgcHJvY2VkaW1pZW50b3MgeSBkZWNpc2lvbmVzIGVuIGVsIHRleHRvCiogQ29tZW50YXIgZWwgY8OzZGlnbwoqIExsZWdhciBhIGxvcyByZXN1bHRhZG9zIGVzcGVyYWRvcwoqIFJlY29tZW5kYW1vcyBmdWVydGVtZW50ZSB1c2FyIGxhcyBmdW5jaW9uZXMgZGUgYHRpZHl2ZXJzZWAKCiMjIERhdG9zCgpVdGlsaXphciBlbCBudWV2byBkYXRhc2V0LCB5YSBmaWx0cmFkbywgcXVlIHNlIGVuY3VlbnRyYSBlbiBodHRwczovL2RpZWdva296LmdpdGh1Yi5pby9FRUEyMDE5L3RyYWJham9zX3ByYWN0aWNvcy9UUC0yL2FyX3Byb3BlcnRpZXMucmRzCgojIyBDT05TSUdOQVMKCjEpIFJlZ3Jlc2nDs24gbGluZWFsIG3Dumx0aXBsZQoKICBhKSBDcmVhciB1biBtb2RlbG8gcGFyYSBwcmVkZWNpciBlbCBwcmVjaW8gY29uIHRvZGFzIGxhcyBjb3ZhcmlhYmxlcy4KICBiKSBBbmFsaXphciBsb3MgcmVzdWx0YWRvcyBkZWwgbW9kZWxvOgogICAgICBpKSBJbnRlcnByZXRhY2nDs24gZGUgbG9zIGNvZWZpY2llbnRlcyBlc3RpbWFkb3MKICAgICAgaWkpIMK/UXXDqSBvYnNlcnZhbiByZXNwZWN0byBkZSBsYSBzaWduaWZpY2F0aXZpZGFkIGRlIGxhcyB2YXJpYWJsZXMgZHVtbXk/CiAgICAgIGlpaSkgTWVkaWRhcyBkZSBldmFsdWFjacOzbiBkZWwgbW9kZWxvCiAgYykgwr9RdcOpIGVzIHByZWZlcmlibGUgdGVuZXIgcGFyYSB2ZW5kZXI/OgogICAgICAxLiB1biBkZXBhcnRhbWVudG8gZGUgMTIwIG10cyBjdWFkcmFkb3MgY3ViaWVydG9zIGVuIGFiYXN0bywgY29uIDMgZG9ybWl0b3Jpb3MgeSAyIGJhw7FvcwogICAgICAyLiBVbiBQSCBlbiBiYWx2YW5lcmEsIGNvbiA4MCBtdHMgY3VhZHJhZG9zIGN1YmllcnRvcywgMjAgbXRzIGN1YWRyYWRvcyBubyBjdWJpZXJ0b3MsIDIgZG9ybWl0b3Jpb3MgeSAzIGJhw7Fvcy4KCiAgZCkgUmVhbGl6YXIgdW4gbW9kZWxvIHNpbiBsYSBjb3ZhcmlhYmxlIGBsM2AgZSBpbnRlcnByZXRhciBzdXMgcmVzdWx0YWRvcyAodG9kYXMgbGFzIHBhcnRlcyBkZSBsYSBzYWxpZGEgcXVlIGNvbnNpZGVyZW4gcmVsZXZhbnRlcykKCiAgZSkgwr9DdcOhbCBlcyBlbCBtb2RlbG8gcXVlIG1lam9yIGV4cGxpY2EgbGEgdmFyaWFiaWxpZGFkIGRlbCBwcmVjaW8/CgoyKSBDcmVhY2nDs24gZGUgdmFyaWFibGVzOgogICAgYSkgRW4gZWwgZWplcmNpY2lvIGFudGVyaW9yIGVuY29udHJhbW9zIHF1ZSBhbGd1bm9zIGJhcnJpb3Mgc29uIHNpZ25pZmljYXRpdm9zLCBhdW5xdWUgbm8gdG9kb3MuIENyZWFyIHVuYSBudWV2YSB2YXJpYWJsZSBgYmFycmlvc2AgcXVlIGRpdmlkYSBhIGxvcyBiYXJyaW9zIHNlZ8O6biBlbCBwcmVjaW8gcG9yIG1ldHJvIGN1YWRyYWRvIHByb21lZGlvIGRlIGxhcyBwcm9waWVkYWRlcyBlbiBlbGxvcywgY29uIGxvcyBncnVwb3MgYygnYWx0bycsICdtZWRpbycsICdiYWpvJykuIFJlYWxpemFyIHVuIGFuw6FsaXNpcyBleHBsb3JhdG9yaW8gcGFyYSBkZWZpbmlyIGxvcyBwdW50b3MgZGUgY29ydGUgZGUgbGEgbnVldmEgdmFyaWFibGUgeSBleHBsaWNhciBsb3MgY3JpdGVyaW9zIHV0aWxpemFkb3MgZW4gbGEgY29uc3RydWNjacOzbiBkZSBsYSBtaXNtYS4KICAgIGIpIENhbGN1bGFyIGVsIG1vZGVsbyBxdWUgcHJlZGljZSBlbCBwcmVjaW8gZW4gZnVuY2nDs24gZGUgbGFzIG51ZXZhcyBjb3ZhcmlhYmxlcyBlIGludGVycHJldGFyIHN1cyByZXN1bHRhZG9zICh0b2RhcyBsYXMgcGFydGVzIGRlIGxhIHNhbGlkYSBxdWUgY29uc2lkZXJlbiByZWxldmFudGVzKQogICAgYykgwr9RdcOpIG1vZGVsbyBleHBsaWNhIG1lam9yIGxhIHZhcmlhYmlsaWRhZCBkZSBsb3MgZGF0b3MsIGVsIHF1ZSB1dGlsaXphIGxhIHZhcmlhYmxlIGBsM2AgbyBlbCBxdWUgdXRpbGl6YSBgYmFycmlvYD8gRW4gc3Ugb3BpbmnDs24sIMK/UXXDqSBtb2RlbG8gZXMgbcOhcyDDunRpbD8gwr9Qb3JxdcOpPyAKICAgIGQpIExhIGludGVycHJldGFjacOzbiBkZSBsb3MgY29lZmljaWVudGVzIGRlIGxhcyB2YXJpYWJsZXMgYHN1cmZhY2VfY292ZXJlZGAgeSBgc3VyZmFjZV90b3RhbGAgcHVlZGUgc2VyIHVuIHBvY28gcHJvYmxlbcOhdGljYSB5YSBxdWUgc2UgZW5jdWVudHJhbiBjb3JyZWxhY2lvbmFkYXMuIEVudG9uY2VzLCBwb2RlbW9zIGNvbnN0cnVpciB1bmEgbnVldmEgdmFyaWFibGUgIGBzdXJmYWNlX3BhdGlvYCBwYXJhIGxhIGRpZmVyZW5jaWEgZW50cmUgYW1iYXMgc3VwZXJmaWNpZXM6CiAgICAgICAgaSkgQ29uc3RydWlyIHVuYSBudWV2YSB2YXJpYWJsZSAgYHN1cmZhY2VfcGF0aW9gLiBEYWRvIHF1ZSBhbGd1bm9zIHJlZ2lzdHJvcyBwdWVkZW4gY29udGVuZXIgbGEgY29udHJhZGljY2nDs24gZGUgcXVlIHN1cmZhY2VfdG90YWw8c3VyZmFjZV9jb3ZlcmVkLCBleHBsaWNpdGFyIGPDs21vIHNlIHByb2NlZGUgcGFyYSBkaWNob3MgY2Fzb3MuIAogICAgICAgIGlpKSBDYWxjdWxhciBudWV2YW1lbnRlIGVsIG1vZGVsbyBsaW5lYWwgcGFyYSB0b2RhcyBsYXMgY292YXJpYWJsZXMgcHJldmlhcyAoZXhjZXB0byBgc3VyZmFjZV90b3RhbGApLCBgc3VyZmFjZV9jb3ZlcmVkYCB5IGBzdXJmYWNlX3BhdGlvYCBlIGludGVycHJldGFyIGxvcyBjb2VmaWNpZW50ZXMgZGUgZXN0YXMgZG9zIMO6bHRpbWFzIHZhcmlhYmxlcwoKMykgRXZhbHVhY2nDs24gZGVsIG1vZGVsbzoKICAgIGEpIEFuYWxpemFyIGxvcyByZXNpZHVvcyBkZWwgbW9kZWxvIGVsYWJvcmFkbyBlbiAyLmQKICAgIGIpIENhbGN1bGFyIGVsIG1vZGVsbyAKJCQKbG9nKHByaWNlKSA9IFxiZXRhXzAgKyBcYmV0YV8xbG9nKHJvb21zKSArIFxiZXRhXzJsb2coYmF0aHJvb21zKSArIFxiZXRhXzNsb2coc3VyZmFjZVxfY292ZXJlZCkgKyBcYmV0YV80cHJvcGVydHlcX3R5cGUgKyBcYmV0YV81YmFycmlvICsgXGJldGFfNnN1cmZhY2VcX3BhdGlvCiQkCkNvbXBhcmFyIGxhIHBlcmZvcm1hbmNlIGRlbCBtb2RlbG8gZGUgMi5kIGNvbiDDqXN0ZSwgdGFudG8gZW4gdMOpcm1pbm9zIGRlIGxhIHZhcmlhYmlsaWRhZCBleHBsaWNhZGEgY8OzbW8gZGUgc3UgcmVsYWNpw7NuIGNvbiBsb3Mgc3VwdWVzdG9zIGRlbCBtb2RlbG8gbGluZWFsLiBSZS1pbnRlcnByZXRhciBsb3MgcGFyw6FtZXRyb3MgZGVsIG1vZGVsby4KCi0gTGVzIHJlY29tZW5kYW1vcyBjb21vIHJlZmVyZW5jaWEgcGFyYSBsYSBpbnRlcnByZXRhY2nDs24gZGUgbG9zIHBhcsOhbWV0cm9zIGVsCltXb29sZHJpZGdlLCBKLiBNLiAoMjAwNikuIEludHJvZHVjY2nDs24gYSBsYSBlY29ub21ldHLDrWE6IHVuIGVuZm9xdWUgbW9kZXJuby4gRWRpdG9yaWFsIFBhcmFuaW5mby5dKGh0dHBzOi8vZGllZ29rb3ouZ2l0aHViLmlvL0VFQTIwMTkvdGVvcmljYS9Xb29sZHJpZ2UucGRmKQoKNCkgRGF0YWZyYW1lcyBhbmlkYWRvcwogICAgYSkgQW5pZGFyIHBvciBsYSB2YXJpYWJsZSAqKnByb3BlcnR5X3R5cGUqKgogICAgYikgQ29uc3RydWlyIHBhcmEgY2FkYSB0aXBvIGRlIHByb3BpZWRhZCBlbCBtb2RlbG8gZGUgMi5kIGUgaW50ZXJwcmV0YXIgbG9zIHJlc3VsdGFkb3MgZW4gY2FkYSBjYXNvLiBRdcOpIGRpZmVyZW5jaWFzIGVuY3VlbnRyYW4gZW50cmUgbG9zIGRpc3RpbnRvcyBtb2RlbG9zPwoKCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlRQIDI6IFJlZ3Jlc2nDs24gbGluZWFsIE3Dumx0aXBsZSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCkRhdG9zIHByb3Zpc3RvcyBwb3IgW1Byb3BlcmF0aSBBcmdlbnRpbmFdKGh0dHBzOi8vd3d3LnByb3BlcmF0aS5jb20uYXIpDQoNCiMjIElOU1RSVUNDSU9ORVMNCg0KRGViZXLDoW4gcmVhbGl6YXIgZWwgdHJhYmFqbyBlbiB1biAqKlJOb3RlYm9vayoqIHkgZW50cmVnYXJsbyBlbiBmb3JtYXRvIEhUTUwuDQoNCkVsICoqUk5vdGVib29rKiogZGViZToNCg0KKiBUZW5lciBlbCBzaWd1aWVudGUgbm9tYnJlOiBlZWEyMDIwX3RwMl8oYXBlbGxpZG8pXyhub21icmUpDQoqIE1vc3RyYXIgdG9kbyBlbCBjw7NkaWdvIHF1ZSBlc2NyaWJhbi4gTk8gVVNBUiBgZWNobz1GQUxTRWANCiogU2VyIG9yZGVuYWRvIGRlIGFjdWVyZG8gYSBsYXMgY29uc2lnbmFzIHByb3B1ZXN0YXMNCg0KVW5hIHZleiB0ZXJtaW5hZG8gZWwgbm90ZWJvb2sgZGViZXLDoW4gZW52aWFybG8gcG9yIG1haWwgYWwgcHJvZmVzb3IgcXVlIGxlcyBzZWEgYXNpZ25hZG8sIHNlZ8O6biBzZSBpbmRpY2EgZW4gbGEgZ3XDrWEgZGUgcHJvY2VkaW1pZW50by4NCg0KIyMgQ1JJVEVSSU9TIERFIEVWQUxVQUNJT04NCg0KKiBFeHBsaWNhciBsb3MgcHJvY2VkaW1pZW50b3MgeSBkZWNpc2lvbmVzIGVuIGVsIHRleHRvDQoqIENvbWVudGFyIGVsIGPDs2RpZ28NCiogTGxlZ2FyIGEgbG9zIHJlc3VsdGFkb3MgZXNwZXJhZG9zDQoqIFJlY29tZW5kYW1vcyBmdWVydGVtZW50ZSB1c2FyIGxhcyBmdW5jaW9uZXMgZGUgYHRpZHl2ZXJzZWANCg0KIyMgREFUT1MNCg0KVXRpbGl6YXIgZWwgbnVldm8gZGF0YXNldCwgeWEgZmlsdHJhZG8sIHF1ZSBzZSBlbmN1ZW50cmEgZW4gaHR0cHM6Ly9lZWEtdWJhLmdpdGh1Yi5pby9FRUEtMjAyMC90cmFiYWpvc19wcmFjdGljb3MvVFAtMi9hcl9wcm9wZXJ0aWVzLnJkcw0KDQojIyBDT05TSUdOQVMNCg0KMSkgKipQcmVwYXJhY2nDs24gZGUgZGF0b3MqKg0KDQogIGEpIENhcmdhciBlbCBkYXRhc2V0IHkgb2JzZXJ2YXIgc3UgZXN0cnVjdHVyYS4gDQogIGIpIERpdmlkaXIgYWxlYXRvcmlhbWVudGUgZWwgY29uanVudG8gZGUgZGF0b3M6IDcwJSBwYXJhIGVudHJlbmFtaWVudG8geSAzMCUgcGFyYSB0ZXN0LiANCg0KMikgKipNb2RlbG8gUmVncmVzacOzbiBsaW5lYWwgbcO6bHRpcGxlKioNCg0KICBhKSBDcmVhciB1biBtb2RlbG8gcGFyYSBwcmVkZWNpciBlbCBwcmVjaW8gY29uIHRvZGFzIGxhcyBjb3ZhcmlhYmxlcy4NCiAgDQogIGIpIEFuYWxpemFyIGxvcyByZXN1bHRhZG9zIGRlbCBtb2RlbG86DQogICAgICBpKSBJbnRlcnByZXRhY2nDs24gZGUgbG9zIGNvZWZpY2llbnRlcyBlc3RpbWFkb3MNCiAgICAgIGlpKSDCv1F1w6kgb2JzZXJ2YW4gcmVzcGVjdG8gZGUgbGEgc2lnbmlmaWNhdGl2aWRhZCBkZSBsYXMgdmFyaWFibGVzIGR1bW15Pw0KICAgICAgaWlpKSBNZWRpZGFzIGRlIGV2YWx1YWNpw7NuIGRlbCBtb2RlbG8NCiAgDQogIGMpIMK/UXXDqSBlcyBwcmVmZXJpYmxlIHRlbmVyIHBhcmEgdmVuZGVyPzoNCiAgICAgIDEuIHVuIGRlcGFydGFtZW50byBkZSAxMjAgbXRzIGN1YWRyYWRvcyBjdWJpZXJ0b3MgZW4gYWJhc3RvLCBjb24gMyBkb3JtaXRvcmlvcyB5IDIgYmHDsW9zDQogICAgICAyLiBVbiBQSCBlbiBiYWx2YW5lcmEsIGNvbiA4MCBtdHMgY3VhZHJhZG9zIGN1YmllcnRvcywgMjAgbXRzIGN1YWRyYWRvcyBubyBjdWJpZXJ0b3MsIDIgZG9ybWl0b3Jpb3MgeSAzIGJhw7Fvcy4NCg0KICBkKSBSZWFsaXphciB1biBtb2RlbG8gc2luIGxhIGNvdmFyaWFibGUgYGwzYCBlIGludGVycHJldGFyIHN1cyByZXN1bHRhZG9zICh0b2RhcyBsYXMgcGFydGVzIGRlIGxhIHNhbGlkYSBxdWUgY29uc2lkZXJlbiByZWxldmFudGVzKS4NCg0KICBlKSDCv0N1w6FsIGVzIGVsIG1vZGVsbyBxdWUgbWVqb3IgZXhwbGljYSBsYSB2YXJpYWJpbGlkYWQgZGVsIHByZWNpbz8NCg0KMikgKipDcmVhY2nDs24gZGUgdmFyaWFibGVzKioNCiAgICBhKSBFbiBlbCBlamVyY2ljaW8gYW50ZXJpb3IgZW5jb250cmFtb3MgcXVlIGFsZ3Vub3MgYmFycmlvcyBzb24gc2lnbmlmaWNhdGl2b3MsIGF1bnF1ZSBubyB0b2Rvcy4gQ3JlYXIgdW5hIG51ZXZhIHZhcmlhYmxlIGBiYXJyaW9zYCBxdWUgZGl2aWRhIGEgbG9zIGJhcnJpb3Mgc2Vnw7puIGVsIHByZWNpbyBwb3IgbWV0cm8gY3VhZHJhZG8gcHJvbWVkaW8gZGUgbGFzIHByb3BpZWRhZGVzIGVuIGVsbG9zLCBjb24gbG9zIGdydXBvcyBjKCdhbHRvJywgJ21lZGlvJywgJ2Jham8nKS4gUmVhbGl6YXIgdW4gYW7DoWxpc2lzIGV4cGxvcmF0b3JpbyBwYXJhIGRlZmluaXIgbG9zIHB1bnRvcyBkZSBjb3J0ZSBkZSBsYSBudWV2YSB2YXJpYWJsZSB5IGV4cGxpY2FyIGxvcyBjcml0ZXJpb3MgdXRpbGl6YWRvcyBlbiBsYSBjb25zdHJ1Y2Npw7NuIGRlIGxhIG1pc21hLg0KICAgIGIpIENhbGN1bGFyIGVsIG1vZGVsbyBxdWUgcHJlZGljZSBlbCBwcmVjaW8gZW4gZnVuY2nDs24gZGUgbGFzIG51ZXZhcyBjb3ZhcmlhYmxlcyBlIGludGVycHJldGFyIHN1cyByZXN1bHRhZG9zICh0b2RhcyBsYXMgcGFydGVzIGRlIGxhIHNhbGlkYSBxdWUgY29uc2lkZXJlbiByZWxldmFudGVzKS4NCiAgICBjKSDCv1F1w6kgbW9kZWxvIGV4cGxpY2EgbWVqb3IgbGEgdmFyaWFiaWxpZGFkIGRlIGxvcyBkYXRvcywgZWwgcXVlIHV0aWxpemEgbGEgdmFyaWFibGUgYGwzYCBvIGVsIHF1ZSB1dGlsaXphIGBiYXJyaW9gPyBFbiBzdSBvcGluacOzbiwgwr9RdcOpIG1vZGVsbyBlcyBtw6FzIMO6dGlsPyDCv1BvcnF1w6k/IA0KICAgIGQpIExhIGludGVycHJldGFjacOzbiBkZSBsb3MgY29lZmljaWVudGVzIGRlIGxhcyB2YXJpYWJsZXMgYHN1cmZhY2VfY292ZXJlZGAgeSBgc3VyZmFjZV90b3RhbGAgcHVlZGUgc2VyIHVuIHBvY28gcHJvYmxlbcOhdGljYSB5YSBxdWUgc2UgZW5jdWVudHJhbiBhbHRhbWVudGUgY29ycmVsYWNpb25hZGFzLiBFbnRvbmNlcywgcG9kZW1vcyBjb25zdHJ1aXIgdW5hIG51ZXZhIHZhcmlhYmxlIGBzdXBfZGVzY3ViaWVydGFgIHBhcmEgbGEgZGlmZXJlbmNpYSBlbnRyZSBhbWJhcyBzdXBlcmZpY2llczoNCiAgICAgICAgaSkgQ29uc3RydWlyIHVuYSBudWV2YSB2YXJpYWJsZSAgYHN1cF9kZXNjdWJpZXJ0YWAuIERhZG8gcXVlIGFsZ3Vub3MgcmVnaXN0cm9zIHB1ZWRlbiBjb250ZW5lciBsYSBjb250cmFkaWNjacOzbiBkZSBxdWUgc3VyZmFjZV90b3RhbCA8IHN1cmZhY2VfY292ZXJlZCwgZXhwbGljaXRhciBjw7NtbyBzZSBwcm9jZWRlIHBhcmEgZGljaG9zIGNhc29zLiANCiAgICAgICAgaWkpIENhbGN1bGFyIG51ZXZhbWVudGUgZWwgbW9kZWxvIGxpbmVhbCBwYXJhIHRvZGFzIGxhcyBjb3ZhcmlhYmxlcyBwcmV2aWFzIChleGNlcHRvIGBzdXJmYWNlX3RvdGFsYCksIGBzdXJmYWNlX2NvdmVyZWRgIHkgYHN1cF9kZXNjdWJpZXJ0YWAgZSBpbnRlcnByZXRhciBsb3MgY29lZmljaWVudGVzIGRlIGVzdGFzIGRvcyDDumx0aW1hcyB2YXJpYWJsZXMuDQoNCjMpICoqRXZhbHVhY2nDs24gZGVsIG1vZGVsbyoqOg0KICAgIGEpIEFuYWxpemFyIGxvcyByZXNpZHVvcyBkZWwgbW9kZWxvIGVsYWJvcmFkbyBlbiAyLmQgdXRpbGl6YW5kbyBlbCBkYXRhc2V0IGRlIHRyYWluIHBvciB1biBsYWRvIHkgZWwgZGUgdGVzdC4gUmVjb3JkYXIgcXVlIGhheSBxdWUgY3JlYXIgbGEgdmFyaWFibGUgYHN1cF9kZXNjdWJpZXJ0YWAgZW4gZXN0ZSDDumx0aW1vIGRhdGFzZXQgdGFtYmnDqW4uICANCiAgICANCjQpICoqTW9kZWxvIExvZyhwcmljZSkqKg0KDQokJA0KbG9nKHByaWNlKSA9IFxiZXRhXzAgKyBcYmV0YV8xbG9nKHJvb21zKSArIFxiZXRhXzJsb2coYmF0aHJvb21zKSArIFxiZXRhXzNsb2coc3VyZmFjZVxfY292ZXJlZCkgKyBcYmV0YV80cHJvcGVydHlcX3R5cGUgKyBcYmV0YV81YmFycmlvICsgXGJldGFfNnN1cmZhY2VcX3BhdGlvDQokJA0KYSkgQ3JlYXIgdW4gbW9kZWxvIHBhcmEgbG9nKHByaWNlKSB5IGNvbXBhcmFyIGxhIHBlcmZvcm1hbmNlIGRlbCBtb2RlbG8gZGUgMi5kIGNvbiDDqXN0ZSwgdGFudG8gZW4gdMOpcm1pbm9zIGRlIGxhIHZhcmlhYmlsaWRhZCBleHBsaWNhZGEgY8OzbW8gZGUgc3UgcmVsYWNpw7NuIGNvbiBsb3Mgc3VwdWVzdG9zIGRlbCBtb2RlbG8gbGluZWFsLiBSZS1pbnRlcnByZXRhciBsb3MgcGFyw6FtZXRyb3MgZGVsIG1vZGVsby4NCg0KLSBMZXMgcmVjb21lbmRhbW9zIGNvbW8gcmVmZXJlbmNpYSBwYXJhIGxhIGludGVycHJldGFjacOzbiBkZSBsb3MgcGFyw6FtZXRyb3MgZWwNCltXb29sZHJpZGdlLCBKLiBNLiAoMjAwNikuIEludHJvZHVjY2nDs24gYSBsYSBlY29ub21ldHLDrWE6IHVuIGVuZm9xdWUgbW9kZXJuby4gRWRpdG9yaWFsIFBhcmFuaW5mby5dKGh0dHBzOi8vZGllZ29rb3ouZ2l0aHViLmlvL0VFQTIwMTkvdGVvcmljYS9Xb29sZHJpZ2UucGRmKQ0KDQo1KSAqKkRhdGFmcmFtZXMgYW5pZGFkb3MqKg0KICAgIGEpIEFuaWRhciBwb3IgbGEgdmFyaWFibGUgKipwcm9wZXJ0eV90eXBlKioNCiAgICBiKSBDb25zdHJ1aXIgcGFyYSBjYWRhIHRpcG8gZGUgcHJvcGllZGFkIGVsIG1vZGVsbyBkZSAyLmQgZSBpbnRlcnByZXRhciBsb3MgcmVzdWx0YWRvcyBlbiBjYWRhIGNhc28uIFF1w6kgZGlmZXJlbmNpYXMgZW5jdWVudHJhbiBlbnRyZSBsb3MgZGlzdGludG9zIG1vZGVsb3M/DQoNCg0K</div>
 
 
 
