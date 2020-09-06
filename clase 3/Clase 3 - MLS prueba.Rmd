@@ -15,10 +15,7 @@ output:
 Vamos a trabajar con un dataset de openqube^[https://openqube.io/encuesta-sueldos-2020.01#Introduccion%20%20%20https://docs.google.com/spreadsheets/d/e/2PACX-1vTORpz5hc_wOwKdaKEIgVOAI3XVTh9WXB__C2abe_E0aJoYIoqhWQ-HTpBBryAByhIlX_booioqxK0T/pub?gid=1893349211&single=true&output=csv] sobre empleos en el sector IT.
 
 ```{r}
-library(data.table)
 library(tidyverse)
-library(readxl) 
-library(lubridate)
 library(corrr)
 library(knitr)
 library(kableExtra)
@@ -28,292 +25,252 @@ library(GGally)
 ## Preparación de Datos
 
 ```{r}
-encuesta <- read_csv("../Fuentes/Encuesta de remuneracion salarial - 2020.1.csv")
+encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
 encuesta %>%
   glimpse()
-encuesta %>%
-  head(10)
-unique(encuesta$`Estoy trabajando en`) # solo Argentina aparece
-unique(encuesta$`Dónde estás trabajando`) # en qué parte del país
-
-unique(encuesta$`Trabajo de`)
-table(encuesta$`Trabajo de`)
 ```
+
+### Análisis exploratorio
+
+```{r}
+encuesta_ds = encuesta %>%
+                filter(trabajo_de %in% c("Data Scientist / Data Engineer", "BI Analyst / Data Analyst"))
+```
+
+
+Chequeo valores unicos y faltantes. 
+
+```{r}
+encuesta_ds %>%
+  gather(., 
+         key = "Variables", 
+         value = "Valores") %>%
+  group_by(Variables) %>% 
+  summarise(Valores.unicos = length(unique(Valores)), Valores.faltantes = sum(is.na(Valores))) %>% 
+  arrange(desc(Valores.faltantes), Valores.unicos) # ordeno la tabla por valores faltantes y luego unicos.
+```
+
 
 ### Filtros 
 
 Se seleccionan las variables de interes.
 
 ```{r}
-df1 <- encuesta[,c(1:5,24:31,35,47:49)]
-
-# class(df1$Timestamp)
-# ymd_hms(df1$Timestamp) # no se convierten a timestamp
-
+encuesta_ds_relevantes = encuesta_ds %>%
+                              select(tengo, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual,
+                                     trabajo_de, salario_mensual_bruto_en_tu_moneda_local,
+                                     salario_mensual_neto_en_tu_moneda_local, sueldo_dolarizado) %>% 
+                              rename(edad = tengo,
+                                     salario_bruto = salario_mensual_bruto_en_tu_moneda_local,
+                                     salario_neto = salario_mensual_neto_en_tu_moneda_local)
 ```
 
-Aplicar filtros: 
 
-- Tipo de contrato = Full-Time
+Descripcion
 
-```{r}
-df1 %>%
-  summary()
-df2 <- df1 %>%
-  filter(`Tipo de contrato` == "Full-Time")
-df2 %>%
-  head(5)
-dim(df2)
-glimpse(df2)
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_relevantes %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
 ```
 
-### Análisis exploratorio
+## Limpieza de datos
 
-Chequeo valores unicos y faltantes. 
+### Limites del estudio
+
+#### Sueldo dolarizado
+
+Eliminar aquellas observaciones con el sueldo dolarizado para no incluir variaciones vinculadas al tipo de cambio en nuestro set de datos
 
 ```{r}
-tabla2 <- df2 %>%
-  gather(., 
-         key = "Variables", 
-         value = "Valores") %>%
-  group_by(Variables) %>% 
-  summarise(Valores.unicos = length(unique(Valores)), Valores.faltantes = sum(is.na(Valores)))
-# ordeno la tabla por valores faltantes y luego unicos.
-tabla2 %>% 
-  arrange(Valores.faltantes, Valores.unicos)
+encuesta_ds_relevantes %>% filter(sueldo_dolarizado==1)
+```
+
+
+### Datos inconsistentes
+
+Comencemos analizando aquellos registros que presentan datos que no son consistentes. 
+
+#### Edad vs años de experiencia
+
+Parecen existir algunos registros en los cuales la experiencia laboral supera la edad. 
+
+```{r}
+ggplot(encuesta_ds_relevantes, aes(x=edad, y=anos_de_experiencia, color=edad-anos_de_experiencia)) +
+        geom_point() +
+        theme_bw()
+```
+
+Sabiendo que la edad mínima para trabajar en Argentina es 14 años, podemos revisar en que registros la diferencia entre la edad y los años de experiencia es menor a dicho umbral.
+
+```{r}
+edad_laboral_minima = 14
+encuesta_ds_relevantes %>% filter(edad-anos_de_experiencia<edad_laboral_minima)
+```
+
+**Caso particular: Años de experiencia en la empresa actual**
+
+Hay un caso particular en el cual una persona contestó que lleva 2016 años en la empresa actual
+
+```{r}
+encuesta_ds_relevantes %>% filter(anos_en_la_empresa_actual>70)
+```
+
+
+### Salario neto superior al bruto
+
+```{r}
+ggplot(encuesta_ds_relevantes, aes(x=salario_mensual_bruto_en_tu_moneda_local, y=salario_mensual_neto_en_tu_moneda_local)) +
+         geom_point() + theme_bw()
+```
+
+
+```{r}
+encuesta_ds_relevantes %>% mutate(dif=(salario_mensual_bruto_en_tu_moneda_local-salario_mensual_neto_en_tu_moneda_local)/salario_mensual_bruto_en_tu_moneda_local) %>% arrange(desc(dif))
+```
+
+
+```{r}
+encuesta_ds_relevantes %>% filter(salario_bruto<salario_neto)
+```
+
+
+```{r}
+encuesta_ds_filtrada = encuesta_ds_relevantes %>%
+                          filter(sueldo_dolarizado==0, #Eliminamos los sueldos dolarizados
+                                 edad-anos_de_experiencia>edad_laboral_minima, # Eliminamos registros inconsistentes con la edad laboral
+                                 salario_bruto>salario_neto, # Inconsistencia en los sueldos
+                                 anos_en_la_empresa_actual<70) # Error de carga
+```
+
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_filtrada %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
 ```
 
 ### Chequeo Outliers Univariados
 
+Chequeamos outliers del salario neto por mes.
+
+Boxplot
+
 ```{r}
-df2[,c(3,6:9,16,17)] %>%
-  pivot_longer(cols = 1:ncol(df2[,c(3,6:9,16,17)]),
-         names_to = "Variables", 
-         values_to  = "Valores") %>% 
-  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
-  geom_boxplot(alpha = 0.5) + 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  facet_wrap( ~ Variables, scales = "free")
+ggplot(encuesta_ds_filtrada, aes(y=salario_neto)) + geom_boxplot() + theme_bw()
+```
 
-# tratamiento de outliers
-# corrijo datos porque entiendo se trata de un error de carga y hay información para contrastar el dato
-df2$`Años en la empresa actual`[df2$`Años en la empresa actual` == 2016] <- 4
-df2$`Años en la empresa actual`[df2$`Años en la empresa actual` == 88] <- 8
+```{r}
+tabla_cuantiles <- function(x, q = c(0.25, 0.5, 0.75)) {
+  tibble("{{ x }}" := quantile(x, q), "{{ x }}_q" := q)
+}
 
-df2 <- df2 %>%
-  mutate(`Salario mensual BRUTO (en tu moneda local)` = round(`Salario mensual BRUTO (en tu moneda local)`), `Salario mensual NETO (en tu moneda local)` = round(`Salario mensual NETO (en tu moneda local)`))
+vector_salario_neto = encuesta_ds_filtrada$salario_neto
 
-# parecen valores mal cargados (corridas las comas)
-# corregir datos o eliminar para que no ensucien la base 
-# ver los que tienen salario neto mayor al bruto (se trata de un error)
-dim(df2 %>%
-  filter(`Salario mensual BRUTO (en tu moneda local)` < `Salario mensual NETO (en tu moneda local)`) %>%
-  mutate(dif = `Salario mensual NETO (en tu moneda local)` - `Salario mensual BRUTO (en tu moneda local)`)) # 125 observaciones con datos mal cargados 
+tabla_cuantiles(vector_salario_neto, c(seq(0,1,0.05)))
+```
 
-# elimino las lineas erroneas por mal carga de sueldos y otro outlier
-df3 <- df2 %>%
-  filter(`Años en el puesto actual` < 8000, `Salario mensual BRUTO (en tu moneda local)` > `Salario mensual NETO (en tu moneda local)`)
+```{r}
+IQR(encuesta_ds_filtrada$salario_neto) * 1.5 + quantile(encuesta_ds_filtrada$salario_neto, 0.75)
+```
 
-# decidi corregir los datos en relación al salario neto 
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 2140000] <- 214000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 7470084] <- 74700
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 55008226] <- 55000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 3130025] <- 31300
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 1500000] <- 150000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 1250000] <- 125000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 900000] <- 90000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 900007] <- 90000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 700000] <- 70000
-df3$`Salario mensual BRUTO (en tu moneda local)`[df3$`Salario mensual BRUTO (en tu moneda local)` == 580000] <- 58000
 
-df3[,c(3,6:9,16:17)] %>%
-  pivot_longer(cols = 1:ncol(df3[,c(3,6:9,16,17)]),
-         names_to = "Variables", 
-         values_to  = "Valores") %>% 
-  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
-  geom_boxplot(alpha = 0.5) + 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  facet_wrap( ~ Variables, scales = "free")
+```{r}
+quantile(encuesta_ds_filtrada$salario_neto, 0.25) - IQR(encuesta_ds_filtrada$salario_neto) * 1.5  
+```
 
-# chequeo outliers en variable salario bruto
-df3 %>%
-  filter(`Salario mensual BRUTO (en tu moneda local)` >= 500000)
 
-# chequeo outliers en variable salario neto
-df3 %>%
-  filter(`Salario mensual BRUTO (en tu moneda local)` < 1000)
+```{r}
+ggplot(encuesta_ds_filtrada, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
+```
 
-df3 <- df3 %>%
-  mutate(salario_bruto = 
-           case_when(`Salario mensual BRUTO (en tu moneda local)` < 1000 &
-                       `Salario mensual NETO (en tu moneda local)` < 1000 ~ 
-                       `Salario mensual BRUTO (en tu moneda local)`*1000, 
-                     TRUE ~ `Salario mensual BRUTO (en tu moneda local)`), 
-         salario_neto =           
-           case_when(`Salario mensual BRUTO (en tu moneda local)` < 1000 &
-                       `Salario mensual NETO (en tu moneda local)` < 1000 ~ 
-                       `Salario mensual NETO (en tu moneda local)`*1000, 
-                     TRUE ~ `Salario mensual NETO (en tu moneda local)`))
 
-df3 <- df3 %>%
-  mutate(salario_neto =           
-           case_when(salario_neto < 1000 ~ salario_neto * 1000, 
-                     TRUE ~ salario_neto))
+```{r}
+encuesta_ds_final = encuesta_ds_filtrada %>% filter(between(salario_neto, 21350.00, 137000))
+```
 
-# elimino dos registros erroneos
-df3 <- df3 %>% 
-  filter(salario_neto < salario_bruto)
+```{r}
+ggplot(encuesta_ds_final, aes(x=trabajo_de, y=salario_neto, fill=trabajo_de)) + geom_boxplot() + theme_bw()
+```
 
-df3 %>%
-  mutate(dif = salario_neto - salario_bruto) %>%
-  filter(dif < -100000, salario_neto < 100000) %>%
-  select(Timestamp)
-
-df3 %>%
-  filter(salario_neto < 1000)
-
-df3 %>%
-  filter(salario_bruto > 1000000)
-
-df3[,c(3,6:9,18:19)] %>%
-  gather(.,
-         key = Variables, 
-         value = Valores) %>% 
-  ggplot(aes(x = Variables, y = as.numeric(Valores))) + 
-  geom_boxplot(alpha = 0.5) + 
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  facet_wrap( ~ Variables, scales = "free")
-
-df3[df3$Timestamp == "1/8/2020 4:11:53","salario_bruto"] <- 45000
-
-df3[df3$Timestamp == "1/8/2020 9:14:53","salario_neto"] <- 110000
-df3[df3$Timestamp == "12/17/2019 0:16:31","salario_neto"] <- 150000
-df3[df3$Timestamp == "12/22/2019 23:31:56","salario_neto"] <- 100000
-df3[df3$Timestamp == "12/9/2019 15:58:28","salario_neto"] <- 120000
-df3[df3$Timestamp == "1/22/2020 22:34:59","salario_neto"] <- 119000
-df3[df3$Timestamp == "2/1/2020 18:37:21","salario_neto"] <- 80000
-
-df3[df3$Timestamp == "2/2/2020 2:25:39","salario_neto"] <- 54000
-df3[df3$Timestamp == "1/13/2020 14:32:52","salario_neto"] <- 50000
-df3[df3$Timestamp == "1/29/2020 18:58:14","salario_neto"] <- 60000
-df3[df3$Timestamp == "1/12/2020 11:49:24	","salario_neto"] <- 70000
-
-# df3 %>%
-#  filter(salario_bruto > 50000, salario_neto < 30000)
+```{r, message=FALSE, warning=FALSE}
+encuesta_ds_final %>% select(-sueldo_dolarizado) %>% ggpairs(aes(color=trabajo_de)) + 
+  theme_bw()
 ```
 
 ### Chequeo correlación
 
 ```{r}
 
-
 # calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
 
 # pearson
-matriz.correl.pe <- df3[,c(3,6:9,18:19)] %>% 
+matriz.correl.pe <- encuesta_ds_final %>%
+  select_if(is.numeric) %>% 
  correlate(use = "complete.obs", method = "pearson") %>% 
   shave() %>% 
   fashion()
 matriz.correl.pe
 
 # spearman
-matriz.correl.sp <- df3[,c(3,6:9,18:19)] %>% 
+matriz.correl.sp <- encuesta_ds_final %>%
+  select_if(is.numeric) %>% 
  correlate(use = "complete.obs", method = "spearman") 
 matriz.correl.sp
+```
 
-df3[,c(3,6:9,18:19)] %>%
-     ggpairs(.,  mapping = aes(colour = df3$Estado),
-        title = "Matriz de correlaciones")
-        
+## Modelos
+
+$salarioNeto = \beta_0 +\beta_1x+\epsilon$
+
+### Modelo edad
+
+```{r}
+lm(salario_neto ~ anos_de_experiencia, encuesta_ds_final) %>%
+  summary()
 ```
 
 ```{r}
-df2 %>%
-  ggplot(aes(y = `Salario mensual NETO (en tu moneda local)`, x = `Salario mensual BRUTO (en tu moneda local)`)) + 
-  geom_point()
-
-df3 %>%
-  ggplot(aes(y = salario_neto, x = salario_bruto)) + 
-  geom_point()
-
-df3 %>%
-  ggplot(aes(y = salario_neto, x = salario_bruto, col = Estado)) + 
-  geom_point()
-
-```
-
-```{r}
-lm(salario_bruto ~ `Años de experiencia`, df3) %>%
-  summary()
-
-lm(salario_bruto ~ `Años de experiencia` + `Dónde estás trabajando` + `¿Gente a cargo?` + `Nivel de estudios alcanzado`, df3) %>%
-  summary()
-
-ggplot(df3, aes(x = `Años de experiencia`, y = salario_bruto)) + 
+encuesta_ds_final %>% ggplot(., aes(x = edad, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
+```
 
+### Modelo años de experiencia
+
+```{r}
+lm(salario_neto ~ anos_de_experiencia + trabajo_de, encuesta_ds_final) %>%
+  summary()
 ```
 
 ```{r}
-lm(salario_bruto ~ `Tengo`, df3) %>%
-  summary()
-
-ggplot(df3, aes(x = `Tengo` , y = salario_bruto)) + 
+encuesta_ds_final %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
-
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
 ```
 
 ```{r}
-data_anal <- df3 %>%
-  filter(grepl("Anal", `Trabajo de`)) %>% 
-  filter(`Tipo de contrato` == "Full-Time")
-
-data_anal %>%
-  glimpse()
-  
-lm(salario_bruto ~ `Años de experiencia`, data_anal) %>%
-  summary()
-
-ggplot(data_anal, aes(x = `Años de experiencia`, y = salario_bruto)) + 
+encuesta_ds_final %>% filter(trabajo_de =="Data Scientist / Data Engineer") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
-
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
 ```
 
 ```{r}
-data_leader <- df3 %>%
-  filter(grepl("Leader", `Trabajo de`)) %>% 
-  filter(`Tipo de contrato` == "Full-Time")
-
-data_leader %>%
-  glimpse()
-  
-lm(salario_bruto ~ `Años de experiencia`, data_leader) %>%
-  summary()
-
-ggplot(data_leader, aes(x = `Nivel de estudios alcanzado`, y = salario_bruto)) + 
+encuesta_ds_final %>% filter(trabajo_de =="BI Analyst / Data Analyst") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
-
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
 ```
+
 
 ```{r}
-data_data <- df3 %>%
-  filter(grepl("Data", `Trabajo de`))
-
-data_data %>%
-  glimpse()
-  
-lm(salario_bruto ~ `Años de experiencia`, data_data) %>%
-  summary()
-
-ggplot(data_data, aes(x = `Años de experiencia`, y = salario_bruto))+ 
+encuesta_ds_final %>% filter(trabajo_de =="Data Scientist / Data Engineer") %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_point() +
-  stat_smooth(method = "lm", col = "red")
-
+  stat_smooth(method = "lm", col = "red") + 
+  theme_bw()
 ```
+```
+
 
 ```{r}
 data_dev <- df3 %>%
