@@ -90,6 +90,6 @@ Se pueden usar los atajos:
 
 Una vez guardado y finalizado, para entregar el archivo en formato html, se deberá generar un knit to HTML, que figura al hacer clic en Preview. 
 
-![](imagenes/knit_html.png){width=300}
+![](imagenes/knit_html.png){width=75%}
 
 Luego se pedirá lo envíen al mail del profesor que les sea asignado. 
