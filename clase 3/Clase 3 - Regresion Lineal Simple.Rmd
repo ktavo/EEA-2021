@@ -22,15 +22,15 @@ div.main-container {
 
 ## Planteo del problema
 
-Vamos a trabajar con un dataset de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/)
+Vamos a trabajar con un dataset de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/).
 
-Nuestro objetivo es crear un modelo lineal simple para explicar el sueldo neto de Data Analysts, Data Scientists y Data Engineers en Argentina.
+El objetivo es crear un modelo lineal simple para explicar el sueldo neto de los Data Analysts, Data Scientists y Data Engineers en Argentina.
 
-Nuestro idea subyacente de cómo se puede explicar el salario neto es:
+La idea subyacente de cómo se puede explicar el salario neto es:
 
 $salarioNeto = \beta_0 +\beta_1X+\epsilon$
 
-Vamos a trabajar nuestro set de datos con esta idea de modelo presente.
+Entonces, vamos a trabajar el set de datos con esta idea de modelo presente.
 
 ```{r, warning=FALSE, message=FALSE}
 # Carga de librerías
@@ -44,7 +44,7 @@ library(GGally)
 
 ## Preparación de Datos
 
-Comenzamos leyendo los datos y viendo su estructura
+Comenzamos leyendo los datos y viendo su estructura.
 
 ```{r, message=FALSE}
 encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
@@ -52,18 +52,16 @@ encuesta %>%
   glimpse()
 ```
 
-Existen 5.982 respuestas de 53 preguntas distintas. Nos vamos a quedar con las respuestas de las personas que trabajan como Data Analysts, Data Scientists y Data Engineers.
+Existen 5.982 respuestas de 53 preguntas distintas. Nos vamos a quedar con las respuestas de las personas que trabajan como Data Analysts, Data Scientists y Data Engineers. Entonces, construimos un subconjunto de los datos que incluya esos perfiles. 
 
 ```{r}
-# Filtro de los perfiles de interes
+# Filtro de los perfiles de interés
 encuesta_ds = encuesta %>%
                 filter(trabajo_de %in% c("Data Scientist / Data Engineer", "BI Analyst / Data Analyst"))
-
 # Función para describir las dimensiones
 dim_desc(encuesta_ds)
 ```
-
-Existen 321 respuestas que cumplen con este criterio
+Existen 321 respuestas (observaciones) que cumplen con este criterio.
 
 ## Análisis exploratorios
 
@@ -84,8 +82,7 @@ tabla_exploratorios =  encuesta_ds %>%
                                       arrange(desc(porcentaje_faltantes), valores_unicos) # ordenamos por porcentaje de faltantes y valores unicos
 tabla_exploratorios
 ```
-
-Vemos que varias variables presentan un alto porcentaje de faltantes. Podemos observar aquellas variables que tienen faltantes en un gráfico. 
+Vemos que una serie de variables presentan un alto porcentaje de faltantes. Podemos observar aquellas variables que tienen faltantes en un gráfico. 
 
 ```{r}
 tabla_exploratorios %>% filter(porcentaje_faltantes>0) %>% 
@@ -102,7 +99,7 @@ La variable a explicar: **salario neto** presenta 10 valores faltantes.
 
 ### Selección de variables 
 
-Seleccionamos las variables que nos interesan. Es la variable a predecir: **salario neto** y 7 variables más.
+Seleccionamos las variables que nos interesan. En este caso incluiremos la variable a predecir **salario neto** y 7 variables más.
 
 ```{r}
 encuesta_ds_relevantes = encuesta_ds %>%
@@ -130,17 +127,17 @@ encuesta_ds_relevantes %>% select(-sueldo_dolarizado) %>%
 
 Respecto de nuestra variable a predecir, el **salario neto**, observamos:
 
-  * Todas las variables (excepto el salario bruto) presentan una correlación muy baja con esta variable
+  * Todas las variables (excepto el salario bruto) presentan una correlación muy baja con esta variable.
   
-  * En los gráficos de dispersión con las variables de edad, salario bruto, años de experiencia y años en el puesto se observan varios puntos que parecen ser outliers 
+  * En los gráficos de dispersión con las variables de edad, salario bruto, años de experiencia y años en el puesto se observan varios puntos que parecen ser outliers. 
 
 Existen más respuestas de *BI Analyst/Data Analyst* que de *Data Scientist/Data Engineer* aunque no es una gran diferencia.
   
 Parece existir:
   
-  * un outlier severo en la variable **años en la empresa**
+  * Un outlier severo en la variable **años en la empresa**.
   
-  * algunas observaciones con una relación "extraña" entre la edad y los años de experiencia
+  * Algunas observaciones con una relación "extraña" entre la edad y los años de experiencia.
 
 ## Limpieza de datos
 
@@ -148,19 +145,18 @@ En base a nuestro análisis de valores faltantes y exploratorios procedemos a re
 
 ### Delimitar el modelo: Sueldo dolarizado
 
-Eliminamos aquellas observaciones con el sueldo dolarizado para no incluir variaciones vinculadas al tipo de cambio en nuestro set de datos
+Eliminamos aquellas observaciones con el sueldo dolarizado para no incluir variaciones vinculadas al tipo de cambio en nuestro set de datos.
 
 ```{r}
 encuesta_ds_relevantes %>% 
   filter(sueldo_dolarizado==1) %>% # Observaciones con el sueldo dolarizado
   nrow()
 ```
-
-Este filtro elimina 20 observaciones
+Este filtro elimina 20 observaciones.
 
 ### Datos faltantes
 
-En el apartado anterior observamos que, de las variables relevantes, sólo nuestra variable a predecir **salario_neto** presentaba 10 valores faltantes. Frente a esta situación podríamos elegir una estrategia para imputar valores faltantes o eliminarlos. Como no se tratan de muchos registros vamos a eliminarlos con la función `drop_na`
+En el apartado anterior observamos que, de las variables relevantes, sólo nuestra variable a predecir **salario_neto** presentaba 10 valores faltantes. Frente a esta situación podríamos elegir una estrategia para imputar valores faltantes o eliminarlos. Como no se tratan de muchos registros vamos a eliminarlos con la función `drop_na`.
 
 ```{r}
 encuesta_ds_relevantes = encuesta_ds_relevantes %>% 
@@ -171,12 +167,12 @@ encuesta_ds_relevantes = encuesta_ds_relevantes %>%
 
 Comencemos analizando aquellos registros que presentan datos que no son consistentes. 
 
-#### Edad vs años de experiencia
+#### Edad vs. Años de experiencia
 
-Como ya mencionamos, parecen existir algunos registros con una relación "extraña" entre la edad y los años de experiencia. Realizamos el gráfico de dispersión entre estas dos variables para analizar mejor su relación 
+Como ya mencionamos, parecen existir algunos registros con una relación "extraña" entre la edad y los años de experiencia. Realizamos el gráfico de dispersión entre estas dos variables para analizar mejor su relación. 
 
 ```{r}
-ggplot(encuesta_ds_relevantes, aes(x=edad, y=anos_de_experiencia)) +
+ggplot(encuesta_ds_relevantes, aes(x = edad, y = anos_de_experiencia)) +
         geom_point() +
         theme_bw() +
         labs(x="Edad", y="Años de experiencia", title = "Edad vs Años de experiencia")
@@ -187,7 +183,8 @@ Existen dos situaciones problemáticas:
 * los años de experiencia superan a la edad
 * sabiendo que la edad mínima para trabajar en Argentina es 14 años, podemos revisar en que registros la diferencia entre la edad y los años de experiencia es menor a dicho umbral
 
-Veamos cuantos registros eliminamos con estos filtros 
+Veamos cuantos registros eliminamos con estos filtros.
+
 ```{r}
 edad_laboral_minima = 14
 encuesta_ds_relevantes %>% 
@@ -195,7 +192,7 @@ encuesta_ds_relevantes %>%
   select(edad, anos_de_experiencia)
 ```
 
-Son 9 registros en los cuales hay casos de ambas problemáticas
+Son 9 registros en los cuales hay casos de ambas problemáticas.
 
 **Caso particular: Años de experiencia en la empresa actual**
 
@@ -209,7 +206,7 @@ ggplot(encuesta_ds_relevantes, aes(y=anos_en_la_empresa_actual)) + geom_boxplot(
 encuesta_ds_relevantes %>% filter(anos_en_la_empresa_actual>70)
 ```
 
-En este caso la persona parece haber contestado con el año en el cual ingreso a la empresa. Podríamos reconstruir el dato o eliminarlo, por simplicidad vamos a elegir la segunda opción.
+En este caso la persona parece haber contestado con el año en el cual ingresó a la empresa. Podríamos reconstruir el dato o eliminarlo, por simplicidad vamos a elegir la segunda opción.
 
 #### Salario neto superior al bruto
 
@@ -222,14 +219,13 @@ ggplot(encuesta_ds_relevantes, aes(x=salario_bruto, y=salario_neto, color = sala
         labs(title = "Inconsistencias en el salario", x="Salario Bruto", y="Salario Neto", color="¿Registro consistente?")
 ```
 
-En el gráfico observamos que existen algunos registros con datos inconsistentes
+En el gráfico observamos que existen algunos registros con datos inconsistentes.
 
 ```{r}
 encuesta_ds_relevantes %>%
   filter(salario_bruto<salario_neto) %>% 
   select(salario_bruto, salario_neto)
 ```
-
 Al igual que antes podríamos tratar de imputar un valor para nuestra variable a predecir o eliminarlos. Al tratarse de 6 registros los vamos a eliminar.
 
 #### Conjunto de filtros
@@ -248,7 +244,7 @@ encuesta_ds_filtrada = encuesta_ds_relevantes %>%
 
 ### GGPairs II
 
-Habiendo aplicado los filtros volvemos a realizar el análisis exploratorio con ggpairs 
+Habiendo aplicado los filtros volvemos a realizar el análisis exploratorio con ggpairs.
 
 ```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 encuesta_ds_filtrada %>%
@@ -259,15 +255,15 @@ encuesta_ds_filtrada %>%
 
 Respecto de nuestra variable a predecir, el **salario neto**, observamos:
 
-  * Todas las variables (excepto el salario bruto) siguen presentando una correlación general muy baja con esta variable
+  * Todas las variables (excepto el salario bruto) siguen presentando una correlación general muy baja con esta variable.
   
-  * Sin embargo, la edad y años de experiencia presentan un correlación positiva moderada para el grupo de *Data Scientist/Data Engineer*
+  * Sin embargo, la edad y años de experiencia presentan un correlación positiva moderada para el grupo de *Data Scientist/Data Engineer*.
   
-  * Siguen existiendo outliers
+  * Siguen existiendo outliers.
 
 ### Outliers Univariados
 
-Analicemos la existencia de outliers del salario neto mensual
+Analicemos la existencia de outliers del salario neto mensual.
 
 #### Boxplot
 
@@ -278,7 +274,6 @@ ggplot(encuesta_ds_filtrada, aes(y=salario_neto)) +
   geom_boxplot() +
   theme_bw() +
   labs(title="Distribución salario neto", y="Salario Neto")
-
 ```
 
 El gráfico nos indica que existen outliers "superiores" de acuerdo al criterio del boxplot. 
@@ -310,15 +305,15 @@ encuesta_ds_filtrada %>% filter(salario_neto>limite_superior_outliers)
 
 Son 10 registros en total. Existen 2 registros (filas 3 y 10) que parecen ser errores de carga, los registros restantes parecen ser outliers "genuinos".
 
-Construimos el limite inferior
+Construimos el límite inferior:
 
 ```{r}
 limite_inferior_outliers =quantile(encuesta_ds_filtrada$salario_neto, 0.25)[[1]] - IQR(encuesta_ds_filtrada$salario_neto) * 1.5
 limite_inferior_outliers 
 ```
+El límite inferior es negativo, por lo tanto, no tiene sentido filtrar por dicho valor. 
 
-El límite inferior es negativo, por lo tanto no tiene sentido filtrar por dicho valor.
-Eliminamos los outliers superiores según este criterio
+Entonces, eliminamos sólo los outliers superiores según este criterio.
 
 ```{r}
 encuesta_ds_sin_outliers = encuesta_ds_filtrada %>% filter(salario_neto<=limite_superior_outliers)
@@ -326,8 +321,7 @@ encuesta_ds_sin_outliers = encuesta_ds_filtrada %>% filter(salario_neto<=limite_
 
 #### Percentiles
 
-Dada la distribución de los datos deberíamos estudiar que sucede en la cola izquierda de la distribución.
-Creamos una función que nos permita observar los percentiles de una variable en una tabla.
+Dada la distribución de los datos deberíamos estudiar qué sucede en la cola izquierda de la distribución. Para ello, creamos una función que nos permita observar los percentiles de una variable en una tabla.
 
 ```{r}
 # Funcion para crear una tabla con los percentiles deseados de la variable
@@ -342,8 +336,7 @@ salario_neto_vec = encuesta_ds_sin_outliers$salario_neto
 percentiles_salario_neto = crear_tabla_percentiles(salario_neto_vec, c(seq(0,.1,0.01)))
 percentiles_salario_neto
 ```
-
-Vemos que hasta el percentil 3 los valores son anormalmente bajos pero no podían ser filtrados por el criterio anterior. Un valor apropiado para filtrar valores bajos es el del percentil 5
+Vemos que hasta el percentil 3 los valores son anormalmente bajos pero no podían ser filtrados por el criterio anterior. Un valor apropiado para filtrar valores bajos parece ser el del percentil 5. Por lo que definimos este valor como límite inferior. 
 
 ```{r}
 # Seleccionamos el valor del salario neto del percentil 5
@@ -353,7 +346,7 @@ limite_inferior_percentil = percentiles_salario_neto %>%
                                 as.numeric()
 ```
 
-Eliminamos los outliers inferiores según este criterio. Al tratarse del percentil 5, sabemos que estamos perdiendo 5% de los datos
+Eliminamos los outliers inferiores según este criterio. Al tratarse del percentil 5, sabemos que estamos perdiendo 5% de los datos.
 
 ```{r}
 encuesta_ds_final = encuesta_ds_sin_outliers %>%
@@ -362,7 +355,7 @@ encuesta_ds_final = encuesta_ds_sin_outliers %>%
 
 ### GGPairs III
 
-Habiendo eliminado los outliers univariados de la variable respuesta realizamos un último análisis exploratorio con ggpairs 
+Habiendo eliminado los outliers univariados de la variable respuesta realizamos un último análisis exploratorio con ggpairs.
 
 ```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 encuesta_ds_final %>%
@@ -373,20 +366,18 @@ encuesta_ds_final %>%
 
 Ahora, respecto de nuestra variable a predecir, el **salario neto**, observamos:
 
-  * Existe una correlación positiva moderada con la edad y los años de experiencia
+  * Existe una correlación positiva moderada con la edad y los años de experiencia.
   
-  * Existe una correlación positiva baja con los años en la empresa y los años en el puesto. Respecto a esta última variable existe una gran diferencia en la correlación entre los dos perfiles 
+  * Existe una correlación positiva baja con los años en la empresa y los años en el puesto. Respecto a esta última variable existe una gran diferencia en la correlación entre los dos perfiles. 
   
-  * Ya no existen outliers
+  * Ya no se observan outliers.
 
 ## Correlación
 
-Habiendo realizado la limpieza previa construimos la matriz de correlación de nuestras variables. Vamos a utilizar el método de Pearson y Spearman 
+Habiendo realizado la limpieza previa construimos la matriz de correlación de nuestras variables. Vamos a utilizar el método de Pearson y Spearman. 
 
 ```{r, message=FALSE}
-
 # calculo matriz de correlacion para los registros completos (omitiendo faltantes) para variables numéricas con ambos métodos 
-
 # pearson
 matriz.correl.pe <- encuesta_ds_final %>%
   select_if(is.numeric) %>% # Seleccionamos las variables numéricas
@@ -394,15 +385,13 @@ matriz.correl.pe <- encuesta_ds_final %>%
   shave() %>% 
   fashion()
 matriz.correl.pe
-
 # spearman
 matriz.correl.sp <- encuesta_ds_final %>%
   select_if(is.numeric) %>% # Seleccionamos las variables numéricas
  correlate(use = "complete.obs", method = "spearman") 
 matriz.correl.sp
 ```
-
-Como ya vimos en la sección inmediatamente anterior, nuestra variable de interés (el **salario_neto**) tiene una correlación positiva (método de Pearson) MODERADA con las variables de **edad**: 0.36 y **años de experiencia**: 0.41 y BAJA con los **años en la empresa actual**: 0.11 y los **años en el puesto actual**: 0.11
+Como ya vimos en la sección inmediatamente anterior, nuestra variable de interés (el **salario_neto**) tiene una correlación positiva (método de Pearson) MODERADA con las variables de **edad**: 0.36 y **años de experiencia**: 0.41 y BAJA con los **años en la empresa actual**: 0.11 y los **años en el puesto actual**: 0.11.
 
 La edad y los años de experiencia parecen ser buenas variables para predecir el salario neto de acuerdo al modelo planteado.
 
@@ -420,7 +409,6 @@ El modelo en términos de la esperanza de Y condicional a las X's que notaremos 
 $$
 E(Y|X) = \beta_0 + \beta_1X
 $$
-
 Se la suele llamar función de respuesta y es una recta.
 
 ### Modelos
@@ -431,7 +419,7 @@ $salarioNeto = \beta_0 +\beta_1x+\epsilon$
 
 Existen numerosos modelos que sostienen que existe una relación positiva entre la edad o años de experiencia laboral y el salario de una persona. Estos modelos suponen que la edad o años de experiencia laboral son variables que miden de manera indirecta la experiencia laboral de una persona. Entonces, a mayor experiencia (edad/años experiencia laboral) debería corresponder una mayor remuneración de la fuerza de trabajo.
 
-### Modelo edad
+### Modelo Edad
 
 Comencemos planteando un modelo lineal con la edad como variable independiente:
 
@@ -450,18 +438,19 @@ El modelo nos muestra la llamada utilizada y los valores de los coeficientes est
 
 #### Interpretación de los coeficientes estimados
 
-Un modelo generado con la función `lm()` es un objeto que tiene muchos atributos a los cuales se puede acceder con el simbolo $. En este caso, nos interesa traer los coeficientes estimados
+Un modelo generado con la función `lm()` es un objeto que tiene muchos atributos a los cuales se puede acceder con el simbolo $. En este caso, nos interesa traer los coeficientes estimados.
 
 ```{r}
 modelo_edad$coefficients
 ```
 
   * Teóricamente el valor $\hat{\beta_0} = 20,223.59$ es el salario neto **esperado** para una persona recién nacida (0 años). Por este motivo este valor carece de interpretación práctica.
+  
   * El valor de $\hat{\beta_1}$ indica que por cada aumento de un año de edad el salario neto **esperado** aumenta en $1,364.72  
   
 #### Gráfico del modelo
 
-Procedemos a graficar nuestro modelo accediendo a la información de los coeficientes estimados
+Procedemos a graficar nuestro modelo accediendo a la información de los coeficientes estimados.
 
 ```{r}
 # Accedemos a la información de los coeficientes estimados
@@ -478,8 +467,7 @@ encuesta_ds_final %>% ggplot(., aes(x = edad, y = salario_neto)) +
   labs(title="Modelo Lineal Simple: Edad", x="Edad", y="Salario Neto") 
 ```
 
-
-### Modelo años de experiencia
+### Modelo Años de experiencia
 
 Ahora realicemos un modelo con los años de experiencia como variable independiente:
 
@@ -492,18 +480,15 @@ modelo_experiencia = lm(formula = salario_neto ~ anos_de_experiencia, data = enc
 
 #### Interpretación de los coeficientes estimados
 
-Un modelo generado con la función `lm()` es un objeto que tiene muchos atributos a los cuales se puede acceder con el simbolo $. En este caso, nos interesa traer los coeficientes estimados
-
 ```{r}
 modelo_experiencia$coefficients
 ```
 
-  * El valor de $\hat{\beta_0}$ indica que el salario neto **esperado** es de $51,825.26 para una persona con perfil de Data Scientist/Engineer o Data Analyst sin experiencia laboral
-  * El valor de $\hat{\beta_1}$ indica que por cada aumento de un año de experiencia el salario neto **esperado** aumenta en $1,693.57  
+  * El valor de $\hat{\beta_0}$ indica que el salario neto **esperado** es de $51,825.26 para una persona con perfil de Data Scientist/Engineer o Data Analyst sin experiencia laboral.
+  
+  * El valor de $\hat{\beta_1}$ indica que por cada aumento de un año de experiencia el salario neto **esperado** aumenta en $1,693.57.  
   
 #### Gráfico del modelo
-
-Procedemos a graficar nuestro modelo accediendo a la información de los coeficientes estimados
 
 ```{r}
 # Accedemos a la información de los coeficientes estimados
@@ -533,18 +518,15 @@ modelo_empresa = lm(formula = salario_neto ~ anos_en_la_empresa_actual, data = e
 
 #### Interpretación de los coeficientes estimados
 
-Un modelo generado con la función `lm()` es un objeto que tiene muchos atributos a los cuales se puede acceder con el simbolo $. En este caso, nos interesa traer los coeficientes estimados
-
 ```{r}
 modelo_empresa$coefficients
 ```
 
-  * El valor de $\hat{\beta_0}$ indica que el salario neto **esperado** es de $60,301.46 para una persona con perfil de Data Scientist/Engineer o Data Analyst que recién comienza en una empresa
-  * El valor de $\hat{\beta_1}$ indica que por cada aumento de un año de experiencia en la misma empresa el salario neto **esperado** aumenta en $618.58  
+  * El valor de $\hat{\beta_0}$ indica que el salario neto **esperado** es de $60,301.46 para una persona con perfil de Data Scientist/Engineer o Data Analyst que recién comienza en una empresa. 
+  
+  * El valor de $\hat{\beta_1}$ indica que por cada aumento de un año de experiencia en la misma empresa el salario neto **esperado** aumenta en $618.58.  
   
 #### Gráfico del modelo
-
-Procedemos a graficar nuestro modelo accediendo a la información de los coeficientes estimados
 
 ```{r}
 # Accedemos a la información de los coeficientes estimados
