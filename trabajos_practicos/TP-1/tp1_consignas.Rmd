@@ -5,9 +5,12 @@ output: html_notebook
 
 Datos provistos por [Properati Argentina](https://www.properati.com.ar)
 
+**Fecha y hora de entrega**:
+**Fecha y hora de devolucion general**: 
+
 ## INSTRUCCIONES
 
-Deberán realizar el trabajo en un **RNotebook** y entregarlo en formato HTML.
+Deberán realizar el trabajo en un **RNotebook** y entregarlo en formato R Notebook o HTML
 
 El **RNotebook** debe:
 
