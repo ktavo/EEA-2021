@@ -6,6 +6,7 @@ output: html_notebook
 Datos provistos por [Properati Argentina](https://www.properati.com.ar)
 
 **Fecha y hora de entrega**: 5 de octubre de 2020 a las 9 a.m
+
 **Fecha y hora de devolucion general**: 10 de octubre de 2020 a las 9 a.m
 
 ## INSTRUCCIONES
@@ -31,7 +32,8 @@ En caso que los resultados no sean los esperados y no logremos identificar las f
 
 ## CONSIGNAS
 
-El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos.
+El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal reportadas por la empresa Properati. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos.
+Vamos a utilizar datos del 2019 para no incorporar comportamientos atípicos ocasionados por la pandemia del COVID-19.
 
 1) **Preparación de los datos (I)**
     a) Leer el archivo *ar_properties.csv* y mostrar su estructura
@@ -65,10 +67,7 @@ Deberían llegar a un dataset con 50.828 observaciones y 8 variables.
 
 5) **Outliers**
     a) Graficar un scatterplot de la variable **precio_en_miles** y **superficie_total**. ¿Detectan alguna anomalía?
-    b) Eliminar los outliers univariados severos de las variables **precio_en_miles**, **rooms** y **surface_total**.
-    Pueden utilizar alguno de los siguientes métodos o combinarlos:
-      * criterio del boxplot (rango intercuartil)
-      * criterio de los percentiles
+    b) Eliminar los outliers univariados de las variables **precio_en_miles**, **rooms** y **surface_total**. Utilizar y fundamentar el o los criterio/s y métodos que consideren adecuados.
     
 6) **Análisis exploratorios (III)**
     a) Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar. 
