@@ -29,7 +29,12 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 
 ### Clase 3: 19-09
 
+Estimación y test de correlación entre 2 variables. Matrices de correlación: librerías `corrr` y `GGally` 
+
 - [Correlación](clase 3/Clase 3 - Correlacion.nb.html)
+
+Análisis exploratorios, limpieza de datos, análisis de outliers e interpretación de los coeficientes de un modelo lineal simple
+
 - [Regresión Lineal Simple: Modelo e interpretación](clase 3/Clase-3---Regresion-Lineal-Simple.html)
 
 ### Clase 4: 26-09
