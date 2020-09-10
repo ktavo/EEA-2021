@@ -1,5 +1,5 @@
 ---
-title: "Regresión Lineal Múltiple"
+title: "Regresión Lineal Múltiple I"
 author: "Juan Barriola y Sofía Perini"
 date: "3 de Octubre de 2020"
 output:
@@ -10,11 +10,19 @@ output:
     df_print: paged
 ---
 
-# Encuesta de Sueldos en el sector IT
+**Encuesta de Sueldos en el sector IT**
 
-Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst. 
+## Planteo del problema
 
-```{r, warning=F}
+Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst, de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/).
+
+Nuestro objetivo es crear un modelo lineal múltiple para explicar el sueldo neto de Data Analysts, Data Scientists y Data Engineers en Argentina.
+
+Nuestro idea subyacente de cómo se puede explicar el salario neto es:
+
+$salarioNeto = \beta_0 +\beta_1X_1+\beta_2X_2+...+\epsilon$
+
+```{r, warning=F, message=F}
 library(data.table)
 library(tidyverse)
 library(readxl) 
@@ -27,7 +35,6 @@ encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
 encuesta %>%
   head()
 ```
-
 ### Limpieza de datos: Aplicamos Filtros
 
 ```{r}
@@ -50,7 +57,6 @@ df <- encuesta_ds %>%
 df
 
 ```
-
 ### Seleccionamos variables de interés
 
 ```{r}
@@ -59,27 +65,6 @@ df <- df %>%
 df %>%
   head()
 ```
-## Partición del dataset en train y test
-
-Realizamos una partición entre dataset de entrenamiento (70%) y testeo (30%) usando la función resample_partition del paquete modelr.
-
-```{r}
-# fijo semilla
-set.seed(44)
-# Partición Train y Test
-train_test <- df %>% 
-  modelr::resample_partition(c(train = 0.7, test = 0.3))
-
-df_train <- train_test$train %>% as_tibble()
-df_test <- train_test$test %>% as_tibble()
-
-# veo el contenido
-df_train %>%
-  glimpse() # 170 filas
-df_test %>%
-  glimpse() # 74 filas
-```
-
 ### Modelo Lineal Múltiple
 
 El modelo de regresión lineal múltiple es un modelo para la variable aleatoria Y cuando se conocen las variables regresoras. Es múltiple ya que vincula una serie de variables predictoras con Y. 
@@ -89,7 +74,8 @@ El modelo en términos de las variables:
 $$Y_i = β_0 + β_1X_{i1} + β_2X_{i2} + · · · + β_{p-1}X_{ip-1} + ε_i$$
 donde $β_0$, $β_1$,.., $β_{p−1}$ son parámetros desconocidos, $X_{i1}$, $X_{i2}$, ..., $X_{ip-1}$ son los valores de las variables predictoras medidas en el i-ésimo individuo, $Y_i$ es la variable respuesta medida en el i-ésimo individuo (observado) y $ε_i$ es el error para el individuo i-ésimo (no observable).
 
-Supuestos del modelo lineal
+**Supuestos del modelo lineal**
+
 Se pueden resumir como ϵi ~ N(0,σ2) 1<i<n, independientes entre sí.
 
 El modelo en términos de la esperanza condicional de Y dadas $X_1$, $X_2$,..., $X_{p-1}$:
@@ -100,25 +86,26 @@ El modelo se denomina *lineal* puesto que la esperanza de Y condicional a las X'
 
 ### Ajuste del Modelo
 
-Se quiere ajustar un modelo para el salario neto en función de distintas variables:
+Se quiere ajustar un modelo para el salario neto en función de 2 variables:
 
-$$salarioNeto = \beta_0 + \beta_1x_i1 + \beta_2x_i2 + \epsilon_i$$
+$salarioNeto = \beta_0 + \beta_1x_i1 + \beta_2x_i2 + \epsilon_i$
+
 #### 1) Predictores numéricos
 
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia y la edad.
 
 ```{r}
 # ajustamos modelo lineal multiple
-lm1 <- lm(salario_neto ~ anos_de_experiencia + edad, data = df_train)
+modelo_exp_edad <- lm(salario_neto ~ anos_de_experiencia + edad, data = df)
 # Resumen del modelo
-summary(lm1)
+summary(modelo_exp_edad)
 ```
 
-##### Significado de los coeficientes estimados
+##### Significado de los coeficientes estimados:
 
-* El valor de la ordenada al origen (36.694) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y con edad 0, por lo que no tendría sentido. 
+* El valor de la ordenada al origen (42.586) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y con edad 0, por lo que no tendría sentido. 
 
-* El coeficiente estimado de años de experiencia (1.156) no es el mismo que cuando los años de experiencia eran la única variable que explicaba el modelo (modelo simple), su valor descendió de 1.676 a 1.156. Esto implica que, si mantenemos la edad constante, cada incremento de un año en los años de experiencia corresponde a un aumento de 1.156 pesos en el sueldo neto, en promedio. O lo que es igual, dadas dos personas con la misma edad pero teniendo uno un año más de experiencia que el otro, el sueldo neto esperado para el de mayor experiencia será 1.156 pesos más alto que el de menor experiencia.
+* El coeficiente estimado de años de experiencia (1.344) no es el mismo que cuando los años de experiencia eran la única variable que explicaba el modelo (modelo simple), su valor descendió de 1.676 a 1.344. Esto implica que, si mantenemos la edad constante, cada incremento de un año en los años de experiencia corresponde a un aumento de 1.344 pesos en el sueldo neto, en promedio. O lo que es igual, dadas dos personas con la misma edad pero teniendo uno un año más de experiencia que el otro, el sueldo neto esperado para el de mayor experiencia será 1.156 pesos más alto que el de menor experiencia.
 
 ¿Cómo se interpretaría el coeficiente estimado de la edad?
 
@@ -129,45 +116,108 @@ summary(lm1)
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia, la edad y género (me_identifico). Introducimos la variable lugar de trabajo que es categórica. Veamos qué ocurre:
 
 ```{r}
-lm2 <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = df_train)
-summary(lm2)
+modelo_exp_sex <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = df)
+summary(modelo_exp_sex)
 ```
 
 ¿Cómo se interpretan los coeficientes de la variable dicotómica?
 
-Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente β1 para mujeres y hombres. Por otro lado, β2 indica cuánto más baja es la función de respuesta para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
+* Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente β1 (1.643) para mujeres y hombres. Por otro lado, β2(-9.173) indica cuánto más baja es la función de respuesta para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
 
-El modelo de regresión lineal en este caso consiste simplemente en expresar
+* El modelo de regresión lineal en este caso consiste simplemente en expresar
 la media del nivel de sueldo neto en cada población (de hombres y mujeres) mediante dos coeficientes distintos, donde β0 es la media del sueldo neto para los hombres y β0+β2 es la media del salario neto para las mujeres, dados los años de experiencia. Por lo tanto, β2 es la diferencia (en este caso negativa) en los niveles medios de salario neto de los hombres respecto de las mujeres.
 
+##### Grafiquemos la regresión para ambas poblaciones
+
+A continuación se muestra el gráfico de esta situación en que tenemos una variable categórica con solo dos niveles y una numérica. De la interpretación de coeficientes, se pudo ver que la regresión se puede expresar como dos rectas paralelas con igual pendiente pero distinto intercepto. Veamos cómo hacerla. 
+
+```{r}
+# Accedemos a la información de los coeficientes estimados
+intercepto_H = modelo_exp_sex$coefficients[1]
+pendiente1 = modelo_exp_sex$coefficients[2]
+intercepto_M = modelo_exp_sex$coefficients[1] + modelo_exp_sex$coefficients[3]
+# Graficamos el dataset y el modelo
+df %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
+  geom_abline(intercept = intercepto_H, slope = pendiente1, color = "forestgreen", size=1.5) + # capa del modelo
+  geom_abline(intercept = intercepto_M, slope = pendiente1, color = "blueviolet", size=1.5) + # capa del modelo 
+  geom_point() + #capa de los datos
+  theme_bw() +
+  scale_x_continuous(limits = c(0,40)) +
+  scale_y_continuous(limits = c(0,150000)) +
+  labs(title="Modelo Lineal Múltiple: Años en la empresa y Género", x="Años de experiencia", y="Salario Neto") 
+```
 #### **Predictores Cualitativos con más de dos clases**
 
 Como hay dos variables que se refieren al nivel de estudios alcanzado, vamos a unificar en una misma y reagrupar los datos.
 
 ```{r}
-unique(df$nivel_de_estudios_alcanzado)
-df2 <- df_train %>% 
+# unique(df$nivel_de_estudios_alcanzado)
+df2 <- df %>% 
   mutate(nivel_educativo = case_when(nivel_de_estudios_alcanzado %in% c("Posgrado", "Posdoctorado", "Doctorado") ~ "Posgrado", 
                                      TRUE ~ nivel_de_estudios_alcanzado))
 # unificamos nivel educativo y estado 
 df2 <- df2 %>% 
   mutate(nivel_edu_alcanzado = paste(nivel_educativo, sep = " ", estado))
-sort(unique(df2$nivel_edu_alcanzado)) # quedan 9 categorías
+unique(df2$nivel_edu_alcanzado) # quedan 9 categorías
 ```
 
-Probemos armar un modelo lineal para el sueldo neto en función de los años de experiencia y esta nueva variable de nivel_edu_alcanzado.  
+Quedan 9 categorías de nivel educativo alcanzado. Probemos armar un modelo lineal para el sueldo neto en función de los años de experiencia y esta nueva variable de nivel_edu_alcanzado.  
 
 ```{r}
-lm3 <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado, data = df2)
-summary(lm3)
+modelo_exp_edu <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado, data = df2)
+summary(modelo_exp_edu)
 ```
 ¿Mejoró el modelo incorporando esta nueva variable? Sí. 
 
+R cuando efectúa la regresión calcula automáticamente las variables indicadoras (dummies) para las covariables categóricas, en general según orden alfabético. Podemos chequear el orden para chequear cuál es la categoría basal. En este caso, la categoría de referencia corresponde al nivel educativo *Posgrado Completado*.
+
+```{r}
+sort(unique(df2$nivel_edu_alcanzado))
+```
+
 ¿Qué significan los coeficientes de la nueva variable categórica?
 
-Este modelo propone ajustar una recta distinta para el sueldo neto medio
+* Este modelo propone ajustar una recta distinta para el sueldo neto medio
 de cada grupo de personas definido por el nivel educativo alcanzado, todas con igual pendiente (definida por los años de experiencia), y nueve ordenadas al origen diferentes, una por cada grupo (nivel educativo alcanzado).
 
-Por ejemplo, β2 = nivel_edu_alcanzado Posgrado En curso, indica cuánto se reduce el sueldo neto medio para las personas cuyo nivel educativo es Posgrado En curso respecto de aquellas cuyo nivel es Posgrado Completado, dados los años de experiencia.
+* Por ejemplo, β2 = nivel_edu_alcanzado **Posgrado En curso**, indica cuánto se reduce el sueldo neto medio para las personas cuyo nivel educativo es Posgrado En curso respecto de aquellas cuyo nivel es Posgrado Completado (categoría basal), dados los años de experiencia.
 
-#### Significatividad de las variables 
+#### Significatividad de las variables
+
+**Test F**
+
+* Para analizar la significatividad de las variables categóricas, primero se analiza el test conjunto F (y su correspondiente p-valor) que permite medir la significatividad conjunta de la variable categórica para explicar la respuesta.
+
+* Dichos tests F se obtienen para cada variable de la tabla de ANOVA. Veamos qué ocurre en este caso. 
+
+```{r}
+anova(modelo_exp_edu)
+```
+
+Como se puede observar, los resultados del test F permiten asegurar que tanto los años de experiencia como el nivel educativo son estadísticamente significativas para explicar al sueldo neto.
+
+¿Qué ocurre con la significativdad de las variables dummies?
+
+**Test t**
+
+Para evaluar la significativdad de estas variables se analiza el test t (columna derecha del resumen de resultados de la regresión) que busca probar si el coeficiente de regresión correspondiente a dicha variable es distinto de 0.
+
+Es decir, busca probar:  
+
+* H0: $\hat{\beta}$ = 0 
+
+* H1: $\hat{\beta}$ ≠ 0. 
+
+Un p-valor pequeño (típicamente ≤ 0.05) indica una fuerte evidencia contra la hipótesis nula (H0), por lo que se rechaza. Al contrario, un p-valor alto (> 0.05) muestra evidencia débil contra la hipótesis nula por lo que no se la puede rechazar.
+
+Al analizar estos estadísticos para las dummies de la variable tipo de propiedad, se observa que todas las categorías resultan significativas (presentan p-valores pequenos). Asimismo, este test permite chequear si los valores medios de precios son los mismos en las distintas categorías respecto de la categoría basal. Cabe destacar, que estos p-valores son válidos para las comparaciones individuales respecto de la categoría basal pero no abarcan todas las comparaciones de a pares.
+No ocurre lo mismo con las variables indicadoras de los barrios, donde algunas presentan p-valores pequenos y otras no, es decir, que no hay evidencia suficiente para rechazar la hipótesis nula. Por lo que, hay algunas que resultan estadísticamente significativas y otras que no. Esto puede deberse que existen muchas categorías en esta variable y no hay igual dispinibildad de datos para todos los barrios.
+
+clase 5
+
+1) interpretación de los coeficientes de un modelo múltiple 
+2) variables categóricas: -interpretación
+-trampa dummy
+-evaluar los niveles con un anova de una categórica con varios niveles (similar a lo de los barrios en el tp2)
+3) correcta interpretación de las variables. Esto es en línea con el caso de superficie total y superficie cubierta en el tp2. Se me ocurre que podríamos hacer lo mismo con la variable de años de experiencia y años en la empresa actual. Sobre esto discutí bastante con un amigo que sabe mucho de econometria y me hizo ver que hay más de una respuesta correcta
+

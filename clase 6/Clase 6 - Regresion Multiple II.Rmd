@@ -1,0 +1,38 @@
+---
+title: "Regresión Lineal Múltiple II"
+author: "Juan Barriola y Sofía Perini"
+date: "3 de Octubre de 2020"
+output:
+  html_notebook:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+Después en la clase 6 daría ya con train/test.
+
+1) medidas de evaluación  de R cuadrado ajustado
+2) medidas de predicción
+3) una discusión más general de explicación VS predicción
+
+## Partición del dataset en train y test
+
+Realizamos una partición entre dataset de entrenamiento (70%) y testeo (30%) usando la función resample_partition del paquete modelr.
+
+```{r}
+# fijo semilla
+set.seed(44)
+# Partición Train y Test
+train_test <- df %>% 
+  modelr::resample_partition(c(train = 0.7, test = 0.3))
+
+df_train <- train_test$train %>% as_tibble()
+df_test <- train_test$test %>% as_tibble()
+
+# veo el contenido
+df_train %>%
+  glimpse() # 170 filas
+df_test %>%
+  glimpse() # 74 filas
+```
