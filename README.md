@@ -1,4 +1,6 @@
-# Materiales para las clases prácticas:
+# Ayudantes
+Juan Manuel Barriola
+Sofía Perini
 
 ### Clase 1: 05-09
 
@@ -7,6 +9,8 @@ Fundamentos de programación en R: entorno, objectos, estructuras de datos, loop
 - [Introducción al entorno R](clase 1/Clase 1 - Introduccion a R.nb.html)
 - [Loops, condicionales y funciones](clase 1/Clase 1 - Loops, condicionales y funciones.nb.html)
 - [Ejercicios](clase 1/Clase 1 - Ejercicios -Consignas .nb.html)
+- [Resueltos](clase 1/Resueltos/Clase 1 - Ejercicios -Resueltos.R)
+
 
 ### Clase 2: 12-09
 
@@ -22,11 +26,12 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 ### Clase 3: 19-09
 
 - [Correlación](clase 3/Clase 3 - Correlacion.nb.html)
-- [Regresión Lineal Simple: Modelo e interpretación]()
+- [Regresión Lineal Simple: Modelo e interpretación](clase 3/Clase-3---Regresion-Lineal-Simple.html)
 
 ### Clase 4: 26-09
 
 - [Regresión Lineal Simple: Evaluación y diagnóstico]()
+- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_basico.nb.html)
 
 ### Clase 5: 03-10
 
