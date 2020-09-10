@@ -1,5 +1,7 @@
 # Ayudantes
+
 Juan Manuel Barriola
+
 Sofía Perini
 
 ### Clase 1: 05-09
