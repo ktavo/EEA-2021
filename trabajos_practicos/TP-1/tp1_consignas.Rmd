@@ -5,9 +5,12 @@ output: html_notebook
 
 Datos provistos por [Properati Argentina](https://www.properati.com.ar)
 
+**Fecha y hora de entrega**: 5 de octubre de 2020 a las 9 a.m
+**Fecha y hora de devolucion general**: 10 de octubre de 2020 a las 9 a.m
+
 ## INSTRUCCIONES
 
-Deberán realizar el trabajo en un **RNotebook** y entregarlo en formato HTML.
+Deberán realizar el trabajo en un **RNotebook** y entregarlo en formato R Notebook o HTML
 
 El **RNotebook** debe:
 
@@ -15,7 +18,7 @@ El **RNotebook** debe:
 * Mostrar todo el código que escriban. NO USAR `echo=FALSE`
 * Ser ordenado de acuerdo a las consignas propuestas
 
-Una vez terminado el notebook deberán enviarlo por mail al profesor que les sea asignado, según se indica en la guía de procedimiento.
+Una vez terminado el notebook deberán enviarlo por mail a eea.uba@gmail.com
 
 ## CRITERIOS DE EVALUACION
 
@@ -27,6 +30,8 @@ Una vez terminado el notebook deberán enviarlo por mail al profesor que les sea
 En caso que los resultados no sean los esperados y no logremos identificar las fuentes de error podemos pedirles que nos compartan el archivo .Rmd y ciertas bases de datos que vayan generando.
 
 ## CONSIGNAS
+
+El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos.
 
 1) **Preparación de los datos (I)**
     a) Leer el archivo *ar_properties.csv* y mostrar su estructura
@@ -43,21 +48,27 @@ Deberian llegar a un dataset con 61.905 observaciones y 9 variables.
     a) Obtener la cantidad de valores únicos y de valores faltantes (NAs) para cada una de estas variables.
     b) Obtener la matriz de correlaciones para las variables numéricas. Pista: usen 'complete.obs' para poder omitir los valores faltantes. 
     c) Grafique la matriz de correlaciones usando la librería `corrr`.
-    c) ¿Cómo es la correlación entre las variables *surface_total* y *surface_covered*? ¿Y la correlación entre *rooms* y *bathrooms*?   
+    d) ¿Cómo es la correlación entre las variables *surface_total* y *surface_covered*? ¿Y la correlación entre *rooms* y *bathrooms*?
+    e) ¿Cómo es la correlación de la variable a explicar, **price**, con el resto de las variables?
     
 3) **Limpieza de datos**
     a) En el punto 2 deberían haber encontrado que la variable **bedrooms** presenta una alta proporción de valores faltantes y que presenta una fuerte correlación con la variable **rooms**. Por lo tanto, vamos a eliminarla.
     b) Eliminar todos los registros que presentan valores faltantes.
+    c) Eliminar aquellos registros en los cuales la superficie total es menor a la superficie cubierta
   
-Deberían llegar a un dataset con 51.210 observaciones y 8 variables.
+Deberían llegar a un dataset con 50.828 observaciones y 8 variables.
   
 4) **Análisis exploratorios (II)**
     a) Crear una nueva variable **precio_en_miles** que sea la variable *price* divida por 1000. Obtener estadísticas descriptivas para esta nueva variable (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
-    b) Obtener las mismas estadísticas descriptivas de la nueva variable **precio_en_miles** para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad? 
+    b) Obtener las mismas estadísticas descriptivas de la nueva variable **precio_en_miles** para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+    c) Realizar un gráfico con la función `ggpairs` de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
 
 5) **Outliers**
     a) Graficar un scatterplot de la variable **precio_en_miles** y **superficie_total**. ¿Detectan alguna anomalía?
-    b) Eliminar los outliers univariados severos de las variables **precio_en_miles**, **rooms** y **surface_total** usando el método de 3 desvíos del rango intercuartil. 
+    b) Eliminar los outliers univariados severos de las variables **precio_en_miles**, **rooms** y **surface_total**.
+    Pueden utilizar alguno de los siguientes métodos o combinarlos:
+      * criterio del boxplot (rango intercuartil)
+      * criterio de los percentiles
     
 6) **Análisis exploratorios (III)**
     a) Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar. 

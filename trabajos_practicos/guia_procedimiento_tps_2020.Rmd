@@ -4,7 +4,7 @@ output: html_notebook
 author: Juan Manuel Barriola y Sofía Perini
 ---
 
-Esta es una pequeña guía de como proceder con la realización de los trabajos prácticos.
+Esta es una pequeña guía sobre como proceder con la realización de los trabajos prácticos.
 
 ## 1. Crear un R Project
 
@@ -49,7 +49,7 @@ Ahora ya pueden comenzar a trabajar dentro del proyecto.
 
 Los notebooks de R son una gran herramienta para realizar analisis y proyectos ya que permiten combinar código, texto e imágenes. Además permiten darle distintos formatos al texto para crear documentos prolijos.
 
-En este caso vamos a trabajar con los R Notebooks básicos que se compilan a html, lo cual permite
+En este caso vamos a trabajar con los R Notebooks básicos que se compilan a html.
 
 Para crear un R Notebook
 
@@ -86,10 +86,10 @@ Se pueden usar los atajos:
 
 ![](imagenes/rnotebook_paso_6.png){width=75%}
 
-## 3. Compartir el archivo html
+## 3. Compartir el archivo 
 
-Una vez guardado y finalizado, para entregar el archivo en formato html, se deberá generar un knit to HTML, que figura al hacer clic en Preview. 
+Una vez guardado y finalizado, pueden entregar el archivo como R notebook (extension .nb.html) o para entregar el archivo en formato html. Para ello deberan hacer click en donde dice Preview y seleccionar Knit HTML. 
 
 ![](imagenes/knit_html.png){width=75%}
 
-Luego se pedirá lo envíen al mail del profesor que les sea asignado. 
+Luego se pedirá lo envíen al mail de la materia
