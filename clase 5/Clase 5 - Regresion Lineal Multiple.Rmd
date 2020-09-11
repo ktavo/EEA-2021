@@ -26,6 +26,7 @@ $salarioNeto = \beta_0 +\beta_1X_1+\beta_2X_2+...+\epsilon$
 library(data.table)
 library(tidyverse)
 library(readxl) 
+library(ggplot2)
 ```
 
 ## Levantamos Dataset
@@ -65,6 +66,13 @@ df <- df %>%
 df %>%
   head()
 ```
+Veamos la correlación entre las variables numéricas seleccionadas. 
+
+```{r}
+library(GGally)
+ggpairs(df[,c(2,4,5,6,12)],  mapping = aes(color = df$trabajo_de))
+```
+
 ### Modelo Lineal Múltiple
 
 El modelo de regresión lineal múltiple es un modelo para la variable aleatoria Y cuando se conocen las variables regresoras. Es múltiple ya que vincula una serie de variables predictoras con Y. 
@@ -111,9 +119,19 @@ summary(modelo_exp_edad)
 
 #### 2) Predictores Categóricos
 
-##### **Ppredictor binario**:
+##### **Predictor binario**:
 
-Armemos un modelo para predecir el salario_neto en función de los años de experiencia, la edad y género (me_identifico). Introducimos la variable lugar de trabajo que es categórica. Veamos qué ocurre:
+Armemos un modelo para predecir el salario_neto en función de los años de experiencia y el género (me_identifico), que es categórica con dos niveles (hombres y mujeres). Para ello, vamos a analizar primero el comportamiento de la variable que queremos predecir para ambos géneros. 
+
+```{r}
+ggplot(data = df, aes(x=anos_de_experiencia,y=salario_neto,group = me_identifico, fill = me_identifico)) +
+         geom_boxplot() + 
+         scale_fill_brewer(palette="Dark2") +
+         labs(title = "Boxplots de salario neto según género") +
+         facet_wrap(~me_identifico, scales = "free_x") +
+         theme_bw() 
+```
+Veamos qué ocurre cuando ajustamos el modelo:
 
 ```{r}
 modelo_exp_sex <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = df)
@@ -139,7 +157,7 @@ intercepto_M = modelo_exp_sex$coefficients[1] + modelo_exp_sex$coefficients[3]
 # Graficamos el dataset y el modelo
 df %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) + 
   geom_abline(intercept = intercepto_H, slope = pendiente1, color = "forestgreen", size=1.5) + # capa del modelo
-  geom_abline(intercept = intercepto_M, slope = pendiente1, color = "blueviolet", size=1.5) + # capa del modelo 
+  geom_abline(intercept = intercepto_M, slope = pendiente1, color = "darkorange", size=1.5) + # capa del modelo 
   geom_point() + #capa de los datos
   theme_bw() +
   scale_x_continuous(limits = c(0,40)) +
@@ -161,11 +179,23 @@ df2 <- df2 %>%
 unique(df2$nivel_edu_alcanzado) # quedan 9 categorías
 ```
 
-Quedan 9 categorías de nivel educativo alcanzado. Probemos armar un modelo lineal para el sueldo neto en función de los años de experiencia y esta nueva variable de nivel_edu_alcanzado.  
+Quedan 9 categorías de nivel educativo alcanzado. Veamos a través de boxplots paralelos cómo se comportan. 
+
+```{r}
+ggplot(data = df2, aes(x=nivel_edu_alcanzado, y=salario_neto, group = nivel_edu_alcanzado, fill = nivel_edu_alcanzado)) +
+         geom_boxplot() +
+         theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(title = "Boxplots de salario neto según nivel educativo alcanzado")
+```
+Probemos armar un modelo lineal para el sueldo neto en función de los años de experiencia y esta nueva variable de nivel_edu_alcanzado.  
 
 ```{r}
 modelo_exp_edu <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado, data = df2)
-summary(modelo_exp_edu)
+resumen <- summary(modelo_exp_edu)
+resumen
 ```
 ¿Mejoró el modelo incorporando esta nueva variable? Sí. 
 
@@ -186,9 +216,15 @@ de cada grupo de personas definido por el nivel educativo alcanzado, todas con i
 
 **Test F**
 
-* Para analizar la significatividad de las variables categóricas, primero se analiza el test conjunto F (y su correspondiente p-valor) que permite medir la significatividad conjunta de la variable categórica para explicar la respuesta.
+Para analizar la significatividad de las variables categóricas, primero se analiza el test conjunto F (y su correspondiente p-valor) que permite medir la significatividad conjunta de la variable categórica para explicar la respuesta.
 
-* Dichos tests F se obtienen para cada variable de la tabla de ANOVA. Veamos qué ocurre en este caso. 
+Se construye para testear las hipótesis
+
+* H0: β1 = β2 = · · · = βp−1 = 0
+
+* H1: no todos los βk (k = 1, 2,..., p−1) son iguales a 0
+
+Dichos tests F se obtienen para cada variable de la tabla de ANOVA. Veamos qué ocurre en este caso. 
 
 ```{r}
 anova(modelo_exp_edu)
@@ -208,16 +244,21 @@ Es decir, busca probar:
 
 * H1: $\hat{\beta}$ ≠ 0. 
 
-Un p-valor pequeño (típicamente ≤ 0.05) indica una fuerte evidencia contra la hipótesis nula (H0), por lo que se rechaza. Al contrario, un p-valor alto (> 0.05) muestra evidencia débil contra la hipótesis nula por lo que no se la puede rechazar.
+```{r}
+# se puede ver el resumen completo
+resumen
+# o solo acceder a los coeficientes para visualizar el test t
+resumen$coefficients
+```
 
-Al analizar estos estadísticos para las dummies de la variable tipo de propiedad, se observa que todas las categorías resultan significativas (presentan p-valores pequenos). Asimismo, este test permite chequear si los valores medios de precios son los mismos en las distintas categorías respecto de la categoría basal. Cabe destacar, que estos p-valores son válidos para las comparaciones individuales respecto de la categoría basal pero no abarcan todas las comparaciones de a pares.
-No ocurre lo mismo con las variables indicadoras de los barrios, donde algunas presentan p-valores pequenos y otras no, es decir, que no hay evidencia suficiente para rechazar la hipótesis nula. Por lo que, hay algunas que resultan estadísticamente significativas y otras que no. Esto puede deberse que existen muchas categorías en esta variable y no hay igual dispinibildad de datos para todos los barrios.
+Al analizar estos estadísticos para las dummies de la variable nivel educativo alcanzado, se observa que no todas sus categorías resultan significativas. Asimismo, este test permite chequear si los valores medios del sueldo neto son los mismos en las distintos categorías respecto de la categoría basal. Cabe destacar, que estos p-valores son válidos para las comparaciones individuales respecto de la categoría basal pero no abarcan todas las comparaciones de a pares.
 
-clase 5
+### Correcta interpretación de las variables
 
-1) interpretación de los coeficientes de un modelo múltiple 
-2) variables categóricas: -interpretación
--trampa dummy
--evaluar los niveles con un anova de una categórica con varios niveles (similar a lo de los barrios en el tp2)
-3) correcta interpretación de las variables. Esto es en línea con el caso de superficie total y superficie cubierta en el tp2. Se me ocurre que podríamos hacer lo mismo con la variable de años de experiencia y años en la empresa actual. Sobre esto discutí bastante con un amigo que sabe mucho de econometria y me hizo ver que hay más de una respuesta correcta
+```{r}
+cor(df2$anos_de_experiencia, df2$anos_en_la_empresa_actual)
+cor(df2$anos_en_el_puesto_actual, df2$anos_en_la_empresa_actual)
+```
+Esto es en línea con el caso de superficie total y superficie cubierta en el tp2. Se me ocurre que podríamos hacer lo mismo con la variable de años de experiencia y años en la empresa actual. Sobre esto discutí bastante con un amigo que sabe mucho de econometria y me hizo ver que hay más de una respuesta correcta
+
 
