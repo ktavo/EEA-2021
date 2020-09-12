@@ -100,7 +100,7 @@ Observamos que hay información sobre:
   
 En las secciones subsiguientes vamos a desarrollar cada uno de estos aspectos
 
-### Inferencia de $\beta_1$
+### Inferencia de $\beta_1$ (test de significatividad individual)
 
 En la salida de `summary()`, en la parte de **coefficients** observamos que están las columnas: estimate, std error, t value y Pr(>|t|).
 En las filas se encuentra el intercepto y la variable independiente: **edad**.
@@ -119,12 +119,36 @@ El valor de **Pr(>|t|)** nos indica el p-valor para dicho test, acompañado de u
 
 Como el p-valor es extremadamente pequeño concluimos que se rechaza la hipótesis nula, es decir, $\beta_1$ (parámetro poblacional) es distinto de cero.
 
+Este test también se conoce como **test de significatividad individual** del parámetro. 
+
 #### Broom: tidy
 
 Con la función `tidy()` del paquete broom podemos obtener la información sobre los parámetros como un dataframe: 
 
 ```{r}
 tidy(modelo_edad)
+```
+
+Veamos los resultados para los otros dos modelos
+
+**Modelo Años de experiencia**
+
+```{r}
+tidy(modelo_experiencia)
+```
+
+**Modelo Años en la Empresa Actual**
+
+```{r}
+tidy(modelo_empresa)
+```
+
+En ambos modelos observamos que el p-valor asociado al test de significatividad individual de $\beta_1$ es extremadamente pequeño. Por lo tanto, concluimos que se rechaza la hipótesis nula, es decir, $\beta_1$ (parámetro poblacional) es distinto de cero. 
+
+### Test F (test de significatividad global)
+
+```{r}
+resumen_modelo_edad
 ```
 
 ### Coeficiente de determinación $R^2$
@@ -137,14 +161,73 @@ resumen_modelo_edad
 
 El valor de $R^2$ es `r resumen_modelo_edad$r.squared`
 
+#### Broom: glance
+
+Con la función `glance()` del paquete broom podemos obtener la información sobre la evaluación global del modelo como un dataframe: 
 
 ```{r}
 glance(modelo_edad)
 ```
 
+Veamos los resultados para los otros dos modelos
+
+**Modelo Años de experiencia**
+
+```{r}
+glance(modelo_experiencia)
+```
+
+**Modelo Años en la Empresa Actual**
+
+```{r}
+glance(modelo_empresa)
+```
+
+## Diagnóstico del modelo
 
 
+```{r  out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
+plot(modelo_edad)
+```
 
 
+Estos gráficos son:
+
+- Residuos versus el modelo ajustado:  El objetivo es que no veamos una estructura clara. Si así la hubiera, esto implicaría que hay una parte __sistemática__ del fenómeno que se esta perdiendo. 
+- Normal QQ plot: sirve para ver si los datos siguen una distribución teórica, en este caso, la $\sim N(0,1)$. Los residuos estandarizados, si el modelo esta bien definido, deberían seguir esta distribución
+- Scale-location plot: Similar al primer gráfico, pero utilizando la raíz cuadrada de los residuos estandarizados. De la misma forma que el anterior, buscamos que no haya una estructura en los residuos.
+- residual vs leverage: El leverage mide cuan influyentes son los puntos en el modelo. Si en este gráfico algunas observaciones aparecen muy separadas, con mucho leverage y residuo, significa que cambian mucho al modelo.
+
+
+```{r}
+au = augment(modelo_edad, encuesta_sueldos)
+au
+```
+
+```{r  message= FALSE, out.width = "50%", fig.asp = 1, fig.width = 6, fig.align='default'}
+
+ggplot(au, aes(.fitted, .resid)) +
+  geom_point()+
+  geom_hline(yintercept = 0) +
+  geom_smooth(se = FALSE) +
+  theme_bw()
+
+ggplot(au, aes(sample= .std.resid))+
+  stat_qq()+
+  geom_abline() +
+  theme_bw()
+
+ggplot(au, aes(.fitted, sqrt(abs(.std.resid))))+
+  geom_point()+
+  geom_smooth(se = FALSE) +
+  theme_bw()
+
+ggplot(au, aes(.hat, .std.resid)) +
+  geom_vline(size = 2, colour = "white", xintercept = 0) +
+  geom_hline(size = 2, colour = "white", yintercept = 0) +
+  geom_point() + geom_smooth(se = FALSE) +
+  theme_bw()
+
+```
 
 
