@@ -10,11 +10,15 @@ output:
     df_print: paged
 ---
 
-**Encuesta de Sueldos en el sector IT**
-
+<style type="text/css">
+div.main-container {
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+  
 ## Planteo del problema
-
-Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst, de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/).
 
 Nuestro objetivo es crear un modelo lineal múltiple para explicar el sueldo neto de Data Analysts, Data Scientists y Data Engineers en Argentina.
 
@@ -23,59 +27,38 @@ Nuestro idea subyacente de cómo se puede explicar el salario neto es:
 $salarioNeto = \beta_0 +\beta_1X_1+\beta_2X_2+...+\epsilon$
 
 ```{r, warning=F, message=F}
-library(data.table)
 library(tidyverse)
-library(readxl) 
-library(ggplot2)
+library(tidymodels)
 ```
 
 ## Levantamos Dataset
 
+Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst, de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/).
+
 ```{r}
-encuesta <- read_csv("../Fuentes/encuesta_sueldos_sysarmy_1s2020.csv")
+encuesta <- read_csv("../Fuentes/encuesta_RLM_limpia.csv")
 encuesta %>%
   head()
-```
-### Limpieza de datos: Aplicamos Filtros
-
-```{r}
-encuesta_ds <- encuesta %>%
-  filter(trabajo_de %in% c("Data Scientist / Data Engineer", "BI Analyst / Data Analyst")) %>%
-  rename(edad = tengo, 
-         salario_bruto = salario_mensual_bruto_en_tu_moneda_local,
-         salario_neto = salario_mensual_neto_en_tu_moneda_local)
-edad_laboral_minima = 14
-limite_inferior_percentil = 20962.50 # percentil 0.05 sueldo_neto
-limite_superior_outliers = 137000 # Q3 + 1.5 IQR sueldo_neto
-df <- encuesta_ds %>% 
-  filter(between(salario_neto, limite_inferior_percentil, limite_superior_outliers), # eliminamos los outliers de acuerdo a los criterios de la clase 3
-        sueldo_dolarizado == 0, #Eliminamos los sueldos dolarizados 
-        edad - anos_de_experiencia > edad_laboral_minima, # Eliminamos registros inconsistentes con la edad laboral
-        salario_bruto > salario_neto, # Inconsistencia en los sueldos
-        anos_en_la_empresa_actual < 70, # Error de carga
-        me_identifico != "Otros") %>%  # elimnamos la categoria otros de me_identifico porque solo tiene 2 valores
-  select(-sueldo_dolarizado) # Eliminamos la columna de sueldo dolarizado
-df
-
+dim_desc(encuesta)
 ```
 ### Seleccionamos variables de interés
 
 ```{r}
-df <- df %>%
+df <- encuesta %>%
   select(me_identifico, edad, donde_estas_trabajando, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual, gente_a_cargo, trabajo_de, nivel_de_estudios_alcanzado, estado, salario_bruto, salario_neto) 
 df %>%
   head()
+dim_desc(df)
 ```
-Veamos la correlación entre las variables numéricas seleccionadas. 
-
+Recordemos cómo era la correlación entre las variables numéricas seleccionadas. 
 ```{r}
 library(GGally)
 ggpairs(df[,c(2,4,5,6,12)],  mapping = aes(color = df$trabajo_de))
 ```
 
-### Modelo Lineal Múltiple
+## Modelo Múltiple
 
-El modelo de regresión lineal múltiple es un modelo para la variable aleatoria Y cuando se conocen las variables regresoras. Es múltiple ya que vincula una serie de variables predictoras con Y. 
+El modelo de **regresión lineal múltiple** es un modelo para la variable aleatoria Y cuando se conocen las variables regresoras. Es múltiple ya que vincula una serie de variables predictoras con Y. 
 
 El modelo en términos de las variables:
 
@@ -92,13 +75,14 @@ $$E(Y|X_1,X_2,...X_{p-1}) = β_0 + β_1X_{i1} + β_2X_{i2} + · · · + β_{p-1}
 
 El modelo se denomina *lineal* puesto que la esperanza de Y condicional a las X's depende linealmente de las covariables $X_1$, $X_2$,..., $X_{p-1}$. 
 
-### Ajuste del Modelo
+## Estimación de los Parámetros (Ajuste del modelo)
 
 Se quiere ajustar un modelo para el salario neto en función de 2 variables:
 
 $salarioNeto = \beta_0 + \beta_1x_i1 + \beta_2x_i2 + \epsilon_i$
 
-#### 1) Predictores numéricos
+Veamos cómo se interpretan los ajustes para los distintos tipos de predictores. 
+### 1) Predictores numéricos
 
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia y la edad.
 
@@ -109,7 +93,7 @@ modelo_exp_edad <- lm(salario_neto ~ anos_de_experiencia + edad, data = df)
 summary(modelo_exp_edad)
 ```
 
-##### Significado de los coeficientes estimados:
+#### Significado de los coeficientes estimados
 
 * El valor de la ordenada al origen (42.586) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y con edad 0, por lo que no tendría sentido. 
 
@@ -117,9 +101,9 @@ summary(modelo_exp_edad)
 
 ¿Cómo se interpretaría el coeficiente estimado de la edad?
 
-#### 2) Predictores Categóricos
+### 2) Predictores Categóricos
 
-##### **Predictor binario**:
+#### **Predictor binario**
 
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia y el género (me_identifico), que es categórica con dos niveles (hombres y mujeres). Para ello, vamos a analizar primero el comportamiento de la variable que queremos predecir para ambos géneros. 
 
@@ -138,14 +122,16 @@ modelo_exp_sex <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = 
 summary(modelo_exp_sex)
 ```
 
-¿Cómo se interpretan los coeficientes de la variable dicotómica?
+#### Significado de los coeficientes estimados
 
-* Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente β1 (1.643) para mujeres y hombres. Por otro lado, β2(-9.173) indica cuánto más baja es la función de respuesta para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
+¿Cómo cambia la interpretación de los coeficientes para la variable dicotómica?
 
 * El modelo de regresión lineal en este caso consiste simplemente en expresar
 la media del nivel de sueldo neto en cada población (de hombres y mujeres) mediante dos coeficientes distintos, donde β0 es la media del sueldo neto para los hombres y β0+β2 es la media del salario neto para las mujeres, dados los años de experiencia. Por lo tanto, β2 es la diferencia (en este caso negativa) en los niveles medios de salario neto de los hombres respecto de las mujeres.
 
-##### Grafiquemos la regresión para ambas poblaciones
+* Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente β1 (1.643) para mujeres y hombres. Por otro lado, β2(-9.173) indica cuánto más baja es la función de respuesta (sueldo) para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
+
+#### Grafiquemos la regresión para ambas poblaciones
 
 A continuación se muestra el gráfico de esta situación en que tenemos una variable categórica con solo dos niveles y una numérica. De la interpretación de coeficientes, se pudo ver que la regresión se puede expresar como dos rectas paralelas con igual pendiente pero distinto intercepto. Veamos cómo hacerla. 
 
@@ -164,6 +150,7 @@ df %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) +
   scale_y_continuous(limits = c(0,150000)) +
   labs(title="Modelo Lineal Múltiple: Años en la empresa y Género", x="Años de experiencia", y="Salario Neto") 
 ```
+
 #### **Predictores Cualitativos con más de dos clases**
 
 Como hay dos variables que se refieren al nivel de estudios alcanzado, vamos a unificar en una misma y reagrupar los datos.
@@ -205,6 +192,8 @@ R cuando efectúa la regresión calcula automáticamente las variables indicador
 sort(unique(df2$nivel_edu_alcanzado))
 ```
 
+#### Significado de los coeficientes estimados
+
 ¿Qué significan los coeficientes de la nueva variable categórica?
 
 * Este modelo propone ajustar una recta distinta para el sueldo neto medio
@@ -212,29 +201,11 @@ de cada grupo de personas definido por el nivel educativo alcanzado, todas con i
 
 * Por ejemplo, β2 = nivel_edu_alcanzado **Posgrado En curso**, indica cuánto se reduce el sueldo neto medio para las personas cuyo nivel educativo es Posgrado En curso respecto de aquellas cuyo nivel es Posgrado Completado (categoría basal), dados los años de experiencia.
 
-#### Significatividad de las variables
-
-**Test F**
-
-Para analizar la significatividad de las variables categóricas, primero se analiza el test conjunto F (y su correspondiente p-valor) que permite medir la significatividad conjunta de la variable categórica para explicar la respuesta.
-
-Se construye para testear las hipótesis
-
-* H0: β1 = β2 = · · · = βp−1 = 0
-
-* H1: no todos los βk (k = 1, 2,..., p−1) son iguales a 0
-
-Dichos tests F se obtienen para cada variable de la tabla de ANOVA. Veamos qué ocurre en este caso. 
-
-```{r}
-anova(modelo_exp_edu)
-```
-
-Como se puede observar, los resultados del test F permiten asegurar que tanto los años de experiencia como el nivel educativo son estadísticamente significativas para explicar al sueldo neto.
+## Inferencia de los βk (test de significatividad individual)
 
 ¿Qué ocurre con la significativdad de las variables dummies?
 
-**Test t**
+**Test para las βk**
 
 Para evaluar la significativdad de estas variables se analiza el test t (columna derecha del resumen de resultados de la regresión) que busca probar si el coeficiente de regresión correspondiente a dicha variable es distinto de 0.
 
@@ -252,6 +223,24 @@ resumen$coefficients
 ```
 
 Al analizar estos estadísticos para las dummies de la variable nivel educativo alcanzado, se observa que no todas sus categorías resultan significativas. Asimismo, este test permite chequear si los valores medios del sueldo neto son los mismos en las distintos categorías respecto de la categoría basal. Cabe destacar, que estos p-valores son válidos para las comparaciones individuales respecto de la categoría basal pero no abarcan todas las comparaciones de a pares.
+
+**Test F**
+
+Para analizar la significatividad de las variables categóricas, primero se analiza el test conjunto F (y su correspondiente p-valor) que permite medir la significatividad conjunta de la variable categórica para explicar la respuesta.
+
+Se construye para testear las hipótesis:
+
+* H0: β1 = β2 = · · · = βp−1 = 0
+
+* H1: no todos los βk (k = 1, 2,..., p−1) son iguales a 0
+
+Dichos tests F se obtienen para cada variable de la tabla de ANOVA del modelo. Veamos qué ocurre en este caso. 
+
+```{r}
+anova(modelo_exp_edu)
+```
+
+Como se puede observar, los resultados del test F permiten asegurar que tanto los años de experiencia como el nivel educativo son estadísticamente significativas para explicar al sueldo neto.
 
 ### Correcta interpretación de las variables
 
