@@ -18,13 +18,6 @@ div.main-container {
 }
 </style>
 
-
-Después en la clase 6 daría ya con train/test.
-
-1) medidas de evaluación  de R cuadrado ajustado
-2) medidas de predicción
-3) una discusión más general de explicación VS predicción
-
 ## Diagnóstico y Evaluación de Modelos de Regresión Lineal Múltiple
 
 ### Dataset 
@@ -73,9 +66,10 @@ df_train %>%
 df_test %>%
   glimpse() # 73 filas
 ```
+
 Habíamos realizado tres modelos distintos para tratar de explicar el salario neto: 
 
-* Modelo Años de experiencia y Edad
+* Modelo Años de experiencia y Gente a cargo
 
 * Modelo Años de experiencia y Género
 
@@ -85,22 +79,38 @@ Volvemos a realizar estos modelos utilizando el dataset de entrenamiento:
 
 ```{r}
 # Modelo Experiencia y Edad
-modelo_exp_edad <- lm(salario_neto ~ anos_de_experiencia + edad, data = df_train)
+modelo_exp_gc <- lm(salario_neto ~ anos_de_experiencia + gente_a_cargo, data = df_train)
 # Modelo Experiencia y Género
 modelo_exp_sex <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = df_train)
 # Modelo Experiencia y Nivel Educativo
 modelo_exp_edu <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado, data = df_train)
 ```
 
-En el notebook previo sólo habíamos interpretado el valor de los parámetros estimados. Ahora buscaremos responder preguntas tales como:
+En el notebook previo sólo habíamos interpretado el valor de los parámetros estimados y su nivel de significación. Ahora buscaremos responder preguntas tales como:
 
-¿La relación entre la variable dependiente e independiente es estadísticamente significativa?
 ¿Qué proporción de la variabilidad logra explicar el modelo? ¿Cómo decidir que modelo explica mejor el fenómeno?
+
 ¿El modelo cumple con los supuestos del modelo lineal?
 
 ## Evaluación del Modelo 
 
 Utilizando el paquete broom, vamos a analizar las medidas de resumen del modelo y graficamos coeficientes estimados. 
+
+**Modelo Años de experiencia y Gente a cargo**
+
+```{r}
+# medidas de resumen tidy (incluido el intervalo de confianza)
+tidy_meg <- tidy(modelo_exp_gc, conf.int = TRUE)
+tidy_meg
+# Plot de los Coeficientes
+ggplot(tidy_meg, aes(estimate, term, xmin = conf.low, xmax = conf.high, height = 0)) +
+  geom_point(color = "forestgreen") +
+  geom_vline(xintercept = 0, lty = 4, color = "black") +
+  geom_errorbarh(color = "forestgreen") +
+  theme_bw() +
+  labs(y = "Coeficientes β", x = "Estimación")
+```
+**Modelo Años de experiencia y Género**
 
 ```{r}
 # medidas de resumen tidy (incluido el intervalo de confianza)
@@ -113,10 +123,53 @@ ggplot(tidy_mes, aes(estimate, term, xmin = conf.low, xmax = conf.high, height =
   geom_errorbarh(color = "forestgreen") +
   theme_bw() +
   labs(y = "Coeficientes β", x = "Estimación")
-glance(modelo_exp_sex)
 ```
+**Modelo Años de experiencia y Nivel Educativo Alcanzado**
+
+```{r}
+# medidas de resumen tidy (incluido el intervalo de confianza)
+tidy_meed <- tidy(modelo_exp_edu, conf.int = TRUE)
+tidy_meed
+# Plot de los Coeficientes
+ggplot(tidy_meed, aes(estimate, term, xmin = conf.low, xmax = conf.high, height = 0)) +
+  geom_point(color = "forestgreen") +
+  geom_vline(xintercept = 0, lty = 4, color = "black") +
+  geom_errorbarh(color = "forestgreen") +
+  theme_bw() +
+  labs(y = "Coeficientes β", x = "Estimación")
+```
+
+### Coeficientes de determinación R2 ajustado
+
+El R2 permite medir el porcentaje de variabilidad del fenómeno que el modelo logra explicar. Sin importar la relevancia de la variable el R2 aumenta al agregar una variable adicional al modelo, aunque no se incremente la capacidad explicativa. 
+
+Como el R2 no toma en cuenta el número de parámetros en el modelo de regresión, un criterio de decisión mucho más objetivo y automatizable es calcular y comparar modelos por medio del R2 ajustado. 
+
+$$ R^2_{a,p} = 1 − \frac{\frac{SSRes_p}{n − p}}{\frac{SSTotal}{n − 1}} $$
+Como SSTotal/n−1 está fijo en un conjunto de datos dado (sólo depende de las
+Y observadas), el R2a aumenta si y sólo si el MSResp disminuye.
+
+Veamos qué pasa con los ajustes qué hicimos. 
+
+```{r}
+# modelo expriencia y gente a cargo
+glance(modelo_exp_gc)
+# modelo experiencia y género
+glance(modelo_exp_sex)
+# modelo experiencia y nivel educativo
+glance(modelo_exp_edu)
+```
+
+¿Cuál es el modelo que mejor explica la variabildad del conjunto?
+
+Un primer criterio para comparar modelos es mirar el R2 obtenido con cada uno de ellos y elegir aquél con mayor R2 ajustado
+
 
 ```{r}
 au_mes <- augment(modelo_exp_sex)
 au_mes
 ```
+
+1) medidas de evaluación  de R cuadrado ajustado
+2) medidas de predicción
+3) una discusión más general de explicación VS predicción
