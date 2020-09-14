@@ -246,9 +246,6 @@ rss_graph = plot_ly(x=b0, y=b1, z=rss_matrix) %>% add_surface(contours = list(
 rss_graph
 ```
 
-
-# Modelo Básico- Clase 2
-
 ## Óptimo por métodos numéricos 
 
 Podríamos ir haciendo la cuadrícula más fina y fina hasta que nos centramos en el mejor modelo. Pero hay mejores formas de abordar ese problema como herramientas de optimización numéricas. Algunas de ellas son:
@@ -311,10 +308,7 @@ sim1_mod <- lm(y ~ x, data = sim1)
 coef(sim1_mod)
 ```
 
-
-
 ## Predicciones
-
 
 Para visualizar las predicciones de un modelo, comenzamos por generar una cuadrícula de valores espaciados uniformemente que cubre la región donde se encuentran nuestros datos. La forma más fácil de hacerlo es usar `modelr :: data_grid ()`. Su primer argumento es un dataframe, y para cada argumento posterior encuentra las variables únicas y luego genera todas las combinaciones:
 
@@ -343,37 +337,3 @@ ggplot(sim1, aes(x)) +
   geom_point(aes(y = y)) +
   geom_line(aes(y = pred), data = grid, colour = "red", size = 1)
 ```
-
-## Residuos del modelo
-
-Agregamos residuos al DF con `add_residuals ()`, que funciona de forma muy similar a `add_predictions ()`. Sin embargo, tengan en cuenta que usamos el conjunto de datos original, no una cuadrícula fabricada. Esto se debe a que para calcular los residuos necesitamos valores y reales.
-
-
-```{r}
-sim1 <- sim1 %>% 
-  add_residuals(sim1_mod)
-sim1
-```
-
-Hay varias formas diferentes de entender lo que nos dicen los residuos sobre el modelo. Una forma es simplemente dibujar un polígono de frecuencia que nos ayude a entender la dispersión de los residuos:
-
-```{r}
-ggplot(sim1, aes(resid)) + 
-  geom_freqpoly(binwidth = 0.5)
-```
-
-Noten que en promedio los residuos deben ser un valor muy cercano a 0
-
-```{r}
-mean(sim1$resid)
-```
-
-Otra forma de graficar los residuos s
-
-```{r}
-ggplot(sim1, aes(x, resid)) + 
-  geom_ref_line(h = 0, size = 2,colour = "firebrick") +
-  geom_point() 
-```
-
-Si los residuos __no tienen estructura__ es que hicimos las cosas bien.

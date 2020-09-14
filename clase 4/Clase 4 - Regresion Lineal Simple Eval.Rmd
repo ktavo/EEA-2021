@@ -153,13 +153,17 @@ resumen_modelo_edad
 
 ### Coeficiente de determinación $R^2$
 
-El $R^2$ permite medir el porcentaje de variabilidad del fenómeno que el modelo logra explicar.  
+El $R^2$ permite medir el porcentaje de variabilidad del fenómeno que el modelo logra explicar.  Por este motivo es una métrica que nos permite evaluar la capacidad explicativa del modelo y poder comparar modelos entre sí bajo ciertas condiciones.
+
+Observemos nuevamente el resumen del **Modelo Edad**
 
 ```{r}
 resumen_modelo_edad
 ```
 
-El valor de $R^2$ es `r resumen_modelo_edad$r.squared`
+Existen dos valores de $R^2$ en esta salida: el R-cuadrado multiple y el R-cuadrado ajustado. 
+
+El valor de $R^2$ es `r resumen_modelo_edad$r.squared` (el que corresponde al R-cuadrado multiple)
 
 #### Broom: glance
 
@@ -168,6 +172,8 @@ Con la función `glance()` del paquete broom podemos obtener la información sob
 ```{r}
 glance(modelo_edad)
 ```
+
+La salida de la función `glance()` devuelve mucha más información que la disponible en el resumen del modelo. 
 
 Veamos los resultados para los otros dos modelos
 
@@ -185,6 +191,7 @@ glance(modelo_empresa)
 
 ## Diagnóstico del modelo
 
+El diagnóstico del modelo consiste en utilizar técnicas para validar el cumplimiento o no de los supuestos del modelo lineal. 
 
 ```{r  out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
 plot(modelo_edad)
