@@ -35,25 +35,27 @@ library(tidymodels)
 
 Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza que se hizo en la clase de regresión lineal simple, correspondiente al grupo de salarios de los data scientists/analyst, de la encuesta de sueldos en el sector de tecnología en Argenina realizada por SysArmy. El informe, realizado por OpenQube lo pueden ver [acá](https://sueldos.openqube.io/encuesta-sueldos-2020.01/).
 
-```{r}
+```{r, message=F}
 encuesta <- read_csv("../Fuentes/encuesta_RLM_limpia.csv")
-encuesta %>%
-  head()
-dim_desc(encuesta)
 ```
+Trabajaremos con un dataset de 243 observaciones. 
+
 ### Seleccionamos variables de interés
 
 ```{r}
 df <- encuesta %>%
-  select(me_identifico, edad, donde_estas_trabajando, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual, gente_a_cargo, trabajo_de, nivel_de_estudios_alcanzado, estado, salario_bruto, salario_neto) 
+  select(me_identifico, edad, donde_estas_trabajando, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual, gente_a_cargo, trabajo_de, nivel_de_estudios_alcanzado, estado, salario_bruto, salario_neto) %>%
+  mutate(perfil = factor(case_when(trabajo_de == "BI Analyst / Data Analyst" ~ "DA", trabajo_de == "Data Scientist / Data Engineer" ~ "DS")))
 df %>%
   head()
-dim_desc(df)
 ```
 Recordemos cómo era la correlación entre las variables numéricas seleccionadas. 
 ```{r}
 library(GGally)
-ggpairs(df[,c(2,4,5,6,7,12)],  mapping = aes(color = df$trabajo_de))
+df[,c(2,4,5,7,12,13)] %>% 
+  ggpairs(., aes(color = perfil), upper = list(continuous = wrap("cor", size = 3, hjust=0.5)), legend = 25) + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 ```
 
 ## Modelo Múltiple
@@ -67,7 +69,7 @@ donde $β_0$, $β_1$,.., $β_{p−1}$ son parámetros desconocidos, $X_{i1}$, $X
 
 **Supuestos del modelo lineal**
 
-Se pueden resumir como ϵi ~ N(0,σ2) 1<i<n, independientes entre sí.
+Se pueden resumir como $ϵ_i$ ~ $N(0,σ^2)$ para todo $1<i<n$, independientes entre sí.
 
 El modelo en términos de la esperanza condicional de Y dadas $X_1$, $X_2$,..., $X_{p-1}$:
 
@@ -75,14 +77,15 @@ $$E(Y|X_1,X_2,...X_{p-1}) = β_0 + β_1X_{i1} + β_2X_{i2} + · · · + β_{p-1}
 
 El modelo se denomina *lineal* puesto que la esperanza de Y condicional a las X's depende linealmente de las covariables $X_1$, $X_2$,..., $X_{p-1}$. 
 
-## Estimación de los Parámetros (Ajuste del modelo)
+### Estimación de los Parámetros (ajuste del modelo)
 
 Se quiere ajustar un modelo para el salario neto en función de 2 variables:
 
 $salarioNeto = \beta_0 + \beta_1x_i1 + \beta_2x_i2 + \epsilon_i$
 
 Veamos cómo se interpretan los ajustes para los distintos tipos de predictores. 
-### 1) Predictores numéricos
+
+### *1) Predictores numéricos*
 
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia y la gente_a_cargo.
 
@@ -90,38 +93,41 @@ Armemos un modelo para predecir el salario_neto en función de los años de expe
 # ajustamos modelo lineal multiple
 modelo_exp_gc <- lm(salario_neto ~ anos_de_experiencia + gente_a_cargo, data = df)
 # Resumen del modelo
-resumen_meg <- summary(modelo_exp_gc)
-resumen_meg
+tidy_meg <- tidy(modelo_exp_gc, conf.int = TRUE)
+tidy_meg
 ```
 
 #### Significado de los coeficientes estimados
 
-* El valor de la ordenada al origen (51.668) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y sin gente a cargo, por lo que no tendría sentido. 
+* El valor de la ordenada al origen (51.668) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y sin gente a cargo, es decir, para alguien que recién comienza. 
 
 * El coeficiente estimado de años de experiencia (1.624) no es el mismo que cuando los años de experiencia eran la única variable que explicaba el modelo (modelo simple), su valor descendió levemente de 1.676 a 1.624. Esto implica que, si mantenemos el número de gente a cargo constante, cada incremento de un año en los años de experiencia corresponde a un aumento de 1.624 pesos en el sueldo neto, en promedio. O lo que es igual, dadas dos personas con la misma cantidad de gente a cargo pero teniendo uno un año más de experiencia que el otro, el sueldo neto esperado para el de mayor experiencia será 1.624 pesos más alto que el de menor experiencia.
 
 ¿Cómo se interpretaría el coeficiente estimado de gente a cargo?
 
-### 2) Predictores Categóricos
+### *2) Predictores Categóricos*
 
-#### **Predictor binario**
+### *i) Predictor binario*
 
 Armemos un modelo para predecir el salario_neto en función de los años de experiencia y el género (me_identifico), que es categórica con dos niveles (hombres y mujeres). Para ello, vamos a analizar primero el comportamiento de la variable que queremos predecir para ambos géneros. 
 
 ```{r}
-ggplot(data = df, aes(x=anos_de_experiencia,y=salario_neto,group = me_identifico, fill = me_identifico)) +
+ggplot(data = df, aes(y=salario_neto/1000, group = me_identifico, fill = me_identifico)) +
          geom_boxplot() + 
          scale_fill_brewer(palette="Dark2") +
-         labs(title = "Boxplots de salario neto según género") +
-         facet_wrap(~me_identifico, scales = "free_x") +
-         theme_bw() 
+  theme_bw() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+         labs(title = "Boxplots de salario neto según género", subtitle = "En miles de pesos") +
+  facet_wrap(~me_identifico)
 ```
 Veamos qué ocurre cuando ajustamos el modelo:
 
 ```{r}
 modelo_exp_sex <- lm(salario_neto ~ anos_de_experiencia + me_identifico, data = df)
-resumen_mes <- summary(modelo_exp_sex)
-resumen_mes
+tidy_mes <- tidy(modelo_exp_sex, conf.int = TRUE)
+tidy_mes
 ```
 
 #### Significado de los coeficientes estimados
@@ -153,7 +159,7 @@ df %>% ggplot(., aes(x = anos_de_experiencia, y = salario_neto)) +
   labs(title="Modelo Lineal Múltiple: Años en la empresa y Género", x="Años de experiencia", y="Salario Neto") 
 ```
 
-#### **Predictores Cualitativos con más de dos clases**
+### *ii) Predictores Cualitativos con más de dos clases*
 
 Como hay dos variables que se refieren al nivel de estudios alcanzado, vamos a unificar en una misma y reagrupar los datos.
 
@@ -161,38 +167,32 @@ Como hay dos variables que se refieren al nivel de estudios alcanzado, vamos a u
 # unique(df$nivel_de_estudios_alcanzado)
 df2 <- df %>% 
   mutate(nivel_educativo = case_when(nivel_de_estudios_alcanzado %in% c("Posgrado", "Posdoctorado", "Doctorado") ~ "Posgrado", 
-                                     TRUE ~ nivel_de_estudios_alcanzado))
-# unificamos nivel educativo y estado 
-df2 <- df2 %>% 
-  mutate(nivel_edu_alcanzado = paste(nivel_educativo, sep = " ", estado))
-unique(df2$nivel_edu_alcanzado) # quedan 9 categorías
+                                     TRUE ~ nivel_de_estudios_alcanzado),
+         # unificamos nivel educativo y estado 
+         nivel_edu_alcanzado = paste(nivel_educativo, sep = " ", estado)) 
+unique(sort(df2$nivel_edu_alcanzado)) # quedan 9 categorías
 ```
 
 Quedan 9 categorías de nivel educativo alcanzado. Veamos a través de boxplots paralelos cómo se comportan. 
 
 ```{r}
-ggplot(data = df2, aes(x=nivel_edu_alcanzado, y=salario_neto, group = nivel_edu_alcanzado, fill = nivel_edu_alcanzado)) +
+ggplot(data = df2, aes(y=salario_neto/1000, group = nivel_edu_alcanzado, fill = nivel_edu_alcanzado)) +
          geom_boxplot() +
          theme_bw() +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) +
-  labs(title = "Boxplots de salario neto según nivel educativo alcanzado")
+  labs(title = "Boxplots de salario neto según nivel educativo alcanzado", subtitle = "En miles de pesos")
 ```
 Probemos armar un modelo lineal para el sueldo neto en función de los años de experiencia y esta nueva variable de nivel_edu_alcanzado.  
 
 ```{r}
 modelo_exp_edu <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado, data = df2)
-resumen_meed <- summary(modelo_exp_edu)
-resumen_meed
+tidy_meed <- tidy(modelo_exp_edu, conf.int = TRUE)
+tidy_meed
 ```
-¿Mejoró el modelo incorporando esta nueva variable? Sí. 
 
 R cuando efectúa la regresión calcula automáticamente las variables indicadoras (dummies) para las covariables categóricas, en general según orden alfabético. Podemos chequear el orden para chequear cuál es la categoría basal. En este caso, la categoría de referencia corresponde al nivel educativo *Posgrado Completado*.
-
-```{r}
-sort(unique(df2$nivel_edu_alcanzado))
-```
 
 #### Significado de los coeficientes estimados
 
@@ -244,37 +244,34 @@ Es decir, busca probar:
 
 ```{r}
 # Modelo Años de experiencia y gente a cargo
-# se puede ver el resumen completo
-resumen_meg
-# o solo acceder a los coeficientes para visualizar el test t
-resumen_meg$coefficients
-confint(modelo_exp_gc) # calculamos intervalo de confianza
+tidy_meg %>%
+  select(term, statistic, p.value, conf.low, conf.high)
 ```
 
 * En este primer modelo se observa que la variable años de experiencia resulta estadísticamente significativa para explicar al sueldo neto (p-valor < 0.05), mientras que la gente a cargo no (p-valor = 0.116 > 0.05). 
 
-* Además del resultado del test, podemos apreciar que el intervalo de confianza del 95% de la variable años de experiencia no contiene al 0, mientras el IC de la variable gente_a_cargo sí. 
+* Además del resultado del test, podemos apreciar que el intervalo de confianza (IC) del 95% de la variable años de experiencia no contiene al 0, mientras el IC de la variable gente_a_cargo sí. 
 
 ```{r}
 # Modelo Años de experiencia y Género
-resumen_mes
-confint(modelo_exp_sex) # calculamos intervalo de confianza
+tidy_mes %>%
+  select(term, statistic, p.value, conf.low, conf.high)
 ```
 
 * En este caso se observa que la variable años de experiencia y la categoría Mujer de la variable me_identifico resultan estadísticamente significativas para explicar al sueldo neto (p-valores < 0.05). 
 
-* Además del resultado del test, podemos corroborar que los intervalos de confianza del 95% para los coeficientes estimados no contienen al 0.  
+* Además del resultado del test, podemos corroborar que los intervalos de confianza del 95% para los coeficientes estimados no contienen al 0 en ninguno de los casos.  
 
 **¿Cómo se interpreta la significatividad de las variables dummies?**
 
-* En el caso de la variable dicotómica me_identifico, este test permite chequear si los valores medios del sueldo neto son los mismos para las mujeres respecto de los hombres (categoría basal).
+* En el caso de la variable dicotómica me_identifico (género), este test permite chequear si los valores medios del sueldo neto son los mismos para las mujeres respecto de los hombres (categoría basal).
 
 * Si queremos evaluar a la variable género en su conjunto, debemos recurrir a un test F, como veremos más abajo para probar que todos los coeficientes de la variable no son = 0.
 
 ```{r}
 # Modelo Años de experiencia y Nivel Educativo Alcanzado
-resumen_meed
-confint(modelo_exp_edu) # calculamos intervalo de confianza
+tidy_meed %>%
+  select(term, statistic, p.value, conf.low, conf.high)
 ```
 
 * En este modelo se observa que mientras la variable años de experiencia resulta estadísticamente significativa para explicar al sueldo neto (p-valores < 0.05), las categorías de nivel educativo no. Hay algunas que resultan significativas y otras no.
@@ -285,9 +282,9 @@ confint(modelo_exp_edu) # calculamos intervalo de confianza
 
 * Este test permite chequear si los valores medios del sueldo neto son los mismos en las distintas categorías de nivel educativo alcanzado respecto de la categoría basal. Cabe destacar, que estos p-valores son válidos para las comparaciones individuales respecto de la categoría basal pero no abarcan todas las comparaciones de a pares.
 
-* Es decir, que los niveles medios de sueldo neto en los distintos grupos del nivel educativo alcanzado, en algunos casos difieren del basal y en otros no.
+* Es decir, que los niveles medios de sueldo neto en los distintos grupos del nivel educativo alcanzado en algunos casos difieren del basal y en otros no.
 
-* Si queremos evaluar a la variable nivel_edu_alcanzado en su conjunto, debemos recurrir a un test F, cuando además en el modelo aparece otra variable como en este caso los años de experiencia. 
+* Si queremos evaluar a la variable nivel_edu_alcanzado en su conjunto, debemos recurrir a un test F. 
 
 ## Test F (test de significatividad global)
 
@@ -303,12 +300,12 @@ Dichos tests F se obtienen para cada variable de la tabla de ANOVA del modelo. V
 
 ```{r}
 # Modelo Años de experiencia y Género
-anova(modelo_exp_sex)
+tidy(anova(modelo_exp_sex))
 # Modelo Años de experiencia y Nivel Educativo Alcanzado
-anova(modelo_exp_edu)
+tidy(anova(modelo_exp_edu))
 ```
 
-Ambas tablas de ANOVA muestran que, según los resultados del test F, en el primer modelo la variable género (me_identifico) en su conjunto es estadísticamente significativa para explicar al sueldo neto; mientras que en el segundo modelo el nivel educativo en su conjunto también (p-valores < 0.05).
+Ambas tablas de ANOVA muestran que, según los resultados del test F, la variable género (me_identifico) en su conjunto es estadísticamente significativa para explicar al sueldo neto en el primero modelo y el nivel educativo en su conjunto también lo es en el segundo modelo (p-valores < 0.05).
 
 * Si este test no resulta significativo, suele descartarse la variable categórica de entre las covariables de interés, y se la excluye del modelo. Si este test resulta estadísticamente significativo, entonces suelen mirarse con más detalle cuáles de las comparaciones entre grupos son estadísticamente significativas, para proporcionar un mejor análisis de los datos en consideración. 
 
@@ -320,7 +317,7 @@ es significativa para explicar a la respuesta, aparece el interés de comparar l
 Para ello, aplicamos el método de la diferencia honestamente significativa de Tukey (HSD: honestly significant difference). 
 
 ```{r}
-TukeyHSD(aov(modelo_exp_edu),"nivel_edu_alcanzado")
+tidy(TukeyHSD(aov(modelo_exp_edu),"nivel_edu_alcanzado"))
 ```
 Aquí vemos que exceptuando la diferencia entre los subgrupos dados por Terciario Completado-Posgrado Completado y Universitario En curso-Posgrado Completado, las restantes diferencias no son estadísticamente significativas a nivel conjunto 95%.
 
@@ -333,25 +330,25 @@ Cuando las variables predictoras están correlacionadas entre sí, decimos que e
 ```{r}
 cor(df2$anos_de_experiencia, df2$edad)
 ```
-Tienen alta correlación. Veamos qué ocurre con los coeficientes de estas dos variables al armar un modelo con todas las variables que vimos antes juntas, incluidas estas dos que se encuentran altamente correlacionadas, en comparación a un modelo con menos variables. 
+Como ya habíamos visto en el gráfico ggpairs inicial, estas variables tienen alta correlación. Veamos qué ocurre con los coeficientes de estas dos variables al armar un modelo con todas las variables que vimos antes juntas, incluidas estas dos que se encuentran altamente correlacionadas, en comparación a un modelo con menos variables. 
 
 ```{r}
 modelo_5 <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado + edad + gente_a_cargo + me_identifico, data = df2)
-summary(modelo_5)
+tidy(modelo_5)
 ```
 
 Armamos un modelo con edad y años de experiencia. 
 
 ```{r}
 modelo_exp_edad <- lm(salario_neto ~ anos_de_experiencia + edad, data = df2)
-summary(modelo_exp_edad)
+tidy(modelo_exp_edad)
 ```
 
 Armamos un modelo con los años de experiencia pero sin contemplar la edad. 
 
 ```{r}
 modelo_4 <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado + gente_a_cargo + me_identifico, data = df2)
-summary(modelo_4)
+tidy(modelo_4)
 ```
 ¿Qué diferencias encuentran con los coeficientes de edad y años de experiencia en los 3 modelos?
 
@@ -362,10 +359,25 @@ summary(modelo_4)
 Veamos qué ocurre si en vez de usar los años de experiencia en el modelo_4 usamos la edad.
 
 ```{r}
-summary(lm(salario_neto ~ edad + nivel_edu_alcanzado + gente_a_cargo + me_identifico, data = df2))
+tidy(lm(salario_neto ~ edad + nivel_edu_alcanzado + gente_a_cargo + me_identifico, data = df2))
 ```
 Observamos que ahora sí resulta estadísticamente significativa la edad para explicar el sueldo neto. 
 
 Los coeficientes pueden ser no significativos aún cuando exista una asociación verdadera entre la variable de respuesta y el conjunto de regresoras cuando armamos un modelo con multicolinealidad de variables regresoras. 
 
 > Hay que tener cuidado con la colinealidad de los predictores para no tener problemas con la interpretación de los coeficientes del modelo lineal y que no aumenten espúreamente la varianza estimada de los estimadores. 
+
+### Problemas de interpretación de los coeficientes
+
+Porque la interpretación si aumenta en un año la experiencia en la empresa actual puede prestarse a confusión sobre el impacto en la experiencia total
+
+```{r}
+tidy(lm(salario_neto ~ anos_de_experiencia + anos_en_la_empresa_actual, data = df2))
+```
+
+La regresión $ = a+bSC+cSD te puede ayudar a entender qué conviene más: agregar un metro cuadrado de sup cubierta o uno de sup descubierta?
+la regresión $=a+bST+cPropSC te ayuda a entender cómo cambiar la composición de la superficie de la propiedad afecta el precio. sería como "Supongamos que vas a construir sobre tu jardín, sin incrementar el terreno" y b es como extender el terreno descubierto. 
+el tema es este: hay un elemento que no vas a poder mantener constante porque no tiene sentido mantener constante uno (ST, SC, SD). no tendría sentido incrementar SC y SD y mantener constante la ST.
+entonces al menos uno de tus coeficientes va a estar reflejando el efecto de incrementar una de las superficies específicas, y el otro coeficiente va a reflejar el efecto de subir una superficie manteniendo constante la otra
+lo que podrías preguntarles es que escriban varios modelos para interpretar los parámetros que te interesen. "supongamos que estás pensando en edificar parte de tu jardín, qué modelo estimarías para ver si conviene edificar o comprar más terreno". 
+Porque muchas personas cayeron en el error de interpretar el coeficiente C en términos absolutos y no como proporción. Entonces sugerimos que lo separen en descubierta y cubierta pero esta bueno lo que sugerís.
