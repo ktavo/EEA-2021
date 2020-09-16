@@ -47,8 +47,8 @@ Para empezar, generemos aleatoriamente varios modelos lineales para ver qué for
 
 ```{r}
 models <- tibble(
-  a1 = runif(250, -20, 40),
-  a2 = runif(250, -5, 5)
+  a1 = runif(250, -20, 40), # Función para tomar valores al azar de una distribución uniforme
+  a2 = runif(250, -5, 5) # Función para tomar valores al azar de una distribución uniforme
 )
 
 ggplot(sim1, aes(x, y)) + 
@@ -62,20 +62,19 @@ A simple vista podemos apreciar que algunos modelos son mejores que otros. Pero 
 
 ## Distancias
 
-Una forma de definir _mejor_ es pensar en aquel modelo que minimiza la distancia vertical con cada punto:
+Una forma de definir _mejor_ es pensar en aquel modelo que minimiza la distancia vertical de la recta (el modelo) con cada punto:
 
-Para eso, eligamos un modelo cualquiera:
+Para eso, elijamos un modelo cualquiera:
 
 $$ y= 7 + 1.5*x$$
 
-(para que se vean mejor las distancias, corremos un poquito cada punto sobre el eje x)
 
 ```{r}
 dist1 <- sim1 %>% 
   mutate(
     dodge = rep(c(-1, 0, 1) / 20, 10),
-    x1 = x + dodge,
-    pred = 7 + x1 * 1.5
+    x1 = x + dodge, # para que se vean mejor las distancias, corremos un poquito cada punto sobre el eje x
+    pred = 10 + x1 * 1.5
   )
 
 ggplot(dist1, aes(x1, y)) + 
@@ -88,46 +87,44 @@ ggplot(dist1, aes(x1, y)) +
 
 La distancia de cada punto a la recta es la diferencia entre lo que predice nuestro modelo y el valor real
 
+## Función de Modelo
 
-Para computar la distancia, primero necesitamos una función que represente a nuestro modelo: 
+Para computar la distancia, primero necesitamos una función que permita representar a cualquier modelo.
 
-## Ejercicio 1
+### Ejercicio
 
-  Crear una función que reciba un vector con los parametros del modelo, y el set de datos, y genere la predicción:
+Crear una función que reciba un vector con los parametros del modelo, y el set de datos, y genere la predicción:
   
 ```{r}
 model1 <- function(a, data) {
-   a[1] + data$x * a[2]
+
    }
 model1(c(7, 1.5), sim1)
 ```
 
+Necesitamos una forma de cuantificar el error de predicción de nuestro modelo en todas las observaciones y resumirlo en única métrica.
+Esta será la función objetivo que buscaremos minimizar. 
 
+Una de las formas de hacerlo es con el error cuadrático medio (ECM)
 
-Ahora, necesitamos una forma de calcular los residuos y agruparlos. Como se vió en la clase teórica, esto lo vamos a hacer con el error cuadrático medio
+### Ejercicio 2
 
-## Ejercicio 2
-
-Necesitamos una función, con el mismo input que la anterior, que calcule el promedio de los errores cuadráticos (ECM)
+Necesitamos una función, que reciba un vector con los parametros del modelo y el set de datos, que calcule el promedio de los errores cuadráticos (ECM)
  
 $$ECM = \frac{\sum_i^n{(\hat{y_i} - y_i)^2}}{n}$$
 
 ```{r}
-
 measure_distance <- function(mod, data) {
- diff <- data$y - model1(mod, data)
- mean(diff ^ 2)/length(data$y)
+
    }
 measure_distance(c(7, 1.5), sim1)
 ```
-
-
 
 ## Evaluando los modelos aleatorios
 
 Ahora podemos calcular el __ECM__ para todos los modelos del dataframe _models_. Para eso utilizamos el paquete __purrr__, para ejecutar varias veces la misma función sobre varios elementos. 
 
-### MAP^[basado en https://jennybc.github.io/purrr-tutorial/ls03_map-function-syntax.html, gracias Jenny!]
+### MAP^[basado en https://jennybc.github.io/purrr-tutorial/ls03_map-function-syntax.html]
 
 Nosotros tenemos que pasar pasar los valores de a1 y a2 (dos parámetros --> map2), pero como nuestra función toma sólo uno (el vector a), nos armamos una función de ayuda para wrapear a1 y a2
 
@@ -277,7 +274,7 @@ La intuición de estas dos herramientas es bastante simple: Se elige un punto de
 En R, podemos hacer eso con `optim ()`:
 
 - necesitamos pasarle un vector de puntos iniciales. Elegimos el origen por poner cualquier cosa
-- le pasamos nuestra función de distancia, y los parámetros que nuestra función necesita (data)
+- le pasamos nuestra función objetivo, y los parámetros que nuestra función necesita (data)
 
 
 ```{r}
@@ -293,65 +290,9 @@ best$par
 # Graficamos la linea de los mejores parametros
 ggplot(sim1, aes(x, y)) + 
   geom_point(size = 2, colour = "grey30") + 
-  geom_abline(intercept = best$par[1], slope = best$par[2])
+  geom_abline(intercept = best$par[1], slope = best$par[2], color="firebrick") +
+  theme_bw()
 ```
 
 
-## Óptimo para el modelo lineal
 
-Este procedimiento es válido para muchas familias de modelos. Pero para el caso del modelo lineal, conocemos otras formas de resolverlo
-
-
-Si nuestro modelo es
-
-$$
-y = a_1 + a_2x + \epsilon
-$$
-
-La solución del óptima es
-
-$$
-\hat{a_1} = \bar{y} - \hat{a_2}\bar{x} 
-$$
-
-$$
-\hat{a_2} = \frac{\sum_i^n (y_i -\bar{y})(x_i -\bar{x})}{\sum_i^n (x_i- \bar{x})}
-$$
-
-R tiene una función específica para el modelo lineal `lm()`. Cómo esta función sirve tanto para regresiones lineales simples como múltiples, debemos especificar el modelo en las _formulas_: `y ~ x`
-
-
-```{r}
-sim1_mod <- lm(y ~ x, data = sim1)
-coef(sim1_mod)
-```
-
-## Predicciones
-
-Para visualizar las predicciones de un modelo, comenzamos por generar una cuadrícula de valores espaciados uniformemente que cubre la región donde se encuentran nuestros datos. La forma más fácil de hacerlo es usar `modelr :: data_grid ()`. Su primer argumento es un dataframe, y para cada argumento posterior encuentra las variables únicas y luego genera todas las combinaciones:
-
-```{r}
-grid <- sim1 %>% 
-  data_grid(x) 
-grid
-```
-
-(Cuando tengamos modelos de varias variables, esta función va a ser de mucha utilidad)
-
-A continuación, agregamos predicciones. Usaremos `modelr :: add_predictions ()` que toma un dataframe y un modelo. Agrega las predicciones del modelo a una nueva columna en el dataframe:
-
-```{r}
-grid <- grid %>% 
-  add_predictions(sim1_mod) 
-grid
-```
-
-(También podríamos agregar predicciones al dataset original)
-
- A continuación, trazamos las predicciones. La ventaja de este enfoque respecto de `geom_abline ()` es que funcionará con __cualquier__ modelo en R, desde el más simple hasta el más complejo.
-
-```{r}
-ggplot(sim1, aes(x)) +
-  geom_point(aes(y = y)) +
-  geom_line(aes(y = pred), data = grid, colour = "red", size = 1)
-```
