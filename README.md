@@ -6,6 +6,10 @@ Juan Manuel Barriola
 
 Sofía Perini
 
+### [Trabajos Prácticos](trabajos_practicos)
+Hasta tanto se resuelva la situación del campus disponibilizamos las consignas y datos del TP 1
+
+
 ### Clase 1: 05-09
 
 Fundamentos de programación en R: entorno, objectos, estructuras de datos, loops, control flow y funciones
