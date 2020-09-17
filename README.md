@@ -19,6 +19,8 @@ Fundamentos de programación en R: entorno, objectos, estructuras de datos, loop
 - [Ejercicios](clase 1/Clase 1 - Ejercicios -Consignas .nb.html)
 - [Resueltos](clase 1/Resueltos/Clase 1 - Ejercicios -Resueltos.R)
 
+#### Datasets para ejercicios
+- [Dataset EPH](Fuentes/usu_individual_T120.txt) 
 
 ### Clase 2: 12-09
 
@@ -26,6 +28,13 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 
 - [Tidyverse](clase 2/Clase_2_-_Tidyverse.html )
 - [Ejercicios](clase 2/Clase 2 - Ejercicios.nb.html )
+
+#### Datasets para ejercicios
+
+- [Dataset dólar](Fuentes/dolar_oficial_ambito.csv)
+- [Dataset IPC](Fuentes/ipc-mensual.csv)
+- [Dataset ataques tiburones](Fuentes/ataques_tiburones.csv)
+- [Dataset EPH](Fuentes/usu_individual_T120.txt) 
 
 #### Material opcional
 
@@ -40,6 +49,11 @@ Estimación y test de correlación entre 2 variables. Matrices de correlación: 
 Análisis exploratorios, limpieza de datos, análisis de outliers e interpretación de los coeficientes de un modelo lineal simple
 
 - [Regresión Lineal Simple: Modelo e interpretación](clase 3/Clase-3---Regresion-Lineal-Simple.html)
+
+#### Dataset Notebook Modelo Lineal
+
+- [Dataset Encuesta Sueldos IT](Fuentes/encuesta_sueldos_sysarmy_1s2020.csv)
+
 
 ### Clase 4: 26-09
 
