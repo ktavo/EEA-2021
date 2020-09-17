@@ -2902,22 +2902,45 @@ resumen_modelo_edad</code></pre>
 {"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"20223.59","3":"6983.2576","4":"2.896012","5":"4.123767e-03"},{"1":"edad","2":"1364.72","3":"223.5562","4":"6.104594","5":"4.048392e-09"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+<p>Tiene dos parámetros muy útiles:</p>
+<ul>
+<li><code>conf.int</code>: valor lógico para incluir los intervalos de confianza o no</li>
+<li><code>conf.level</code>: nivel de confianza para calcular los intervalos. Este es valor es <span class="math inline">\(1 - \alpha\)</span></li>
+</ul>
+<pre class="r"><code># Incluimos intervalos de confianza
+tidy(modelo_edad,conf.int = TRUE)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"20223.59","3":"6983.2576","4":"2.896012","5":"4.123767e-03","6":"6468.1529","7":"33979.037"},{"1":"edad","2":"1364.72","3":"223.5562","4":"6.104594","5":"4.048392e-09","6":"924.3645","7":"1805.075"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Al contar con los datos de los límites de los intervalos de confianza podemos chequear si los mismos contienen o no el cero</p>
+<pre class="r"><code># Aumentamos el nivel de confianza sobre los intervalos
+tidy(modelo_edad,conf.int = TRUE, conf.level = 0.99)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"20223.59","3":"6983.2576","4":"2.896012","5":"4.123767e-03","6":"2093.5745","7":"38353.615"},{"1":"edad","2":"1364.72","3":"223.5562","4":"6.104594","5":"4.048392e-09","6":"784.3204","7":"1945.119"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Al aumentar el nivel de confianza los intervalos se volvieron más anchos. De todas formas, siguen sin contener al cero.</p>
 <p>Veamos los resultados para los otros dos modelos</p>
 <p><strong>Modelo Años de experiencia</strong></p>
-<pre class="r"><code>tidy(modelo_experiencia)</code></pre>
+<pre class="r"><code>tidy(modelo_experiencia,conf.int = TRUE) </code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"51825.264","3":"1995.2856","4":"25.973857","5":"4.584114e-72"},{"1":"anos_de_experiencia","2":"1693.574","3":"240.2255","4":"7.049934","5":"1.844848e-11"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"51825.264","3":"1995.2856","4":"25.973857","5":"4.584114e-72","6":"47895.001","7":"55755.526"},{"1":"anos_de_experiencia","2":"1693.574","3":"240.2255","4":"7.049934","5":"1.844848e-11","6":"1220.384","7":"2166.764"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+<p>Al igual que en el modelo anterior el p-valor es muy pequeño y el intervalo no contiene al cero</p>
 <p><strong>Modelo Años en la Empresa Actual</strong></p>
-<pre class="r"><code>tidy(modelo_empresa)</code></pre>
+<pre class="r"><code>tidy(modelo_empresa,conf.int = TRUE)</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"60301.464","3":"1759.1934","4":"34.277905","5":"4.705258e-95"},{"1":"anos_en_la_empresa_actual","2":"618.576","3":"336.4527","4":"1.838523","5":"6.720584e-02"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["term"],"name":[1],"type":["chr"],"align":["left"]},{"label":["estimate"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["std.error"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p.value"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"60301.464","3":"1759.1934","4":"34.277905","5":"4.705258e-95","6":"56836.25005","7":"63766.678"},{"1":"anos_en_la_empresa_actual","2":"618.576","3":"336.4527","4":"1.838523","5":"6.720584e-02","6":"-44.16002","7":"1281.312"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<p>En ambos modelos observamos que el p-valor asociado al test de significatividad individual de <span class="math inline">\(\beta_1\)</span> es extremadamente pequeño. Por lo tanto, concluimos que se rechaza la hipótesis nula, es decir, <span class="math inline">\(\beta_1\)</span> (parámetro poblacional) es distinto de cero.</p>
+<p>En este modelo, el p-valor asociado al test sobre <span class="math inline">\(\beta_1\)</span> es igual a 0.067. Si nuestro nivel de significancia es 0.05 no rechazamos la hipótesis nula.</p>
+<p>Esto también se puede observar en el intervalo de confianza asociado ya que el mismo contiene el cero.</p>
 </div>
 </div>
 <div id="test-f-test-de-significatividad-global" class="section level3">
@@ -2965,7 +2988,7 @@ resumen_modelo_edad</code></pre>
 ## Residual standard error: 22100 on 243 degrees of freedom
 ## Multiple R-squared:  0.133,  Adjusted R-squared:  0.1294 
 ## F-statistic: 37.27 on 1 and 243 DF,  p-value: 4.048e-09</code></pre>
-<p>Existen dos valores de <span class="math inline">\(R^2\)</span> en esta salida: el R-cuadrado multiple y el R-cuadrado ajustado.</p>
+<p>Existen dos valores de <span class="math inline">\(R^2\)</span> en esta salida: el R-cuadrado multiple y el R-cuadrado ajustado. Podemos observar cualquiera de los dos valores ya que estamos trabajando con modelos con una sola variable independiente, el R-cuadrado ajustado tendrá mayor utilidad cuando trabajemos con regresiones múltiples.</p>
 <p>El valor de <span class="math inline">\(R^2\)</span> es 0.1329667 (el que corresponde al R-cuadrado multiple)</p>
 <div id="broom-glance" class="section level4">
 <h4>Broom: glance</h4>
