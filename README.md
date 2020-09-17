@@ -28,6 +28,7 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 
 - [Tidyverse](clase 2/Clase_2_-_Tidyverse.html )
 - [Ejercicios](clase 2/Clase 2 - Ejercicios.nb.html )
+- [Resueltos](clase 2/resueltos)
 
 #### Datasets para ejercicios
 
