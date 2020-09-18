@@ -170,9 +170,16 @@ Esto también se puede observar en el intervalo de confianza asociado ya que el 
 
 ### Test F (test de significatividad global)
 
+La información del Test F o de significatividad global se pueden encontrar en el `summary` del modelo en los siguientes campos:
+
+* F-statistic: estadístico del test F
+* p-value: es el p-valos de dicho test (se encuenta al lado del F-statistic)
+
 ```{r}
 resumen_modelo_edad
 ```
+
+En el caso de un modelo lineal simple, el test F es otro test para testear que las hipótesis $H_0 : \beta_1 = 0$ vs $H_1 : \beta_1 \neq 0$. Por lo tanto, no nos detendremos en su análisis.
 
 ### Coeficiente de determinación $R^2$
 
@@ -212,51 +219,104 @@ glance(modelo_experiencia)
 glance(modelo_empresa)
 ```
 
+Observamos que el modelo que utiliza los años de experiencia como variable explicativa tiene el mayor R-cuadrado: $R^2=0.1698$ y por lo tanto es el mejor modelo entre los que probamos para **explicar** el salario neto del grupo de personas que estamos analizando.
+
 ## Diagnóstico del modelo
 
-El diagnóstico del modelo consiste en utilizar técnicas para validar el cumplimiento o no de los supuestos del modelo lineal. 
+El diagnóstico del modelo consiste en utilizar técnicas para validar el cumplimiento o no de los supuestos del modelo lineal. Recordemos que estos supuestos se puede resumir en:
 
-```{r  out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
+$\varepsilon_i \sim N(0, \sigma^2)$ independientes entre sí.
+
+Los **errores** tienen distribución normal con media cero y varianza constante y son independientes entre sí. Los errores son inobservables, por lo tanto tendremos que trabajar con su correlato empírico: los **residuos** en las técnicas de diagnóstico.
+
+Con el comando `plot()` sobre un modelo lineal obtenemos 4 gráficos muy útiles para realizar el diagnóstico de nuestro modelo:
+
+1) **Residuos** vs **valores predichos**:  El objetivo es que no veamos una estructura clara. Si así la hubiera, esto implicaría que hay una parte __sistemática__ del fenómeno que se esta perdiendo. 
+
+2) **Normal QQ plot**: sirve para ver si los datos siguen una distribución teórica, en este caso, la $\sim N(0,1)$. Los residuos estandarizados, si el modelo esta bien definido, deberían seguir esta distribución
+
+3) **Scale-location plot**: Similar al primer gráfico, pero utilizando la raíz cuadrada de los residuos estandarizados. De la misma forma que el anterior, buscamos que no haya una estructura en los residuos.
+
+4) **Residual** vs **leverage**: El leverage mide cuan influyentes son los puntos en el modelo. Si en este gráfico algunas observaciones aparecen muy separadas, con mucho leverage y residuo, significa que cambian mucho al modelo.
+
+**Modelo de edad**
+
+Observemos estos gráficos para el modelo de edad
+
+```{r out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
 plot(modelo_edad)
 ```
 
+1) **Residuos** vs **valores predichos**:  Parece existir cierta estructura en los datos: una leve curvatura y varianza que depende de la covariable
 
-Estos gráficos son:
+2) **Normal QQ plot**: los extremos no se ajustan a la distribución teórica
 
-- Residuos versus el modelo ajustado:  El objetivo es que no veamos una estructura clara. Si así la hubiera, esto implicaría que hay una parte __sistemática__ del fenómeno que se esta perdiendo. 
-- Normal QQ plot: sirve para ver si los datos siguen una distribución teórica, en este caso, la $\sim N(0,1)$. Los residuos estandarizados, si el modelo esta bien definido, deberían seguir esta distribución
-- Scale-location plot: Similar al primer gráfico, pero utilizando la raíz cuadrada de los residuos estandarizados. De la misma forma que el anterior, buscamos que no haya una estructura en los residuos.
-- residual vs leverage: El leverage mide cuan influyentes son los puntos en el modelo. Si en este gráfico algunas observaciones aparecen muy separadas, con mucho leverage y residuo, significa que cambian mucho al modelo.
-
+4) **Residual** vs **leverage**: Existen dos puntos con un leverage bastante alto, el gráfico destaca la observación 82.
 
 ```{r}
-au = augment(modelo_edad, encuesta_sueldos)
-au
+encuesta_sueldos[82,]
 ```
 
-```{r  message= FALSE, out.width = "50%", fig.asp = 1, fig.width = 6, fig.align='default'}
+**Diagnóstico**: el modelo no cumple con los supuestos del modelo lineal. Parecen existir dos problemas: la existencia de heterocedasticidad (varianza no constante) y la presencia de observaciones de alto leverage
 
-ggplot(au, aes(.fitted, .resid)) +
+**Modelo de experiencia**
+
+Observemos estos gráficos para el modelo de experiencia
+
+```{r  out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
+plot(modelo_experiencia)
+```
+
+¿Qué observamos en este caso? ¿Qué diagnóstico darían?
+
+### Broom: augment_columns
+
+Con la función `augment_columns()` del paquete broom podemos agregar información a nuestro dataset original o a datos nuevos. Toma como argumentos: `x`: el modelo y `data`: nuestro dataset. 
+
+```{r}
+# Agregamos las columnas
+encuesta_aumentada = augment_columns(x=modelo_edad, data=encuesta_sueldos)
+# Observamos los resultados
+glimpse(encuesta_aumentada)
+```
+
+La función agregó varias columnas al dataset:
+
+* .fitted: es el valor predicho
+
+* .resid: es el residuo
+
+* .std.resid: es el residuo estandarizado
+
+Al contar con esta información como dataframe podemos trabajarla de diversas maneras. Por ejemplo, podemos realizar los gráficos de diagnóstico con ggplot
+
+```{r  message= FALSE}
+
+ggplot(encuesta_aumentada, aes(.fitted, .resid)) +
   geom_point()+
-  geom_hline(yintercept = 0) +
+  geom_hline(size = 1, colour = "grey", linetype="dashed", yintercept = 0) +
   geom_smooth(se = FALSE) +
-  theme_bw()
+  theme_bw() +
+  labs(title = "Residuos vs valores predichos")
 
-ggplot(au, aes(sample= .std.resid))+
+ggplot(encuesta_aumentada, aes(sample= .std.resid))+
   stat_qq()+
   geom_abline() +
-  theme_bw()
+  theme_bw() +
+  labs(title = "Normal QQ plot")
 
-ggplot(au, aes(.fitted, sqrt(abs(.std.resid))))+
+ggplot(encuesta_aumentada, aes(.fitted, sqrt(abs(.std.resid))))+
   geom_point()+
   geom_smooth(se = FALSE) +
-  theme_bw()
+  theme_bw() +
+  labs(title = "Scale-location plot")
 
-ggplot(au, aes(.hat, .std.resid)) +
+ggplot(encuesta_aumentada, aes(.hat, .std.resid)) +
   geom_vline(size = 2, colour = "white", xintercept = 0) +
-  geom_hline(size = 2, colour = "white", yintercept = 0) +
+  geom_hline(size = 1, colour = "grey", linetype="dashed", yintercept = 0) +
   geom_point() + geom_smooth(se = FALSE) +
-  theme_bw()
+  theme_bw() +
+  labs(title = "Residual vs leverage")
 
 ```
 

@@ -25,7 +25,7 @@ Usualmente se observa el enfoque "estadístico para hallar las estimaciones de l
 
 $\hat{\beta_0} = \overline{Y} - \hat{\beta_1} \cdot \overline{X}$
 
-$\hat{\beta_1} = \frac{\sum{(X_i - \overline{X})(Y_i - \overline{Y})}}{\sum{(X_i - \overline{X})^2}} $
+$\hat{\beta_1} = \frac{\sum{(X_i - \overline{X})(Y_i - \overline{Y})}}{\sum{(X_i - \overline{X})^2}}$
 
 En este caso vamos a desarrollar otra manera de hallar los valores de estos parámetros, mediante un enfoque de optimización.
 
