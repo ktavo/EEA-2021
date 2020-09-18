@@ -123,27 +123,50 @@ Este test también se conoce como **test de significatividad individual** del pa
 
 #### Broom: tidy
 
-Con la función `tidy()` del paquete broom podemos obtener la información sobre los parámetros como un dataframe: 
+Con la función `tidy()` del paquete broom podemos obtener la información sobre los parámetros como un dataframe:
 
 ```{r}
 tidy(modelo_edad)
 ```
+
+Tiene dos parámetros muy útiles:
+
+  * `conf.int`: valor lógico para incluir los intervalos de confianza o no
+  * `conf.level`: nivel de confianza para calcular los intervalos. Este es valor es $1 - \alpha$ 
+  
+```{r}
+# Incluimos intervalos de confianza
+tidy(modelo_edad,conf.int = TRUE)
+```
+
+Al contar con los datos de los límites de los intervalos de confianza podemos chequear si los mismos contienen o no el cero
+
+```{r}
+# Aumentamos el nivel de confianza sobre los intervalos
+tidy(modelo_edad,conf.int = TRUE, conf.level = 0.99)
+```
+
+Al aumentar el nivel de confianza los intervalos se volvieron más anchos. De todas formas, siguen sin contener al cero.
 
 Veamos los resultados para los otros dos modelos
 
 **Modelo Años de experiencia**
 
 ```{r}
-tidy(modelo_experiencia)
+tidy(modelo_experiencia,conf.int = TRUE) 
 ```
+
+Al igual que en el modelo anterior el p-valor es muy pequeño y el intervalo no contiene al cero
 
 **Modelo Años en la Empresa Actual**
 
 ```{r}
-tidy(modelo_empresa)
+tidy(modelo_empresa,conf.int = TRUE)
 ```
 
-En ambos modelos observamos que el p-valor asociado al test de significatividad individual de $\beta_1$ es extremadamente pequeño. Por lo tanto, concluimos que se rechaza la hipótesis nula, es decir, $\beta_1$ (parámetro poblacional) es distinto de cero. 
+En este modelo, el p-valor asociado al test sobre $\beta_1$ es igual a 0.067. Si nuestro nivel de significancia es 0.05 no rechazamos la hipótesis nula.
+
+Esto también se puede observar en el intervalo de confianza asociado ya que el mismo contiene el cero.
 
 ### Test F (test de significatividad global)
 
@@ -153,13 +176,17 @@ resumen_modelo_edad
 
 ### Coeficiente de determinación $R^2$
 
-El $R^2$ permite medir el porcentaje de variabilidad del fenómeno que el modelo logra explicar.  
+El $R^2$ permite medir el porcentaje de variabilidad del fenómeno que el modelo logra explicar.  Por este motivo es una métrica que nos permite evaluar la capacidad explicativa del modelo y poder comparar modelos entre sí bajo ciertas condiciones.
+
+Observemos nuevamente el resumen del **Modelo Edad**
 
 ```{r}
 resumen_modelo_edad
 ```
 
-El valor de $R^2$ es `r resumen_modelo_edad$r.squared`
+Existen dos valores de $R^2$ en esta salida: el R-cuadrado multiple y el R-cuadrado ajustado. Podemos observar cualquiera de los dos valores ya que estamos trabajando con modelos con una sola variable independiente, el R-cuadrado ajustado tendrá mayor utilidad cuando trabajemos con regresiones múltiples. 
+
+El valor de $R^2$ es `r resumen_modelo_edad$r.squared` (el que corresponde al R-cuadrado multiple)
 
 #### Broom: glance
 
@@ -168,6 +195,8 @@ Con la función `glance()` del paquete broom podemos obtener la información sob
 ```{r}
 glance(modelo_edad)
 ```
+
+La salida de la función `glance()` devuelve mucha más información que la disponible en el resumen del modelo. 
 
 Veamos los resultados para los otros dos modelos
 
@@ -185,6 +214,7 @@ glance(modelo_empresa)
 
 ## Diagnóstico del modelo
 
+El diagnóstico del modelo consiste en utilizar técnicas para validar el cumplimiento o no de los supuestos del modelo lineal. 
 
 ```{r  out.width = "50%", fig.asp = 1, fig.width = 5, fig.align='default'}
 plot(modelo_edad)
