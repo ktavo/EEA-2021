@@ -38,7 +38,8 @@ Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza
 ```{r, message=F}
 encuesta <- read_csv("../Fuentes/encuesta_RLM_limpia.csv")
 ```
-Trabajaremos con un dataset de 243 observaciones. 
+
+Trabajaremos con un dataset de 159 observaciones. 
 
 ### Seleccionamos variables de interés
 
@@ -48,12 +49,16 @@ df <- encuesta %>%
   mutate(perfil = factor(case_when(trabajo_de == "BI Analyst / Data Analyst" ~ "DA", trabajo_de == "Data Scientist / Data Engineer" ~ "DS")))
 df %>%
   head()
+# table(df$perfil) 98 DA 61 DS
 ```
+
 Recordemos cómo era la correlación entre las variables numéricas seleccionadas. 
 ```{r}
 library(GGally)
 df[,c(2,4,5,7,12,13)] %>% 
-  ggpairs(., aes(color = perfil), upper = list(continuous = wrap("cor", size = 3, hjust=0.5)), legend = 25) + 
+  ggpairs(., aes(color = perfil), 
+          upper = list(continuous = wrap("cor", size = 3, hjust=0.5)), 
+          legend = 25, proportions = 1) + 
   theme_bw() +
   theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 ```
@@ -369,15 +374,54 @@ Los coeficientes pueden ser no significativos aún cuando exista una asociación
 
 ### Problemas de interpretación de los coeficientes
 
-Porque la interpretación si aumenta en un año la experiencia en la empresa actual puede prestarse a confusión sobre el impacto en la experiencia total
+Porque la interpretación si aumenta en un año la experiencia en la empresa actual puede prestarse a confusión sobre el impacto en la experiencia total.
+
+¿Cómo es la correlación entre las variables que queremos analizar?
 
 ```{r}
+cor(df2$anos_de_experiencia, df2$anos_en_la_empresa_actual)
+```
+Están correlacionadas. Veamos cómo afecta la interpretación cuando usamos esas variables para construir un modelo. 
+
+```{r}
+# modelo 1: salario en función de anos de experiencia y anos en empresa actual
 tidy(lm(salario_neto ~ anos_de_experiencia + anos_en_la_empresa_actual, data = df2))
 ```
+¿Qué pasa con los coeficientes estimados de la variables? 
 
-La regresión $ = a+bSC+cSD te puede ayudar a entender qué conviene más: agregar un metro cuadrado de sup cubierta o uno de sup descubierta?
-la regresión $=a+bST+cPropSC te ayuda a entender cómo cambiar la composición de la superficie de la propiedad afecta el precio. sería como "Supongamos que vas a construir sobre tu jardín, sin incrementar el terreno" y b es como extender el terreno descubierto. 
-el tema es este: hay un elemento que no vas a poder mantener constante porque no tiene sentido mantener constante uno (ST, SC, SD). no tendría sentido incrementar SC y SD y mantener constante la ST.
-entonces al menos uno de tus coeficientes va a estar reflejando el efecto de incrementar una de las superficies específicas, y el otro coeficiente va a reflejar el efecto de subir una superficie manteniendo constante la otra
-lo que podrías preguntarles es que escriban varios modelos para interpretar los parámetros que te interesen. "supongamos que estás pensando en edificar parte de tu jardín, qué modelo estimarías para ver si conviene edificar o comprar más terreno". 
-Porque muchas personas cayeron en el error de interpretar el coeficiente C en términos absolutos y no como proporción. Entonces sugerimos que lo separen en descubierta y cubierta pero esta bueno lo que sugerís.
+Anos_de_experiencia resulta significativa y anos_en_la_empresa_actual no. 
+
+¿Cómo se interpretan estos coeficientes?
+
+xxxxx
+
+¿Qué pasa si creamos un nuevo modelo separando los años de experiencia entre experiencia previa y acutal? 
+
+```{r}
+# armamos nueva variable de experiencia previa
+df3 <- df2 %>%
+  mutate(exp_previa = anos_de_experiencia - anos_en_la_empresa_actual)
+# modelo 2: separando experiencia previa y empresa actual  
+tidy(lm(salario_neto ~ exp_previa + anos_en_la_empresa_actual, data = df3))
+```
+¿Qué pasa con los coeficientes estimados de la variables? 
+
+La experiencia previa resulta significativa y los anos_en_la_empresa_actual no. 
+¿Cómo se interpretan estos coeficientes?
+
+En este caso la regresión ayuda a entender cómo afecta la experiencia previa y la actual el sueldo neto. Es decir, cuánto aumenta el sueldo neto medio un año adicional de experiencia previa, dados los años en la empresa actual, y cuánto aumenta el sueldo neto promedio un año adicional de experiencia en la empresa actual, dada la experiencia previa. 
+
+### Interacción de variables
+
+
+```{r}
+tidy(modelo_exp_sex)
+```
+
+```{r}
+tidy(lm(salario_neto ~  me_identifico + anos_de_experiencia + me_identifico*anos_de_experiencia, data = df2))
+```
+
+```{r}
+tidy(lm(salario_neto ~  perfil + edad, data = df2))
+```

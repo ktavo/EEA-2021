@@ -20,11 +20,12 @@ df <- encuesta_ds %>%
          sueldo_dolarizado == 0, #Eliminamos los sueldos dolarizados 
          edad - anos_de_experiencia > edad_laboral_minima, # Eliminamos registros inconsistentes con la edad laboral
          salario_bruto > salario_neto, # Inconsistencia en los sueldos
+         anos_de_experiencia > anos_en_la_empresa_actual, # Inconsistencia 
          anos_en_la_empresa_actual < 70, # Error de carga
          me_identifico != "Otros") %>%  # elimnamos la categoria otros de me_identifico porque solo tiene 2 valores
   select(-sueldo_dolarizado) # Eliminamos la columna de sueldo dolarizado
 df %>%
-  glimpse() # 243 obs 12 columnas
+  glimpse() # 159 obs 13 columnas
 # guardo el archivo limpio
-write.csv(df2, "../Fuentes/encuesta_RLM_limpia.csv")
+write.csv(df, "../Fuentes/encuesta_RLM_limpia.csv")
 
