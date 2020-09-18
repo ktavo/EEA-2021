@@ -19,10 +19,22 @@ div.main-container {
 
 ### Kernels (OPCIONAL)
 
+```{r}
+library(tidyverse)
+library(ggthemes)
+```
+
+
+```{r}
+## Levantamos dataset
+Individual_T120 <- read.table(paste0("../Fuentes/usu_individual_T120.txt"),
+                              sep=";", dec=",", header = TRUE, fill = TRUE)
+```
+
 Podemos hacer una nueva versión del gráfico 2. Utilizando un procesamiento similar al que hicimos antes.
 
 ```{r warning=FALSE}
-datagraf <-Individual_T120 %>% 
+datagraf <- Individual_T120 %>% 
   select(REGION,P47T,T_VI, TOT_P12, P21, PONDII, CH04) %>% 
   filter(!is.na(P47T), P47T > 0 ) %>% 
   mutate(REGION             = case_when(REGION == 1    ~ 'GBA',
@@ -40,13 +52,12 @@ datagraf <-Individual_T120 %>%
   gather(., key = Tipo_ingreso, Ingreso, c((ncol(.)-1):ncol(.)))
 datagraf  
 ```
-
 Con los Kernels, no necesitamos dividir a la población en deciles, porque podemos tener una mirada completa de la forma de la distribución.    
 
-Para este gráfico, quiero eliminar los ingresos = 0
+Para este gráfico, quiero eliminar los ingresos = 0.
 
 ```{r}
-datagraf2 <- datagraf %>% filter( Ingreso !=0)
+datagraf2 <- datagraf %>% filter(Ingreso !=0)
 ggplot(datagraf2, aes(
   x = Ingreso,
   weights = PONDII,
