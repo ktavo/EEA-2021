@@ -47,6 +47,7 @@ df <- df %>%
                                      TRUE ~ nivel_de_estudios_alcanzado), nivel_edu_alcanzado = paste(nivel_educativo, sep = " ", estado))
 df
 ```
+
 ### Partición del dataset en train y test
 
 En este caso para evaluar los modelos vamos a realizar una partición entre dataset de entrenamiento (70%) y testeo (30%) usando la función resample_partition del paquete modelr.
@@ -110,6 +111,7 @@ ggplot(tidy_meg, aes(estimate, term, xmin = conf.low, xmax = conf.high, height =
   theme_bw() +
   labs(y = "Coeficientes β", x = "Estimación")
 ```
+
 **Modelo Años de experiencia y Género**
 
 ```{r}
@@ -124,6 +126,7 @@ ggplot(tidy_mes, aes(estimate, term, xmin = conf.low, xmax = conf.high, height =
   theme_bw() +
   labs(y = "Coeficientes β", x = "Estimación")
 ```
+
 **Modelo Años de experiencia y Nivel Educativo Alcanzado**
 
 ```{r}
@@ -164,12 +167,20 @@ glance(modelo_exp_edu)
 
 Un primer criterio para comparar modelos es mirar el R2 obtenido con cada uno de ellos y elegir aquél con mayor R2 ajustado
 
+1) medidas de evaluación  de R cuadrado ajustado
+2) medidas de predicción
+3) una discusión más general de explicación VS predicción
 
 ```{r}
 au_mes <- augment(modelo_exp_sex)
 au_mes
 ```
 
-1) medidas de evaluación  de R cuadrado ajustado
-2) medidas de predicción
-3) una discusión más general de explicación VS predicción
+```{r}
+glance(modelo_exp_sex)
+```
+
+```{r}
+au_mes <- augment(modelo_exp_sex)
+au_mes
+```
