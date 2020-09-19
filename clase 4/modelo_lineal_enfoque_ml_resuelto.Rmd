@@ -74,7 +74,7 @@ dist1 <- sim1 %>%
   mutate(
     dodge = rep(c(-1, 0, 1) / 20, 10),
     x1 = x + dodge, # para que se vean mejor las distancias, corremos un poquito cada punto sobre el eje x
-    pred = 10 + x1 * 1.5
+    pred = 7 + x1 * 1.5
   )
 
 ggplot(dist1, aes(x1, y)) + 
@@ -269,22 +269,23 @@ Podríamos ir haciendo la cuadrícula más fina y fina hasta que nos centramos e
 * Búsqueda __Newton-Raphson__.
 * **Gradient Descent**
 
-La intuición de estas dos herramientas es bastante simple: Se elige un punto de partida y se busca la pendiente más inclinada. Luego, desciende por esa pendiente un poco, y se repite una y otra vez, hasta que no se puede seguir bajando. 
+La intuición de estas dos herramientas es bastante simple: Se elige un punto de partida en la superficie de la función objetivo y se busca la pendiente más inclinada. Luego, desciende por esa pendiente un poco, y se repite una y otra vez, hasta alcanzar la condición de corte. 
 
 
-En R, podemos hacer eso con `optim ()`:
+En R, podemos utilizar la función `optim ()`. Cuenta con los siguientes parámetros:
 
-- necesitamos pasarle un vector de puntos iniciales. Elegimos el origen por poner cualquier cosa
-- le pasamos nuestra función objetivo, y los parámetros que nuestra función necesita (data)
-
-
-```{r}
-optim(c(4,2), measure_distance, data = sim1)
-```
+- **par**: vector de puntos iniciales. Elegimos el origen por poner cualquier cosa
+- **fn**: función objetivo, y los parámetros que nuestra función necesita (data)
 
 ```{r}
 # Corremos la optimizacion
 best <- optim(c(0, 0), measure_distance, data = sim1)
+
+best
+```
+
+
+```{r}
 # Obtenemos los mejores parametros
 best$par
 
