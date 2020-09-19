@@ -59,7 +59,7 @@ Análisis exploratorios, limpieza de datos, análisis de outliers e interpretaci
 ### Clase 4: 26-09
 
 - [Regresión Lineal Simple: Evaluación y diagnóstico]()
-- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_basico.nb.html)
+- [Regresión Lineal Simple: Enfoque de Machine Learning]()
 
 ### Clase 5: 03-10
 
