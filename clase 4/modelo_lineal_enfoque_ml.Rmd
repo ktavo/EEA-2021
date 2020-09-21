@@ -119,7 +119,6 @@ measure_distance <- function(mod, data) {
    }
 measure_distance(c(7, 1.5), sim1)
 ```
-
 ## Evaluando los modelos aleatorios
 
 Ahora podemos calcular el __ECM__ para todos los modelos del dataframe _models_. Para eso utilizamos el paquete __purrr__, para ejecutar varias veces la misma función sobre varios elementos. 
