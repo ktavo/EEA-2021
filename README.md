@@ -60,7 +60,7 @@ Inferencia sobre los parámetros, test de significatividad global, R-cuadrado y 
 
 Modelo lineal desde el enfoque de Machine Learning: random search y grid search de parámetros, función objetivo y métodos de optimización para hallar los valores de los parámetros
 
-- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_lineal_enfoque_ml_resuelto.nb.html)
+- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_lineal_enfoque_ml.nb.html)
 
 ### Clase 5: 03-10
 
