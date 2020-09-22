@@ -22,7 +22,7 @@ div.main-container {
 
 Nuestro objetivo es crear un modelo lineal múltiple para explicar el sueldo neto de Data Analysts, Data Scientists y Data Engineers en Argentina.
 
-Nuestro idea subyacente de cómo se puede explicar el salario neto es:
+Nuestra idea subyacente de cómo se puede explicar el salario neto es:
 
 $salarioNeto = \beta_0 +\beta_1X_1+\beta_2X_2+...+\epsilon$
 
@@ -38,8 +38,7 @@ Vamos a trabajar con el subconjunto de datos que surgió del trabajo de limpieza
 ```{r, message=F}
 encuesta <- read_csv("../Fuentes/encuesta_RLM_limpia.csv")
 ```
-
-Trabajaremos con un dataset de 159 observaciones. 
+La limpieza consistió en: eliminar los outliers de acuerdo a los criterios de la clase 3, descartar los sueldos dolarizados, eliminar los registros inconsistentes con la edad laboral, aquellas inconsistencias en las variables sueldo bruto y neto, como también aquellos errores de carga en los años de experiencia y las inconsistencias en relación con los años en la empresa actual, quedando como resultado un dataset de 159 observaciones, con el que trabajaremos a continuación (98 DA y 61 DS). 
 
 ### Seleccionamos variables de interés
 
@@ -49,16 +48,15 @@ df <- encuesta %>%
   mutate(perfil = factor(case_when(trabajo_de == "BI Analyst / Data Analyst" ~ "DA", trabajo_de == "Data Scientist / Data Engineer" ~ "DS")))
 df %>%
   head()
-# table(df$perfil) 98 DA 61 DS
 ```
-
 Recordemos cómo era la correlación entre las variables numéricas seleccionadas. 
-```{r}
+
+```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 library(GGally)
-df[,c(2,4,5,7,12,13)] %>% 
+df %>%
+  select(edad, anos_de_experiencia, anos_en_la_empresa_actual, anos_en_el_puesto_actual, gente_a_cargo, salario_neto, perfil) %>% 
   ggpairs(., aes(color = perfil), 
-          upper = list(continuous = wrap("cor", size = 3, hjust=0.5)), 
-          legend = 25, proportions = 1) + 
+          upper = list(continuous = wrap("cor", size = 3, hjust=0.5)), legend = 25) + 
   theme_bw() +
   theme(axis.text.x = element_text(angle=45, vjust=0.5), legend.position = "bottom")
 ```
@@ -235,17 +233,17 @@ df %>%
   labs(title="Modelo Lineal Múltiple: Años en la empresa y Nivel Educativo", x="Años de experiencia", y="Salario Neto") 
 ```
 
-## Inferencia de los βk (test de significatividad individual)
+## Inferencia de los $β_k$ (test de significatividad individual)
 
-**Test para las βk**
+**Test para las $β_k$**
 
 Para evaluar la significativdad individual de cada una de las variables se analiza el test t (columna derecha del resumen de resultados de la regresión) que busca probar si el coeficiente de regresión correspondiente a dicha variable es distinto de 0.
 
 Es decir, busca probar:  
 
-* H0: $\hat{\beta}$ = 0 
+* H0: $\hat{\beta_k}$ = 0 
 
-* H1: $\hat{\beta}$ ≠ 0. 
+* H1: $\hat{\beta_k}$ ≠ 0. 
 
 ```{r}
 # Modelo Años de experiencia y gente a cargo
@@ -253,7 +251,7 @@ tidy_meg %>%
   select(term, statistic, p.value, conf.low, conf.high)
 ```
 
-* En este primer modelo se observa que la variable años de experiencia resulta estadísticamente significativa para explicar al sueldo neto (p-valor < 0.05), mientras que la gente a cargo no (p-valor = 0.116 > 0.05). 
+* En este primer modelo se observa que la variable años de experiencia resulta estadísticamente significativa para explicar al sueldo neto (p-valor = 0.001 < 0.05), mientras que la gente a cargo no (p-valor = 0.84 > 0.05). 
 
 * Además del resultado del test, podemos apreciar que el intervalo de confianza (IC) del 95% de la variable años de experiencia no contiene al 0, mientras el IC de la variable gente_a_cargo sí. 
 
@@ -270,8 +268,6 @@ tidy_mes %>%
 **¿Cómo se interpreta la significatividad de las variables dummies?**
 
 * En el caso de la variable dicotómica me_identifico (género), este test permite chequear si los valores medios del sueldo neto son los mismos para las mujeres respecto de los hombres (categoría basal).
-
-* Si queremos evaluar a la variable género en su conjunto, debemos recurrir a un test F, como veremos más abajo para probar que todos los coeficientes de la variable no son = 0.
 
 ```{r}
 # Modelo Años de experiencia y Nivel Educativo Alcanzado
@@ -297,9 +293,9 @@ El test conjunto F (y su correspondiente p-valor) permite medir la significativi
 
 Test F se construye para testear si varios parámetros son cero, es decir, para probar las hipótesis:
 
-* H0: β1 = β2 = · · · = βp−1 = 0
+* H0: $β_1$ = $β_2$ = · · · = $β_{p−1}$ = 0
 
-* H1: no todos los βk (k = 1, 2,..., p−1) son iguales a 0
+* H1: no todos los $β_k$ (k = 1, 2,..., p−1) son iguales a 0
 
 Dichos tests F se obtienen para cada variable de la tabla de ANOVA del modelo. Veamos qué ocurre en este caso. 
 
@@ -312,19 +308,7 @@ tidy(anova(modelo_exp_edu))
 
 Ambas tablas de ANOVA muestran que, según los resultados del test F, la variable género (me_identifico) en su conjunto es estadísticamente significativa para explicar al sueldo neto en el primero modelo y el nivel educativo en su conjunto también lo es en el segundo modelo (p-valores < 0.05).
 
-* Si este test no resulta significativo, suele descartarse la variable categórica de entre las covariables de interés, y se la excluye del modelo. Si este test resulta estadísticamente significativo, entonces suelen mirarse con más detalle cuáles de las comparaciones entre grupos son estadísticamente significativas, para proporcionar un mejor análisis de los datos en consideración. 
-
-## Comparaciones Múltiples
-
-Una vez que, a través del test F, logramos concluir que la variable categórica
-es significativa para explicar a la respuesta, aparece el interés de comparar la media de la variable respuesta para los grupos definidos por los distintos niveles de la variable categórica. 
-
-Para ello, aplicamos el método de la diferencia honestamente significativa de Tukey (HSD: honestly significant difference). 
-
-```{r}
-tidy(TukeyHSD(aov(modelo_exp_edu),"nivel_edu_alcanzado"))
-```
-Aquí vemos que exceptuando la diferencia entre los subgrupos dados por Terciario Completado-Posgrado Completado y Universitario En curso-Posgrado Completado, las restantes diferencias no son estadísticamente significativas a nivel conjunto 95%.
+* Si este test no resulta significativo, suele descartarse la variable categórica de entre las covariables de interés, y se la excluye del modelo. Si este test resulta estadísticamente significativo, entonces suelen mirarse con más detalle cuáles de las comparaciones entre grupos son estadísticamente significativas, para proporcionar un mejor análisis de los datos. 
 
 ### Colinealidad de los Predictores
 
@@ -335,10 +319,10 @@ Cuando las variables predictoras están correlacionadas entre sí, decimos que e
 ```{r}
 cor(df2$anos_de_experiencia, df2$edad)
 ```
-Como ya habíamos visto en el gráfico ggpairs inicial, estas variables tienen alta correlación. Veamos qué ocurre con los coeficientes de estas dos variables al armar un modelo con todas las variables que vimos antes juntas, incluidas estas dos que se encuentran altamente correlacionadas, en comparación a un modelo con menos variables. 
+Como ya habíamos visto en el gráfico ggpairs inicial, estas variables tienen alta correlación. Veamos qué ocurre con los coeficientes de ambas variables al armar distintos modelos múltiples que las incluyan. 
 
 ```{r}
-modelo_5 <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado + edad + gente_a_cargo + me_identifico, data = df2)
+modelo_5 <- lm(salario_neto ~ anos_de_experiencia + edad + gente_a_cargo + me_identifico, data = df2)
 tidy(modelo_5)
 ```
 
@@ -352,20 +336,21 @@ tidy(modelo_exp_edad)
 Armamos un modelo con los años de experiencia pero sin contemplar la edad. 
 
 ```{r}
-modelo_4 <- lm(salario_neto ~ anos_de_experiencia + nivel_edu_alcanzado + gente_a_cargo + me_identifico, data = df2)
+modelo_4 <- lm(salario_neto ~ anos_de_experiencia + gente_a_cargo + me_identifico, data = df2)
 tidy(modelo_4)
 ```
+
 ¿Qué diferencias encuentran con los coeficientes de edad y años de experiencia en los 3 modelos?
 
-* Los coeficientes de regresión estimados se modifican sustancialmente cuando agregamos o quitamos variables del modelo. En el modelo_5 vs exp_edad el beta estimado de los años de experiencia cambia de 1653 a 1344 y la edad de -347.6 a 374. 
-
-* Los errores estándares de los estimadores de los coeficientes aumentan espúreamente cuando se incluyen covariables muy correlacionadas. Se infla la varianza estimada de los estimadores. En nuestro caso: el error estándar de la variable años de experiencia en el modelo_5 donde está incluida la edad es de alrededor de 400, mientras que en el modelo_4 que se excluye dicha variable es de 246,5. 
+* Los coeficientes de regresión estimados se modifican sustancialmente cuando agregamos o quitamos variables del modelo. En el modelo_5 vs exp_edad el beta estimado de los años de experiencia cambia de 974 a 901 y la edad de -80 a 48. 
+* Los errores estándares de los estimadores de los coeficientes aumentan espúreamente cuando se incluyen covariables muy correlacionadas. Se infla la varianza estimada de los estimadores. En nuestro caso: el error estándar de la variable años de experiencia en el modelo_5 donde está incluida la edad es de alrededor de 557, mientras que en el modelo_4 que se excluye dicha variable es de 287. 
 
 Veamos qué ocurre si en vez de usar los años de experiencia en el modelo_4 usamos la edad.
 
 ```{r}
-tidy(lm(salario_neto ~ edad + nivel_edu_alcanzado + gente_a_cargo + me_identifico, data = df2))
+tidy(lm(salario_neto ~ edad + gente_a_cargo + me_identifico, data = df2))
 ```
+
 Observamos que ahora sí resulta estadísticamente significativa la edad para explicar el sueldo neto. 
 
 Los coeficientes pueden ser no significativos aún cuando exista una asociación verdadera entre la variable de respuesta y el conjunto de regresoras cuando armamos un modelo con multicolinealidad de variables regresoras. 
@@ -407,12 +392,12 @@ tidy(lm(salario_neto ~ exp_previa + anos_en_la_empresa_actual, data = df3))
 ¿Qué pasa con los coeficientes estimados de la variables? 
 
 La experiencia previa resulta significativa y los anos_en_la_empresa_actual no. 
+
 ¿Cómo se interpretan estos coeficientes?
 
 En este caso la regresión ayuda a entender cómo afecta la experiencia previa y la actual el sueldo neto. Es decir, cuánto aumenta el sueldo neto medio un año adicional de experiencia previa, dados los años en la empresa actual, y cuánto aumenta el sueldo neto promedio un año adicional de experiencia en la empresa actual, dada la experiencia previa. 
 
 ### Interacción de variables
-
 
 ```{r}
 tidy(modelo_exp_sex)
