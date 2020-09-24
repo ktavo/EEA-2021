@@ -102,9 +102,9 @@ tidy_meg
 
 #### Significado de los coeficientes estimados
 
-* El valor de la ordenada al origen (51.668) es el valor de salario neto esperado para alguien sin experiencia laboral (0 años de experiencia) y sin gente a cargo, es decir, para alguien que recién comienza. 
+* El valor de la ordenada al origen (61.303) es el valor de salario neto **esperado** para alguien sin experiencia laboral (0 años de experiencia) y sin gente a cargo, es decir, para alguien que recién comienza. 
 
-* El coeficiente estimado de años de experiencia (1.624) no es el mismo que cuando los años de experiencia eran la única variable que explicaba el modelo (modelo simple), su valor descendió levemente de 1.676 a 1.624. Esto implica que, si mantenemos el número de gente a cargo constante, cada incremento de un año en los años de experiencia corresponde a un aumento de 1.624 pesos en el sueldo neto, en promedio. O lo que es igual, dadas dos personas con la misma cantidad de gente a cargo pero teniendo uno un año más de experiencia que el otro, el sueldo neto esperado para el de mayor experiencia será 1.624 pesos más alto que el de menor experiencia.
+* El coeficiente estimado de años de experiencia  es 967,23. Si mantenemos el número de gente a cargo constante, cada incremento de un año en los años de experiencia corresponde a un aumento de 967 pesos, **en promedio** en el sueldo neto. O lo que es igual, dadas dos personas con la misma cantidad de gente a cargo pero teniendo uno un año más de experiencia que el otro, el sueldo neto **esperado** para el de mayor experiencia será 967 pesos más alto que el de menor experiencia.
 
 ¿Cómo se interpretaría el coeficiente estimado de gente a cargo?
 
@@ -138,9 +138,9 @@ tidy_mes
 ¿Cómo cambia la interpretación de los coeficientes para la variable dicotómica?
 
 * El modelo de regresión lineal en este caso consiste simplemente en expresar
-la media del nivel de sueldo neto en cada población (de hombres y mujeres) mediante dos coeficientes distintos, donde β0 es la media del sueldo neto para los hombres y β0+β2 es la media del salario neto para las mujeres, dados los años de experiencia. Por lo tanto, β2 es la diferencia (en este caso negativa) en los niveles medios de salario neto de los hombres respecto de las mujeres.
+la media del nivel de sueldo neto en cada población (de hombres y mujeres) mediante dos coeficientes distintos, donde $\beta_0$ es la media del sueldo neto para los hombres y $\beta_0 + \beta_2$ es la media del salario neto para las mujeres, dados los años de experiencia. Por lo tanto, $\beta_2$ es la diferencia (en este caso negativa) en los **niveles medios** de salario neto de las mujeres respecto de los hombres (categoría basal).
 
-* Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente β1 (1.643) para mujeres y hombres. Por otro lado, β2(-9.173) indica cuánto más baja es la función de respuesta (sueldo) para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
+* Vemos que el nivel medio del sueldo neto es una función lineal de los años de experiencia de la persona, con una misma pendiente $\beta_1$ (896) para mujeres y hombres. Por otro lado, $\beta_2$ (-12.850) indica cuánto más baja es la función de respuesta (sueldo) para las mujeres respecto de los hombres (categoría basal), dados los años de experiencia.
 
 #### Grafiquemos la regresión para ambas poblaciones
 
@@ -201,10 +201,10 @@ R cuando efectúa la regresión calcula automáticamente las variables indicador
 
 ¿Qué significan los coeficientes de la nueva variable categórica?
 
-* Este modelo propone ajustar una recta distinta para el sueldo neto medio
+* Este modelo propone ajustar una recta distinta para el sueldo neto **medio**
 de cada grupo de personas definido por el nivel educativo alcanzado, todas con igual pendiente (definida por los años de experiencia), y nueve ordenadas al origen diferentes, una por cada grupo (nivel educativo alcanzado).
 
-* Por ejemplo, β2 = nivel_edu_alcanzado **Posgrado En curso**, indica cuánto se reduce el sueldo neto medio para las personas cuyo nivel educativo es Posgrado En curso respecto de aquellas cuyo nivel es Posgrado Completado (categoría basal), dados los años de experiencia.
+* Por ejemplo, $\beta_2$ = nivel_edu_alcanzado **Posgrado En curso**, indica cuánto se reduce el sueldo neto medio para las personas cuyo nivel educativo es Posgrado En curso respecto de aquellas cuyo nivel es Posgrado Completado (categoría basal), dados los años de experiencia.
 
 ```{r}
 # Accedemos a la información de los coeficientes estimados
@@ -246,6 +246,7 @@ Es decir, busca probar:
 * H1: $\hat{\beta_k}$ ≠ 0. 
 
 ```{r}
+options(scipen=1)
 # Modelo Años de experiencia y gente a cargo
 tidy_meg %>%
   select(term, statistic, p.value, conf.low, conf.high)
@@ -272,7 +273,8 @@ tidy_mes %>%
 ```{r}
 # Modelo Años de experiencia y Nivel Educativo Alcanzado
 tidy_meed %>%
-  select(term, statistic, p.value, conf.low, conf.high)
+  select(term, statistic, p.value, conf.low, conf.high) %>% 
+  arrange(desc(p.value))
 ```
 
 * En este modelo se observa que mientras la variable años de experiencia resulta estadísticamente significativa para explicar al sueldo neto (p-valores < 0.05), las categorías de nivel educativo no. Hay algunas que resultan significativas y otras no.
@@ -343,7 +345,8 @@ tidy(modelo_4)
 ¿Qué diferencias encuentran con los coeficientes de edad y años de experiencia en los 3 modelos?
 
 * Los coeficientes de regresión estimados se modifican sustancialmente cuando agregamos o quitamos variables del modelo. En el modelo_5 vs exp_edad el beta estimado de los años de experiencia cambia de 974 a 901 y la edad de -80 a 48. 
-* Los errores estándares de los estimadores de los coeficientes aumentan espúreamente cuando se incluyen covariables muy correlacionadas. Se infla la varianza estimada de los estimadores. En nuestro caso: el error estándar de la variable años de experiencia en el modelo_5 donde está incluida la edad es de alrededor de 557, mientras que en el modelo_4 que se excluye dicha variable es de 287. 
+* Los errores estándares de los estimadores de los coeficientes aumentan espúreamente cuando se incluyen covariables muy correlacionadas. Se infla la varianza estimada de los estimadores. En nuestro caso: el error estándar de la variable años de experiencia en el modelo_5 donde está incluida la edad es de alrededor de 557, mientras que en el modelo_4 que se excluye dicha variable es de 287.
+* En el modelo de experiencia y edad, los p-valores de los coeficientes estimados superan el umbral de 0.10. Es decir, ninguno de los dos son significativos cuando ambas variables están en el modelo
 
 Veamos qué ocurre si en vez de usar los años de experiencia en el modelo_4 usamos la edad.
 
@@ -357,30 +360,60 @@ Los coeficientes pueden ser no significativos aún cuando exista una asociación
 
 > Hay que tener cuidado con la colinealidad de los predictores para no tener problemas con la interpretación de los coeficientes del modelo lineal y que no aumenten espúreamente la varianza estimada de los estimadores. 
 
-### Problemas de interpretación de los coeficientes
+### Observaciones sobre la interpretación de los coeficientes
 
-Porque la interpretación si aumenta en un año la experiencia en la empresa actual puede prestarse a confusión sobre el impacto en la experiencia total.
+Supongamos que consideramos el siguiente modelo para explicar el salario neto: 
 
-¿Cómo es la correlación entre las variables que queremos analizar?
+$E(salarioNeto|...) = \beta_0 +\beta_1AñosExperiencia+\beta_2AñosEmpresaActual$
+
+¿Cuál es la interpretación correcta del parámetro correcta del parámetro estimado $\beta_2$?
+
+Comencemos analizando la correlación entre estas variables:
 
 ```{r}
 cor(df2$anos_de_experiencia, df2$anos_en_la_empresa_actual)
 ```
-Están correlacionadas. Veamos cómo afecta la interpretación cuando usamos esas variables para construir un modelo. 
+
+Tiene una correlación positiva bastante fuerte. 
+
+Construimos el modelo lineal que planteamos 
+
+**Modelo experiencia y experiencia en la empresa actual**
 
 ```{r}
 # modelo 1: salario en función de anos de experiencia y anos en empresa actual
 tidy(lm(salario_neto ~ anos_de_experiencia + anos_en_la_empresa_actual, data = df2))
 ```
-¿Qué pasa con los coeficientes estimados de la variables? 
 
-Anos_de_experiencia resulta significativa y anos_en_la_empresa_actual no. 
+La interpretación de los coeficientes estimados es:
 
-¿Cómo se interpretan estos coeficientes?
+* $\hat{\beta_1}=1068$ indica que por cada año de experiencia adicional el salario neto esperado aumenta en 1068 pesos dados los años de en la empresa actual
 
-xxxxx
+* $\hat{\beta_2}=-431$ indica que por cada año adicional en la empresa actual el salario neto esperado disminuye en -431 pesos dados los años de experiencia
 
-¿Qué pasa si creamos un nuevo modelo separando los años de experiencia entre experiencia previa y acutal? 
+Respecto a la segunda interpretación alguien podría objetar lo siguiente:
+
+$AñosExperiencia = AñosEmpresaActual + AñosEmpresasPasadas$
+
+Entonces, si aumento en un año la variable AñosEmpresaActual no puedo sostener que variable AñosExperiencia se mantiene constante
+
+¿Es esta observación correcta?
+
+No, el coeficiente de $\hat{\beta_2}$ nos permite evaluar cual es el efecto en el salario neto esperado de estar un año más en la misma empresa para igual cantidad de años de experiencia.
+
+Por ejemplo, si existen dos personas con 5 años de experiencia en total y la persona A está hace 2 años en la empresa actual y la persona B está hace 3 años, nuestro modelo nos indica que el salario predicho para la persona B va a ser 431 menor al salario de la persona A.
+
+De todas maneras, observamos que el p valor asociado a $\beta_2$ indica que no se puede rechazar la hipotesis nula del test de significatividad individual.
+
+**Modelo experiencia previa y experiencia actual**
+
+Si quisieramos poder separar el efecto de los años de experiencia previa y experiencia actual deberíamos crear una variable nueva que sea:
+
+$AñosExperienciaPrevia = AñosExperiencia - AñosEmpresaActual$
+
+Ahora nuestro modelo es:
+
+$E(salarioNeto|...) = \beta_0 +\beta_1AñosExperienciaPrevia+\beta_2AñosEmpresaActual$
 
 ```{r}
 # armamos nueva variable de experiencia previa
@@ -389,13 +422,16 @@ df3 <- df2 %>%
 # modelo 2: separando experiencia previa y empresa actual  
 tidy(lm(salario_neto ~ exp_previa + anos_en_la_empresa_actual, data = df3))
 ```
-¿Qué pasa con los coeficientes estimados de la variables? 
 
-La experiencia previa resulta significativa y los anos_en_la_empresa_actual no. 
+La interpretación de los coeficientes estimados es:
 
-¿Cómo se interpretan estos coeficientes?
+* $\hat{\beta_1}=1068$ indica que por cada año de experiencia previa el salario neto esperado aumenta en 1068 pesos dados los años de en la empresa actual
+
+* $\hat{\beta_2}=-431$ indica que por cada año adicional en la empresa actual el salario neto esperado aumenta en 637 pesos dados los años de experiencia previa
 
 En este caso la regresión ayuda a entender cómo afecta la experiencia previa y la actual el sueldo neto. Es decir, cuánto aumenta el sueldo neto medio un año adicional de experiencia previa, dados los años en la empresa actual, y cuánto aumenta el sueldo neto promedio un año adicional de experiencia en la empresa actual, dada la experiencia previa. 
+
+Volvemos a observar que el p valor asociado a $\beta_2$ indica que no se puede rechazar la hipotesis nula del test de significatividad individual
 
 ### Interacción de variables
 
@@ -407,6 +443,7 @@ tidy(modelo_exp_sex)
 tidy(lm(salario_neto ~  me_identifico + anos_de_experiencia + me_identifico*anos_de_experiencia, data = df2))
 ```
 
+
 ```{r}
-tidy(lm(salario_neto ~  perfil + edad, data = df2))
+tidy(lm(salario_neto ~  perfil + edad + me_identifico, data = df2))
 ```
