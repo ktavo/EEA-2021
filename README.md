@@ -58,8 +58,13 @@ Análisis exploratorios, limpieza de datos, análisis de outliers e interpretaci
 
 ### Clase 4: 26-09
 
-- [Regresión Lineal Simple: Evaluación y diagnóstico]()
-- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_basico.nb.html)
+Inferencia sobre los parámetros, test de significatividad global, R-cuadrado y diagnóstico de modelo lineal simple
+
+- [Regresión Lineal Simple: Evaluación y diagnóstico](clase 4/Clase-4---Regresion-Lineal-Simple-Eval.html)
+
+Modelo lineal desde el enfoque de Machine Learning: random search y grid search de parámetros, función objetivo y métodos de optimización para hallar los valores de los parámetros
+
+- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_lineal_enfoque_ml.nb.html)
 
 ### Clase 5: 03-10
 
