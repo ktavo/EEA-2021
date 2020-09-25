@@ -1,4 +1,14 @@
-# Materiales para las clases prácticas:
+# EEA-UBA 2020
+
+## Ayudantes
+
+Juan Manuel Barriola
+
+Sofía Perini
+
+### [Trabajos Prácticos](trabajos_practicos)
+Hasta tanto se resuelva la situación del campus disponibilizamos las consignas y datos del TP 1
+
 
 ### Clase 1: 05-09
 
@@ -7,6 +17,10 @@ Fundamentos de programación en R: entorno, objectos, estructuras de datos, loop
 - [Introducción al entorno R](clase 1/Clase 1 - Introduccion a R.nb.html)
 - [Loops, condicionales y funciones](clase 1/Clase 1 - Loops, condicionales y funciones.nb.html)
 - [Ejercicios](clase 1/Clase 1 - Ejercicios -Consignas .nb.html)
+- [Resueltos](clase 1/Resueltos/Clase 1 - Ejercicios -Resueltos.R)
+
+#### Datasets para ejercicios
+- [Dataset EPH](Fuentes/usu_individual_T120.txt) 
 
 ### Clase 2: 12-09
 
@@ -14,19 +28,38 @@ Introducción al paquete Tidyverse: trabajo con datasets (`dplyr` y `tidyr`), fe
 
 - [Tidyverse](clase 2/Clase_2_-_Tidyverse.html )
 - [Ejercicios](clase 2/Clase 2 - Ejercicios.nb.html )
+- [Resueltos](clase 2/resueltos)
+
+#### Datasets para ejercicios
+
+- [Dataset dólar](Fuentes/dolar_oficial_ambito.csv)
+- [Dataset IPC](Fuentes/ipc-mensual.csv)
+- [Dataset ataques tiburones](Fuentes/ataques_tiburones.csv)
+- [Dataset EPH](Fuentes/usu_individual_T120.txt) 
 
 #### Material opcional
 
-- [Gráficos de kernels y tendencias](Clase 2 - Kernels y Tendencias (OPCIONAL).nb.html)
+- [Gráficos de kernels y tendencias](clase 2/Clase 2 - Kernels y Tendencias (OPCIONAL).nb.html)
 
 ### Clase 3: 19-09
 
+Estimación y test de correlación entre 2 variables. Matrices de correlación: librerías `corrr` y `GGally` 
+
 - [Correlación](clase 3/Clase 3 - Correlacion.nb.html)
-- [Regresión Lineal Simple: Modelo e interpretación]()
+
+Análisis exploratorios, limpieza de datos, análisis de outliers e interpretación de los coeficientes de un modelo lineal simple
+
+- [Regresión Lineal Simple: Modelo e interpretación](clase 3/Clase-3---Regresion-Lineal-Simple.html)
+
+#### Dataset Notebook Modelo Lineal
+
+- [Dataset Encuesta Sueldos IT](Fuentes/encuesta_sueldos_sysarmy_1s2020.csv)
+
 
 ### Clase 4: 26-09
 
 - [Regresión Lineal Simple: Evaluación y diagnóstico]()
+- [Regresión Lineal Simple: Enfoque de Machine Learning](clase 4/modelo_basico.nb.html)
 
 ### Clase 5: 03-10
 

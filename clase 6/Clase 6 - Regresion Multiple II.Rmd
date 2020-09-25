@@ -68,6 +68,7 @@ df_train %>%
 df_test %>%
   glimpse() # 48 filas
 ```
+
 Habíamos realizado tres modelos distintos para tratar de explicar el salario neto: 
 
 * Modelo **Años de experiencia y Gente a cargo**
@@ -211,6 +212,7 @@ Los errores tienen distribución normal con media cero y varianza constante y so
 ```{r}
 plot(modelo_exp_sex)
 ```
+
 * *Residuos vs valores predichos*: Parece existir cierta estructura en los datos: la varianza parece incrementarse con los valores predichos (depende de la variable) por lo que no se satisface el supuesto de homocedasticidad.
 
 * *Normal QQ plot*: El extremo superior derecho no se ajusta a la distribución teórica.
@@ -231,6 +233,7 @@ au_modelos = purrr::map_df(models, broom::augment, .id = "model")
 au_modelos %>%
   head()
 ```
+
 Al contar con esta información como dataframe, podemos realizar los gráficos de diagnóstico con ggplot. Vamos a ver dos ejemplos con los mejores modelos, pero se podría hacer para todos el mismo ejercicio. 
 
 ```{r}
@@ -302,3 +305,4 @@ grid.arrange(g1, g2, g3, g4, nrow = 2)
 1) medidas de evaluación  de R cuadrado ajustado
 2) medidas de predicción
 3) una discusión más general de explicación VS predicción
+
