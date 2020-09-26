@@ -116,7 +116,7 @@ $$ECM = \frac{\sum_i^n{(\hat{y_i} - y_i)^2}}{n}$$
 ```{r}
 measure_distance <- function(mod, data) {
  diff <- data$y - model1(mod, data)
- mean(diff ^ 2)/length(data$y)
+ mean(diff ^ 2)
    }
 measure_distance(c(7, 1.5), sim1)
 ```
