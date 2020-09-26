@@ -11,22 +11,104 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 
 CONSIGNAS
 El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal reportadas por la empresa Properati. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos. Vamos a utilizar datos del 2019 para no incorporar comportamientos atípicos ocasionados por la pandemia del COVID-19.
+```{r}
+#Añado librerías necesarias
+library(tidyverse)
+#library(tidymodels)
+```
   
 1. Preparación de los datos (I)
 a.Leer el archivo ar_properties.csv y mostrar su estructura
-b.Quedarse con aquellos registros que:
-  I.Pertenecen a Argentina y Capital Federal
-  II.Cuyo precio esta en dólares (USD)
-  III.El tipo de propiedad sea: Departamento, PH o Casa
-  IV.El tipo de operacion sea Venta
-c.Seleccionar las variables id, l3, rooms, bedrooms, bathrooms, surface_total, surface_covered, price y property_type.
+
 
 ```{r}
-
-
-
+#Leo los datos del dataSet 
+datos_propiedades <- read.csv("ar_properties.csv")
 ```
 
+```{r}
+#Revisión datos con str
+str(datos_propiedades)
+#Revisión datos con Glipse
+glimpse(datos_propiedades)
+#Clase de los datos
+class(datos_propiedades) #DataFrame
+```
+
+Se observa que el dataframe está compeusto por 388,891 observaciones caracterizadas por 24 variables.
+15 Variables de tipo caracter
+8 Variables de tipo numérico
+1 Variable de tipo lógico
+
+Estas variables podrían agruparse tambíen del siguiente modo:
+3 variables de fecha.
+8 Variables describiendo la ubicación, dos de ellas de latitud y longitud, y 6 de ellas variables de texto describiendo ubicación desde país yendo a mayor detalle por ciudad, barrio, etc.
+5 Variables descriptivas de la propiedad.
+7 Variables descriptivas del condiciones de venta o arrendamiento.
+1 Variable ID.
+
+b.Quedarse con aquellos registros que:
+  I.Pertenecen a Argentina y Capital Federal
+```{r}
+datos_propiedades_filter <- datos_propiedades %>% 
+  filter(l1 == "Argentina" , l2 == "Capital Federal")
+datos_propiedades_filter
+```
+  
+  Aplicando este primer filtro por País y ciudad, tenemos ahora 124.327 propiedades.
+
+  II.Cuyo precio esta en dólares (USD)
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(currency == "USD")
+datos_propiedades_filter
+```
+  Aplicando este segundo filtro tenemos 81.601 propiedades.
+
+  III.El tipo de propiedad sea: Departamento, PH o Casa
+
+```{r}
+#datos_propiedades_filter %>% 
+#  filter(property_type == "Departamento" | property_type == "PH" | property_type == "Casa")
+#De forma más limpia: 
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(property_type %in% c("Departamento", "PH", "Casa"))
+datos_propiedades_filter
+#Departamento -> 57.712 
+#PH -> 5.851
+#Casa -> 3.807
+```
+
+  IV.El tipo de operacion sea Venta
+  
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(operation_type == "Venta")
+datos_propiedades_filter
+```
+  
+Con el filtro de tipo de venta tendríamos un total de 61.905 observaciones.
+
+c.Seleccionar las variables id, l3, rooms, bedrooms, bathrooms, surface_total, surface_covered, price y property_type.
+
+
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  select(id, l3, rooms, bedrooms, bathrooms, surface_total, surface_covered, price, property_type)
+datos_propiedades_filter
+```
+
+#Deberian llegar a un dataset con 61.905 observaciones y 9 variables.
+
+2.Análisis exploratorios (I)
+a.Obtener la cantidad de valores únicos y de valores faltantes (NAs) para cada una de estas variables.
+b.Obtener la matriz de correlaciones para las variables numéricas. Pista: usen ‘complete.obs’ para poder omitir los valores faltantes.
+c.Grafique la matriz de correlaciones usando la librería corrr.
+d.¿Cómo es la correlación entre las variables surface_total y surface_covered? ¿Y la correlación entre rooms y bathrooms?
+e.¿Cómo es la correlación de la variable a explicar, price, con el resto de las variables?
+
+
+******************************************************************************************************
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
