@@ -42,7 +42,7 @@ En el notebook previo realizamos un análisis extenso de nuestro dataset, limpie
 
 ```{r}
 # Cargamos el dataset limpio
-encuesta_sueldos = read_csv("~/Fuentes/encuesta_sueldos_it_limpia.csv")
+encuesta_sueldos = read_csv("encuesta_sueldos_sysarmy_limpia.csv")
 ```
 
 Habíamos realizado tres modelos distintos para tratar de explicar el salario neto
