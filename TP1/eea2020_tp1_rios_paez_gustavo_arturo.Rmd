@@ -200,14 +200,14 @@ cor(datos_propiedades_filter %>%
 También si queremos clasificar por tipo de propiedad:
 
 ```{r}
-matriz_correlaciones <- datos_propiedades_filter %>% 
+datos_propiedades_filter %>% 
   select(-id,-l3,) %>% # desestimamos algunas variables
   mutate(property_type = factor(property_type)) %>% 
   ggpairs(., 
-        title = "Matriz de correlaciones",
+        title = "GG Pairs por property_type",
         mapping = aes(colour = property_type))
-matriz_correlaciones
 ```
+
 
 d.¿Cómo es la correlación entre las variables surface_total y surface_covered? ¿Y la correlación entre rooms y bathrooms?
 
@@ -308,6 +308,82 @@ c.Eliminar aquellos registros en los cuales la superficie total es menor a la su
 
 #Deberían llegar a un dataset con 50.828 observaciones y 8 variables.
 
+4.Análisis exploratorios (II)
+a.Crear una nueva variable precio_en_miles que sea la variable price divida por 1000. Obtener estadísticas descriptivas para esta nueva variable (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+
+```{r}
+datos_propiedades_filter2$precio_en_miles <- (datos_propiedades_filter2$price)/1000
+datos_propiedades_filter2
+```
+
+```{r}
+summary(datos_propiedades_filter2$precio_en_miles)
+```
+Acorde a los cuantiles no veriamos una variabilidad excesiva, el valor máximo parece bastante extremo. 
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(6, 6000, by=10), 
+                 #fill="red", 
+                 color="#69b3a2",
+                 alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+
+```
+
+El histograma revela una moda bastante marcada, y un outlier realmente alto. Graficamos con un límite diferente para ignorar el outlier
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(6, 1000, by=10), 
+                 #fill="red", 
+                 color="#69b3a2",
+                 alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+
+```
+
+
+b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+
+Utilizaremos tapply con la función summary para esto: 
+```{r}
+tapply(datos_propiedades_filter2$precio_en_miles, datos_propiedades_filter2$property_type, summary)
+```
+Observamos outliers notables en las casas y los apartamentos, en los PHs también tenemos ouliers pero en una menor magnitud.
+
+```{r}
+ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 6000)) # definimos escala del eje y
+```
+
+El tercer cuartil más 1.5 veces la distancia intercuartil nos da 496.5, esto dejaría algunos valores interesantes por fuera, tomaremos el valor de 1000 para voler a graficar. (Un poco menos que 5 distancias I.Q. adicionales).
+```{r}
+ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 1000)) # definimos escala del eje y
+
+```
+
+c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
+
+```{r}
+datos_propiedades_filter2 %>% 
+  select(-id,-l3,) %>% # desestimamos algunas variables
+  ggpairs(., 
+        title = "GGPairs sin agrupación")
+```
+
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
+#Comentarios ggpairs!!
 
 ******Punto 5.
 Queriendo indagar un poco más en la clasificación de tipo de propiedad:
