@@ -14,6 +14,7 @@ El objetivo general es poder crear un modelo lineal simple para explicar el prec
 ```{r}
 #Añado librerías necesarias
 library(tidyverse)
+library(corrr)
 #library(tidymodels)
 ```
   
@@ -102,10 +103,225 @@ datos_propiedades_filter
 
 2.Análisis exploratorios (I)
 a.Obtener la cantidad de valores únicos y de valores faltantes (NAs) para cada una de estas variables.
+
+Podríamos usar n_distinct para evaluar NA por cada variable, por ejemplo: 
+
+```{r}
+n_distinct(datos_propiedades_filter$l3)
+```
+
+Pero con sapply podemos obtener los NA para todo el dataset de forma más sencilla
+```{r}
+sapply(datos_propiedades_filter, function(x) sum(is.na(x)))
+```
+
+Y también los valores únicos
+```{r}
+sapply(datos_propiedades_filter, function(x) n_distinct(x))
+```
+
+La función summary también nos sirve para validar los NAs
+```{r}
+summary(datos_propiedades_filter)
+```
+
+En general se ve alrededor de un 5% faltante de datos, a exepción de la variable bedrooms que presenta un 41% de datos faltantes.
+
 b.Obtener la matriz de correlaciones para las variables numéricas. Pista: usen ‘complete.obs’ para poder omitir los valores faltantes.
+
+Calculando por el método de Pearson (y filtrando las variables numéricas con select) obtemnemos:
+```{r}
+correlated_pearson <- cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="pearson") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  fashion() #Para redondear decimales y hacerlo más legible 
+correlated_pearson
+```
+
+
+
+Observamos algunas correlacionesmarcadas y esperadas, como bedrooms<->rooms ,rooms<->bathrooms y surface_total<->surface_covered.
+Vemos también una correlación alta entre una variable de las que más nos interesan price<->bathrooms. 
+
+Sin embargo, vemos algunas correlaciones negativas que llaman mucho la atención: 
+rooms<->surface_total
+rooms<->surface_covered
+price<->surface_total
+price<->surface_covered
+Esto parecería contradecir la lógica, dado que esperaríamos que una casa de mayor área cuente con mayor cantidad de habitaciones, además de con un precio mayor, lo que en ambos casos implicaría correlaciones positivas.
+
+Un detalle menor sería que la correlación surface_total<->surface_covered parece algo débil para el significado de las variables.
+
+Teniendo en cuenta que el calculo de correlación bajo el método Pearson es bastante sensible a outliers realizamos una nueva matriz de correlación con el método Spearman que es más robusto.
+
+```{r}
+correlated_spearman <- cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="spearman") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  fashion() #Para redondear decimales y hacerlo más legible 
+correlated_spearman
+```
+
+Efectivamente vemos que la correlaciones:
+rooms<->surface_total
+rooms<->surface_covered
+price<->surface_total
+price<->surface_covered
+Que nos llamaban la atención para a ser positivas, y además vemos muy marcada la correlación surface_total<->surface_covered.
+
 c.Grafique la matriz de correlaciones usando la librería corrr.
+
+De forma gráfica tenemos bajo el método Pearson:
+
+```{r}
+cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="pearson") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  rplot() #Graficamos
+```
+
+
+De forma gráfica tenemos bajo el método Spearman:
+
+```{r}
+cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="spearman") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  rplot() #Graficamos
+```
+También si queremos clasificar por tipo de propiedad:
+
+```{r}
+matriz_correlaciones <- datos_propiedades_filter %>% 
+  select(-id,-l3,) %>% # desestimamos algunas variables
+  mutate(property_type = factor(property_type)) %>% 
+  ggpairs(., 
+        title = "Matriz de correlaciones",
+        mapping = aes(colour = property_type))
+matriz_correlaciones
+```
+
 d.¿Cómo es la correlación entre las variables surface_total y surface_covered? ¿Y la correlación entre rooms y bathrooms?
+
+surface_total y surface_covered se veían extrañamente correlacionadas de forma negativa bajo el método Pearson, bajo el método Spearman hace más sentido su corelación.
+El anáñlisis de outliers que se hará más adelante arrojará más información sobre este punto.
+
+Graficamos las variables surface_total y surface_covered
+
+```{r}
+ggplot(datos_propiedades_filter, aes(x = surface_total, y = surface_covered)) + 
+  geom_point()
+```
+
+Se realizan los test análisis de correlación:
+Para el método Pearson
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "pearson")
+```
+Vemos un p-valor bastante pequeño que nos da la suficiente evidencia muestral para descartar la hipótesis nula, el coeficiente de correlación es 0.69
+
+Ahora con el método Spearman:
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "spearman")
+```
+El test no arroja un resultado debido a los empates "ties" Se procede a hacer un test Kendall
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "kendall")
+```
+
+Del mismo modo el p-valor es muy pequeño con lo que tenemos suficiente evidencia para descartar la hipótesis nula. Se observa una corelación marcada entre las dos variables.
+
+
+Respecto a las variables rooms y bathrooms, estás se encuentran relacionadas de forma positiva para un análisis Pearson, sin embargo se ve una relación de relación fuerte negativa para Spearman.
+
+Graficamos las variables rooms y bathrooms
+
+```{r}
+ggplot(datos_propiedades_filter, aes(x = rooms, y = bathrooms)) + 
+  geom_point()
+```
+No pareciera tenerse una correlación lineal entre estas dos variables.
+Procedemos a hacer tests de correlación:
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "pearson")
+```
+Ahora con el método Spearman:
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "spearman")
+```
+El test no arroja un resultado debido a los empates "ties" Se procede a hacer un test Kendall
+
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "kendall")
+```
+
+
+En ninguno de los dos casos observamos una correlación fuerte.
+
 e.¿Cómo es la correlación de la variable a explicar, price, con el resto de las variables?
+
+
+```{r}
+correlated_pearson
+```
+
+Para el método Pearson está relacionada con bathrooms de forma positiva, de la correlación negativa con surface_total y surface_covered ya hablamos.
+
+```{r}
+correlated_spearman
+```
+
+Para un análisis con método Spearman vemos una relación algo débil con surface_total y con surface_covered,se ve también una corelación negativa frente a bedrooms que llama la atención.
+
+3.Limpieza de datos
+a.En el punto 2 deberían haber encontrado que la variable bedrooms presenta una alta proporción de valores faltantes y que presenta una fuerte correlación con la variable rooms. Por lo tanto, vamos a eliminarla.
+
+```{r}
+datos_propiedades_filter2 <- datos_propiedades_filter %>% select(-bedrooms)
+datos_propiedades_filter2
+```
+
+b.Eliminar todos los registros que presentan valores faltantes.
+
+```{r}
+datos_propiedades_filter2 <- drop_na(datos_propiedades_filter2)
+datos_propiedades_filter2 <- datos_propiedades_filter2 %>% filter(surface_total >= surface_covered)
+datos_propiedades_filter2
+```
+
+
+c.Eliminar aquellos registros en los cuales la superficie total es menor a la superficie cubierta
+
+#Deberían llegar a un dataset con 50.828 observaciones y 8 variables.
+
+
+******Punto 5.
+Queriendo indagar un poco más en la clasificación de tipo de propiedad:
+
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter 
+ggplot(datos_propiedades_filter, aes(property_type, price, group = property_type, fill = factor(property_type)))+
+  geom_boxplot(alpha = 0.75)
+```
+
+
+
+
+
 
 
 ******************************************************************************************************
