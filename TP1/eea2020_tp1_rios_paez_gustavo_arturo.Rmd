@@ -372,29 +372,83 @@ c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin 
 
 ```{r}
 datos_propiedades_filter2 %>% 
-  select(-id,-l3,) %>% # desestimamos algunas variables
+  select(-id,-l3, -property_type) %>% # desestimamos algunas variables
   ggpairs(., 
         title = "GGPairs sin agrupación")
 ```
 
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
-#Comentarios ggpairs!!
+Se aprecia una relación entre el precio y la cantidad de habitaciones, incluso una mayor relación entre precio y cantidad de baños.
+Llama la atención la baja relación entre el precio y las variables de superficie, sin embargo las variables de superficie se ven también poco asociadas a la cantidad de habitaciones.
 
-******Punto 5.
+
+5.Outliers
+a.Graficar un scatterplot de la variable precio_en_miles y superficie_total. ¿Detectan alguna anomalía?
+
+```{r}
+ggplot(datos_propiedades_filter2, aes(x = precio_en_miles, y = surface_total)) +
+  geom_point(alpha = 1/10) +
+  geom_point(aes(colour = factor(property_type)))
+```
+Se tienen outliers de superficie muy marcados que no permiten observar claramente la información. Podría haber casos con información errónea respecto a la superficie. También pareciera haber algunos datos que guardan una relación lineal creciente entre las dos variables.
+
+b.Eliminar los outliers univariados de las variables precio_en_miles, rooms y surface_total. Utilizar y fundamentar el o los criterio/s y métodos que consideren adecuados.
+
+Se toma como criterio eliminar outliers a más de 4.5 Distancias intercuartiles para el caso de precio_en_miles.
+
+```{r}
+summary(datos_propiedades_filter2$precio_en_miles)
+#(270+(270-251))*4.5
+#1300
+datos_propiedades_filter3 <- datos_propiedades_filter2 %>% filter(precio_en_miles < 1300)
+```
+
+Se toma como criterio eliminar outliers a más de 1.5 Distancias intercuartiles para el caso de rooms
+
+```{r}
+summary(datos_propiedades_filter2$rooms)
+#(4+(4-3))*1.5
+#7.5
+datos_propiedades_filter3 <- datos_propiedades_filter3 %>% filter(rooms < 7.5)
+```
+
+Se toma como criterio separar las propiedades de más de 500 metros y las de menos de 500. El criterio de distancia intercuartil no parecía apropiado, puesto que para 9 Di filtraba los menor a 200 metros, que es una medida esperada para una casa promedio.
+
+```{r}
+summary(datos_propiedades_filter2$surface_total)
+#106+(106-96)*9
+#196
+datos_propiedades_filer_grandes <- datos_propiedades_filter3 %>% filter(surface_total > 500)
+datos_propiedades_filter3 <- datos_propiedades_filter3 %>% filter(surface_total < 500)
+```
+
+Se grafica de nuevo el scatterplot para el dataset filtrado
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(x = precio_en_miles, y = surface_total)) + 
+  geom_point(alpha = 1/10) +
+  geom_point(aes(colour = factor(property_type)))
+```
+
 Queriendo indagar un poco más en la clasificación de tipo de propiedad:
 
 ```{r}
-datos_propiedades_filter <- datos_propiedades_filter 
-ggplot(datos_propiedades_filter, aes(property_type, price, group = property_type, fill = factor(property_type)))+
+ggplot(datos_propiedades_filter3, aes(property_type, price, group = property_type, fill = factor(property_type)))+
   geom_boxplot(alpha = 0.75)
 ```
 
+Vemos una precios superiores en las casas en promedio frente a los departamentos y PHs (probablemente por la superficia de las mismas) 
+Vemos una altísima variabilidad en los precios de los departamentos, podría explicarse por la variabilidad de su ubicación respecto a las diferentes zonas de la ciudad.
 
+6.Análisis exploratorios (III)
+Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar.
+a.Obtener estadísticas descriptivas para la variable precio_en_miles (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+
+```{r}
+summary(datos_propiedades_filter3$precio_en_miles)
+```
+
+b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
 
 
 
