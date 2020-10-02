@@ -518,7 +518,22 @@ El modelo por habitaciones tiene un r-squared de 0.3471 lo que es menor al r-squ
 El segundo modelo explica mejor la variabilidad de los datos, lo escogería.
 Sin embargo no descartaría el primero pues aporta entendimiento desde una variable importante al momento de elegir una casa.
 
+Viendo gráficamente tenemos el modelo de rooms: 
 
+```{r}
+ggplot(datos_propiedades_filter3, aes(rooms, precio_en_miles)) + 
+  #geom_point(size = 2, colour = "#063b36") + 
+  geom_abline(intercept = -0.1502, slope = 82.1323, color="firebrick") +
+  geom_point(aes(colour = factor(property_type)))
+```
+
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(surface_total, precio_en_miles)) + 
+  #geom_point(size = 2, colour = "#063b36") + 
+  geom_point(aes(colour = factor(property_type))) + 
+  geom_abline(intercept = 53.269372, slope = 2.001306, color="firebrick")
+```
 
 
 ******************************************************************************************************
