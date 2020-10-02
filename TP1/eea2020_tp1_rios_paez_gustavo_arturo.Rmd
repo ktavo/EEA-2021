@@ -429,7 +429,31 @@ ggplot(datos_propiedades_filter3, aes(x = precio_en_miles, y = surface_total)) +
   geom_point(aes(colour = factor(property_type)))
 ```
 
-Queriendo indagar un poco más en la clasificación de tipo de propiedad:
+
+6.Análisis exploratorios (III)
+Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar.
+a.Obtener estadísticas descriptivas para la variable precio_en_miles (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+
+
+```{r}
+summary(datos_propiedades_filter3$precio_en_miles)
+```
+
+La remoción de outliers no afectó en gran manera los estadísticos descriptivos de la variable precio en miles.
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(0, 1300, by=10), 
+                 #fill="red", 
+                 color="#69b3a2",
+                 alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+
+```
+
+b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+
 
 ```{r}
 ggplot(datos_propiedades_filter3, aes(property_type, price, group = property_type, fill = factor(property_type)))+
@@ -439,17 +463,60 @@ ggplot(datos_propiedades_filter3, aes(property_type, price, group = property_typ
 Vemos una precios superiores en las casas en promedio frente a los departamentos y PHs (probablemente por la superficia de las mismas) 
 Vemos una altísima variabilidad en los precios de los departamentos, podría explicarse por la variabilidad de su ubicación respecto a las diferentes zonas de la ciudad.
 
-6.Análisis exploratorios (III)
-Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar.
-a.Obtener estadísticas descriptivas para la variable precio_en_miles (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
 
-```{r}
-summary(datos_propiedades_filter3$precio_en_miles)
-```
-
-b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
 c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
 
+```{r}
+datos_propiedades_filter3 %>% 
+  select(-id,-l3, -property_type) %>% # desestimamos algunas variables
+  ggpairs(., 
+        title = "GGPairs sin agrupación sin outliers")
+```
+
+Se ve una corelación marcada entre el precio y la superficie de las propiedades, sin embargo en la gráfica no se llega a ver relación lineal. En menor medida se observa también una corelación entre el precio y la cantidad de baños y habitaciones de la propiedad.
+
+7.Modelo lineal
+a.Realizar un modelo lineal simple para explicar el precio_en_miles en función de las habitaciones (rooms) y otro modelo que explique el precio en función de la superficie total (surface_total).
+
+```{r}
+# Modelo Rooms
+modelo_rooms = lm(formula = precio_en_miles ~ rooms, data = datos_propiedades_filter3)
+#summary(modelo_rooms)
+tidy(modelo_rooms)
+```
+
+
+```{r}
+# Modelo Superficie Total
+modelo_surface = lm(formula = precio_en_miles ~ surface_total, data = datos_propiedades_filter3)
+#summary(modelo_surface)
+tidy(modelo_surface)
+```
+
+
+b.Usar la función summary() para obtener informacion de ambos modelos. Explicar el significado de los valores de los coeficientes estimados en cada caso.
+
+```{r}
+# Modelo Rooms
+summary(modelo_rooms)
+```
+
+Se tiene como intercepto con el eje y -0.150, el aumento por cada unidad de la variable habitación representa un aumento de 82k en el precio.
+
+
+```{r}
+# Modelo Superficie Total
+summary(modelo_surface)
+```
+
+
+Se parte del intercepto en 53k por el aumento en superficia (1metro cuadrado) el valor de la propiedad aumenta en 2k.
+
+c.¿Cuál modelo usarían para predecir el precio? ¿Por qué?
+
+El modelo por habitaciones tiene un r-squared de 0.3471 lo que es menor al r-squared del modelo de superficie que es de 0.5165.
+El segundo modelo explica mejor la variabilidad de los datos, lo escogería.
+Sin embargo no descartaría el primero pues aporta entendimiento desde una variable importante al momento de elegir una casa.
 
 
 
