@@ -1,21 +1,22 @@
 ---
-title: "R Notebook TP 1: Análisis Exploratorio e Introducción a Regresión lineal"
+title: 'R Notebook TP 1: Análisis Exploratorio e Introducción a Regresión lineal'
 author: "Gustavo Arturo Ríos Páez"
 date: "05 de Octubre de 2020"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 CONSIGNAS
 El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal reportadas por la empresa Properati. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos. Vamos a utilizar datos del 2019 para no incorporar comportamientos atípicos ocasionados por la pandemia del COVID-19.
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #Añado librerías necesarias
 library(tidyverse)
 library(corrr)
-#library(tidymodels)
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(broom)
 ```
   
 1. Preparación de los datos (I)
@@ -130,7 +131,7 @@ En general se ve alrededor de un 5% faltante de datos, a exepción de la variabl
 b.Obtener la matriz de correlaciones para las variables numéricas. Pista: usen ‘complete.obs’ para poder omitir los valores faltantes.
 
 Calculando por el método de Pearson (y filtrando las variables numéricas con select) obtemnemos:
-```{r}
+```{r, message = FALSE, warning = FALSE}
 correlated_pearson <- cor(datos_propiedades_filter %>% 
   select(-id, -l3, -property_type)
     , use="complete.obs", method="pearson") %>%
@@ -156,7 +157,7 @@ Un detalle menor sería que la correlación surface_total<->surface_covered pare
 
 Teniendo en cuenta que el calculo de correlación bajo el método Pearson es bastante sensible a outliers realizamos una nueva matriz de correlación con el método Spearman que es más robusto.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 correlated_spearman <- cor(datos_propiedades_filter %>% 
   select(-id, -l3, -property_type)
     , use="complete.obs", method="spearman") %>%
@@ -177,7 +178,7 @@ c.Grafique la matriz de correlaciones usando la librería corrr.
 
 De forma gráfica tenemos bajo el método Pearson:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 cor(datos_propiedades_filter %>% 
   select(-id, -l3, -property_type)
     , use="complete.obs", method="pearson") %>%
@@ -189,7 +190,7 @@ cor(datos_propiedades_filter %>%
 
 De forma gráfica tenemos bajo el método Spearman:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 cor(datos_propiedades_filter %>% 
   select(-id, -l3, -property_type)
     , use="complete.obs", method="spearman") %>%
@@ -199,15 +200,14 @@ cor(datos_propiedades_filter %>%
 ```
 También si queremos clasificar por tipo de propiedad:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 datos_propiedades_filter %>% 
   select(-id,-l3,) %>% # desestimamos algunas variables
   mutate(property_type = factor(property_type)) %>% 
   ggpairs(., 
-        title = "GG Pairs por property_type",
-        mapping = aes(colour = property_type))
+  title = "GG Pairs por property_type",
+  mapping = aes(colour = property_type))
 ```
-
 
 d.¿Cómo es la correlación entre las variables surface_total y surface_covered? ¿Y la correlación entre rooms y bathrooms?
 
@@ -216,7 +216,7 @@ El anáñlisis de outliers que se hará más adelante arrojará más informació
 
 Graficamos las variables surface_total y surface_covered
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 ggplot(datos_propiedades_filter, aes(x = surface_total, y = surface_covered)) + 
   geom_point()
 ```
@@ -247,7 +247,7 @@ Respecto a las variables rooms y bathrooms, estás se encuentran relacionadas de
 
 Graficamos las variables rooms y bathrooms
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 ggplot(datos_propiedades_filter, aes(x = rooms, y = bathrooms)) + 
   geom_point()
 ```
@@ -324,10 +324,7 @@ Acorde a los cuantiles no veriamos una variabilidad excesiva, el valor máximo p
 ```{r}
 #qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
 ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
-  geom_histogram(breaks=seq(6, 6000, by=10), 
-                 #fill="red", 
-                 color="#69b3a2",
-                 alpha = .2) + 
+  geom_histogram(breaks=seq(6, 6000, by=10), fill="red",       color="#69b3a2",   alpha = .2) + 
   labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
 
 ```
@@ -337,10 +334,7 @@ El histograma revela una moda bastante marcada, y un outlier realmente alto. Gra
 ```{r}
 #qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
 ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
-  geom_histogram(breaks=seq(6, 1000, by=10), 
-                 #fill="red", 
-                 color="#69b3a2",
-                 alpha = .2) + 
+  geom_histogram(breaks=seq(6, 1000, by=10), fill="blue", color="#69b3a2", alpha = .2) + 
   labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
 
 ```
@@ -361,20 +355,21 @@ ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, gr
 ```
 
 El tercer cuartil más 1.5 veces la distancia intercuartil nos da 496.5, esto dejaría algunos valores interesantes por fuera, tomaremos el valor de 1000 para voler a graficar. (Un poco menos que 5 distancias I.Q. adicionales).
-```{r}
+```{r, message = FALSE, warning = FALSE}
 ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, group = property_type, fill = property_type))+
   geom_boxplot() +
   scale_y_continuous(limits = c(0, 1000)) # definimos escala del eje y
 
 ```
 
+Se observa en promedio mayor precio para las casas respecto a los apartamentos y PHs, la variabilidad en las casas también es mayor.
+
 c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 datos_propiedades_filter2 %>% 
   select(-id,-l3, -property_type) %>% # desestimamos algunas variables
-  ggpairs(., 
-        title = "GGPairs sin agrupación")
+  ggpairs(.,      title = "GGPairs sin agrupación")
 ```
 
 Se aprecia una relación entre el precio y la cantidad de habitaciones, incluso una mayor relación entre precio y cantidad de baños.
@@ -393,7 +388,7 @@ Se tienen outliers de superficie muy marcados que no permiten observar clarament
 
 b.Eliminar los outliers univariados de las variables precio_en_miles, rooms y surface_total. Utilizar y fundamentar el o los criterio/s y métodos que consideren adecuados.
 
-Se toma como criterio eliminar outliers a más de 4.5 Distancias intercuartiles para el caso de precio_en_miles.
+Se toma como criterio eliminar outliers a más de 4.5 Distancias intercuartiles para el caso de precio_en_miles, me parcía interesante ver hasta las propiedades alrededor de 1 millón USD.
 
 ```{r}
 summary(datos_propiedades_filter2$precio_en_miles)
@@ -444,19 +439,17 @@ La remoción de outliers no afectó en gran manera los estadísticos descriptivo
 ```{r}
 #qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
 ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
-  geom_histogram(breaks=seq(0, 1300, by=10), 
-                 #fill="red", 
-                 color="#69b3a2",
-                 alpha = .2) + 
+  geom_histogram(breaks=seq(0, 1300, by=10), fill="blue", color="#69b3a2", alpha = .2) + 
   labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
-
 ```
+
+Observamos una curva con cola alargada hacia la derecha, y con la mayor cantidad de datos alrededor de los 125k para precio en miles.
 
 b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
 
 
 ```{r}
-ggplot(datos_propiedades_filter3, aes(property_type, price, group = property_type, fill = factor(property_type)))+
+ggplot(datos_propiedades_filter3, aes(property_type, precio_en_miles, group = property_type, fill = factor(property_type)))+
   geom_boxplot(alpha = 0.75)
 ```
 
@@ -466,11 +459,10 @@ Vemos una altísima variabilidad en los precios de los departamentos, podría ex
 
 c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 datos_propiedades_filter3 %>% 
   select(-id,-l3, -property_type) %>% # desestimamos algunas variables
-  ggpairs(., 
-        title = "GGPairs sin agrupación sin outliers")
+  ggpairs(., title = "GGPairs sin agrupación sin outliers")
 ```
 
 Se ve una corelación marcada entre el precio y la superficie de las propiedades, sin embargo en la gráfica no se llega a ver relación lineal. En menor medida se observa también una corelación entre el precio y la cantidad de baños y habitaciones de la propiedad.
@@ -509,14 +501,14 @@ Se tiene como intercepto con el eje y -0.150, el aumento por cada unidad de la v
 summary(modelo_surface)
 ```
 
-
 Se parte del intercepto en 53k por el aumento en superficia (1metro cuadrado) el valor de la propiedad aumenta en 2k.
 
 c.¿Cuál modelo usarían para predecir el precio? ¿Por qué?
 
 El modelo por habitaciones tiene un r-squared de 0.3471 lo que es menor al r-squared del modelo de superficie que es de 0.5165.
 El segundo modelo explica mejor la variabilidad de los datos, lo escogería.
-Sin embargo no descartaría el primero pues aporta entendimiento desde una variable importante al momento de elegir una casa.
+
+Sin embargo no descartaría el primero pues aporta entendimiento desde una variable muy importante al momento de elegir una casa.
 
 Viendo gráficamente tenemos el modelo de rooms: 
 
@@ -536,9 +528,3 @@ ggplot(datos_propiedades_filter3, aes(surface_total, precio_en_miles)) +
 ```
 
 
-******************************************************************************************************
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
