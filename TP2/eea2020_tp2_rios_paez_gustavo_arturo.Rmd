@@ -1,0 +1,610 @@
+---
+title: 'R Notebook TP 2: Regresión lineal Múltiple'
+author: "Gustavo Arturo Ríos Páez"
+date: "09 de Novienmbre de 2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+CONSIGNAS
+El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal reportadas por la empresa Properati. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos. Vamos a utilizar datos del 2019 para no incorporar comportamientos atípicos ocasionados por la pandemia del COVID-19.
+```{r, message = FALSE, warning = FALSE}
+#Añado librerías necesarias
+rm( list=ls() )  #remove all objects
+gc()             #garbage collection
+
+
+library(tidyverse)
+library(corrr)
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(broom)
+```
+
+
+2) Modelo Regresión lineal múltiple
+Utilizando el dataset de training:
+
+Crear un modelo para predecir el precio con todas las covariables.
+
+Analizar los resultados del modelo:
+Interpretación de los coeficientes estimados
+¿Qué observan respecto de la significatividad de las variables dummy?
+Medidas de evaluación del modelo
+Realizar un modelo sin la covariable l3 e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+
+¿Cuál es el modelo que mejor explica la variabilidad del precio?
+
+3) Creación de variables
+Utilizando el dataset de training:
+
+En el ejercicio anterior deberían haber encontrado que algunos barrios son significativos, aunque no todos. Crear una nueva variable barrios que permita agrupar a los barrios. Explicar el análisis exploratorio para definir la nueva variable y los criterios utilizados en la construcción de la misma.
+Un criterio sugerido es agrupar los barrios según el precio por metro cuadrado promedio de las propiedades ubicadas en ellos, creando grupos de ‘precio_alto’, ‘precio_medio’ y ‘precio_bajo’.
+
+Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+
+¿Qué modelo explica mejor la variabilidad de los datos, el que utiliza la variable l3 o el que utiliza barrio? En su opinión, ¿Qué modelo es más útil? ¿Porqué?
+
+La interpretación de los coeficientes de las variables surface_covered y surface_total puede ser un poco problemática ya que se encuentran altamente correlacionadas. Entonces, podemos construir una nueva variable sup_descubierta para la diferencia entre ambas superficies. Calcular nuevamente el modelo lineal del punto 3.b) (modelo con variable barrio) para todas las covariables previas (excepto surface_total), incluyendo surface_covered y sup_descubierta e interpretar los coeficientes de estas dos últimas variables.
+
+4) Diagnóstico del modelo
+Utilizando el dataset de training:
+
+Analizar los residuos del modelo elaborado en el punto 3.d) y evaluar el cumplimiento de los supuestos del modelo lineal.
+
+5) Modelo Log(price)
+Utilizando el dataset de training:
+
+Crear un modelo para log(price) e interpretar los parámetros estimados de este nuevo modelo. Comparar la performance del modelo de 3.d) con éste, tanto en términos de la variabilidad explicada como del cumplimiento de los supuestos del modelo lineal.
+
+log(price)=β0+β1log(rooms)+β2log(bathrooms)+β3log(surface_covered)+β4property_type+β5barrio+β6surface_patio
+
+Les recomendamos tomar como referencia para la interpretación de los parámetros de este modelo el siguiente recorte: Wooldridge, J. M. (2006). Introducción a la econometría: un enfoque moderno. Editorial Paraninfo.
+6) Selección de modelo
+Ahora debe elegir el mejor modelo para predecir los precios de nuevas propiedades.
+
+Utilizando el dataset de training desarrollar 2 (dos) modelos de regresión múltiple nuevos. Elegir 2 (dos) modelos de los 5 (cinco) que ya fueron creados:
+
+modelo con todas las covariables
+
+modelo sin l3
+
+modelo con la variable barrio
+
+modelo con la variable sup_descubierta
+
+modelo con logaritmo.
+
+Puede elegir por los criterios que considere adecuados: métricas, facilidad de interpretación, etc. siempre y cuando los explique claramente
+
+Evalue estos 4 (cuatro) modelos en términos de su capacidad predictiva en el dataset de training, fundamentando claramente su elección con la/s métrica/s que considere adecuada/s.
+
+Predecir los valores de precios de las propiedades en el dataset de testing (recuerden que deben realizar las mismas transformaciones que hicieron en el set de training) y comparar la performance de los modelos seleccionados con la/s métrica/s elegidas previamente. Determinar con cuál modelo se queda y por qué.
+
+
+
+
+***************************************************************************************************************************
+
+1) Preparación de datos
+Cargar el dataset de training y realizar una breve descripción del mismo.
+
+```{r}
+
+getwd()
+```
+
+
+
+***************************************************************************************************************************
+1. Preparación de los datos (I)
+a.Leer el archivo ar_properties.csv y mostrar su estructura
+
+
+```{r}
+#Leo los datos del dataSet 
+datos_propiedades <- read.csv("ar_properties.csv")
+```
+
+```{r}
+#Revisión datos con str
+str(datos_propiedades)
+#Revisión datos con Glipse
+glimpse(datos_propiedades)
+#Clase de los datos
+class(datos_propiedades) #DataFrame
+```
+
+Se observa que el dataframe está compeusto por 388,891 observaciones caracterizadas por 24 variables.
+15 Variables de tipo caracter
+8 Variables de tipo numérico
+1 Variable de tipo lógico
+
+Estas variables podrían agruparse tambíen del siguiente modo:
+3 variables de fecha.
+8 Variables describiendo la ubicación, dos de ellas de latitud y longitud, y 6 de ellas variables de texto describiendo ubicación desde país yendo a mayor detalle por ciudad, barrio, etc.
+5 Variables descriptivas de la propiedad.
+7 Variables descriptivas del condiciones de venta o arrendamiento.
+1 Variable ID.
+
+b.Quedarse con aquellos registros que:
+  I.Pertenecen a Argentina y Capital Federal
+```{r}
+datos_propiedades_filter <- datos_propiedades %>% 
+  filter(l1 == "Argentina" , l2 == "Capital Federal")
+datos_propiedades_filter
+```
+  
+  Aplicando este primer filtro por País y ciudad, tenemos ahora 124.327 propiedades.
+
+  II.Cuyo precio esta en dólares (USD)
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(currency == "USD")
+datos_propiedades_filter
+```
+  Aplicando este segundo filtro tenemos 81.601 propiedades.
+
+  III.El tipo de propiedad sea: Departamento, PH o Casa
+
+```{r}
+#datos_propiedades_filter %>% 
+#  filter(property_type == "Departamento" | property_type == "PH" | property_type == "Casa")
+#De forma más limpia: 
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(property_type %in% c("Departamento", "PH", "Casa"))
+datos_propiedades_filter
+#Departamento -> 57.712 
+#PH -> 5.851
+#Casa -> 3.807
+```
+
+  IV.El tipo de operacion sea Venta
+  
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  filter(operation_type == "Venta")
+datos_propiedades_filter
+```
+  
+Con el filtro de tipo de venta tendríamos un total de 61.905 observaciones.
+
+c.Seleccionar las variables id, l3, rooms, bedrooms, bathrooms, surface_total, surface_covered, price y property_type.
+
+
+```{r}
+datos_propiedades_filter <- datos_propiedades_filter %>% 
+  select(id, l3, rooms, bedrooms, bathrooms, surface_total, surface_covered, price, property_type)
+datos_propiedades_filter
+```
+
+#Deberian llegar a un dataset con 61.905 observaciones y 9 variables.
+
+2.Análisis exploratorios (I)
+a.Obtener la cantidad de valores únicos y de valores faltantes (NAs) para cada una de estas variables.
+
+Podríamos usar n_distinct para evaluar NA por cada variable, por ejemplo: 
+
+```{r}
+n_distinct(datos_propiedades_filter$l3)
+```
+
+Pero con sapply podemos obtener los NA para todo el dataset de forma más sencilla
+```{r}
+sapply(datos_propiedades_filter, function(x) sum(is.na(x)))
+```
+
+Y también los valores únicos
+```{r}
+sapply(datos_propiedades_filter, function(x) n_distinct(x))
+```
+
+La función summary también nos sirve para validar los NAs
+```{r}
+summary(datos_propiedades_filter)
+```
+
+En general se ve alrededor de un 5% faltante de datos, a exepción de la variable bedrooms que presenta un 41% de datos faltantes.
+
+b.Obtener la matriz de correlaciones para las variables numéricas. Pista: usen ‘complete.obs’ para poder omitir los valores faltantes.
+
+Calculando por el método de Pearson (y filtrando las variables numéricas con select) obtemnemos:
+```{r, message = FALSE, warning = FALSE}
+correlated_pearson <- cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="pearson") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  fashion() #Para redondear decimales y hacerlo más legible 
+correlated_pearson
+```
+
+
+
+Observamos algunas correlacionesmarcadas y esperadas, como bedrooms<->rooms ,rooms<->bathrooms y surface_total<->surface_covered.
+Vemos también una correlación alta entre una variable de las que más nos interesan price<->bathrooms. 
+
+Sin embargo, vemos algunas correlaciones negativas que llaman mucho la atención: 
+rooms<->surface_total
+rooms<->surface_covered
+price<->surface_total
+price<->surface_covered
+Esto parecería contradecir la lógica, dado que esperaríamos que una casa de mayor área cuente con mayor cantidad de habitaciones, además de con un precio mayor, lo que en ambos casos implicaría correlaciones positivas.
+
+Un detalle menor sería que la correlación surface_total<->surface_covered parece algo débil para el significado de las variables.
+
+Teniendo en cuenta que el calculo de correlación bajo el método Pearson es bastante sensible a outliers realizamos una nueva matriz de correlación con el método Spearman que es más robusto.
+
+```{r, message = FALSE, warning = FALSE}
+correlated_spearman <- cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="spearman") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  fashion() #Para redondear decimales y hacerlo más legible 
+correlated_spearman
+```
+
+Efectivamente vemos que la correlaciones:
+rooms<->surface_total
+rooms<->surface_covered
+price<->surface_total
+price<->surface_covered
+Que nos llamaban la atención para a ser positivas, y además vemos muy marcada la correlación surface_total<->surface_covered.
+
+c.Grafique la matriz de correlaciones usando la librería corrr.
+
+De forma gráfica tenemos bajo el método Pearson:
+
+```{r, message = FALSE, warning = FALSE}
+cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="pearson") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  rplot() #Graficamos
+```
+
+
+De forma gráfica tenemos bajo el método Spearman:
+
+```{r, message = FALSE, warning = FALSE}
+cor(datos_propiedades_filter %>% 
+  select(-id, -l3, -property_type)
+    , use="complete.obs", method="spearman") %>%
+  correlate() %>% #Para convertir la matrix en un data frame
+  shave() %>% #Para mostrar sólo lo que está abajo de la diagonal
+  rplot() #Graficamos
+```
+También si queremos clasificar por tipo de propiedad:
+
+```{r, message = FALSE, warning = FALSE}
+datos_propiedades_filter %>% 
+  select(-id,-l3,) %>% # desestimamos algunas variables
+  mutate(property_type = factor(property_type)) %>% 
+  ggpairs(., 
+  title = "GG Pairs por property_type",
+  mapping = aes(colour = property_type))
+```
+
+d.¿Cómo es la correlación entre las variables surface_total y surface_covered? ¿Y la correlación entre rooms y bathrooms?
+
+surface_total y surface_covered se veían extrañamente correlacionadas de forma negativa bajo el método Pearson, bajo el método Spearman hace más sentido su corelación.
+El anáñlisis de outliers que se hará más adelante arrojará más información sobre este punto.
+
+Graficamos las variables surface_total y surface_covered
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(datos_propiedades_filter, aes(x = surface_total, y = surface_covered)) + 
+  geom_point()
+```
+
+Se realizan los test análisis de correlación:
+Para el método Pearson
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "pearson")
+```
+Vemos un p-valor bastante pequeño que nos da la suficiente evidencia muestral para descartar la hipótesis nula, el coeficiente de correlación es 0.69
+
+Ahora con el método Spearman:
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "spearman")
+```
+El test no arroja un resultado debido a los empates "ties" Se procede a hacer un test Kendall
+
+```{r}
+cor.test(datos_propiedades_filter$surface_total, datos_propiedades_filter$surface_covered, method = "kendall")
+```
+
+Del mismo modo el p-valor es muy pequeño con lo que tenemos suficiente evidencia para descartar la hipótesis nula. Se observa una corelación marcada entre las dos variables.
+
+
+Respecto a las variables rooms y bathrooms, estás se encuentran relacionadas de forma positiva para un análisis Pearson, sin embargo se ve una relación de relación fuerte negativa para Spearman.
+
+Graficamos las variables rooms y bathrooms
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(datos_propiedades_filter, aes(x = rooms, y = bathrooms)) + 
+  geom_point()
+```
+No pareciera tenerse una correlación lineal entre estas dos variables.
+Procedemos a hacer tests de correlación:
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "pearson")
+```
+Ahora con el método Spearman:
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "spearman")
+```
+El test no arroja un resultado debido a los empates "ties" Se procede a hacer un test Kendall
+
+
+```{r}
+cor.test(datos_propiedades_filter$rooms, datos_propiedades_filter$bathrooms, method = "kendall")
+```
+
+
+En ninguno de los dos casos observamos una correlación fuerte.
+
+e.¿Cómo es la correlación de la variable a explicar, price, con el resto de las variables?
+
+
+```{r}
+correlated_pearson
+```
+
+Para el método Pearson está relacionada con bathrooms de forma positiva, de la correlación negativa con surface_total y surface_covered ya hablamos.
+
+```{r}
+correlated_spearman
+```
+
+Para un análisis con método Spearman vemos una relación algo débil con surface_total y con surface_covered,se ve también una corelación negativa frente a bedrooms que llama la atención.
+
+3.Limpieza de datos
+a.En el punto 2 deberían haber encontrado que la variable bedrooms presenta una alta proporción de valores faltantes y que presenta una fuerte correlación con la variable rooms. Por lo tanto, vamos a eliminarla.
+
+```{r}
+datos_propiedades_filter2 <- datos_propiedades_filter %>% select(-bedrooms)
+datos_propiedades_filter2
+```
+
+b.Eliminar todos los registros que presentan valores faltantes.
+
+```{r}
+datos_propiedades_filter2 <- drop_na(datos_propiedades_filter2)
+datos_propiedades_filter2 <- datos_propiedades_filter2 %>% filter(surface_total >= surface_covered)
+datos_propiedades_filter2
+```
+
+
+c.Eliminar aquellos registros en los cuales la superficie total es menor a la superficie cubierta
+
+#Deberían llegar a un dataset con 50.828 observaciones y 8 variables.
+
+4.Análisis exploratorios (II)
+a.Crear una nueva variable precio_en_miles que sea la variable price divida por 1000. Obtener estadísticas descriptivas para esta nueva variable (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+
+```{r}
+datos_propiedades_filter2$precio_en_miles <- (datos_propiedades_filter2$price)/1000
+datos_propiedades_filter2
+```
+
+```{r}
+summary(datos_propiedades_filter2$precio_en_miles)
+```
+Acorde a los cuantiles no veriamos una variabilidad excesiva, el valor máximo parece bastante extremo. 
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(6, 6000, by=10), fill="red",       color="#69b3a2",   alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+
+```
+
+El histograma revela una moda bastante marcada, y un outlier realmente alto. Graficamos con un límite diferente para ignorar el outlier
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(6, 1000, by=10), fill="blue", color="#69b3a2", alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+
+```
+
+
+b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+
+Utilizaremos tapply con la función summary para esto: 
+```{r}
+tapply(datos_propiedades_filter2$precio_en_miles, datos_propiedades_filter2$property_type, summary)
+```
+Observamos outliers notables en las casas y los apartamentos, en los PHs también tenemos ouliers pero en una menor magnitud.
+
+```{r}
+ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 6000)) # definimos escala del eje y
+```
+
+El tercer cuartil más 1.5 veces la distancia intercuartil nos da 496.5, esto dejaría algunos valores interesantes por fuera, tomaremos el valor de 1000 para voler a graficar. (Un poco menos que 5 distancias I.Q. adicionales).
+```{r, message = FALSE, warning = FALSE}
+ggplot(datos_propiedades_filter2, aes(x = property_type, y = precio_en_miles, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 1000)) # definimos escala del eje y
+
+```
+
+Se observa en promedio mayor precio para las casas respecto a los apartamentos y PHs, la variabilidad en las casas también es mayor.
+
+c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
+
+```{r, message = FALSE, warning = FALSE}
+datos_propiedades_filter2 %>% 
+  select(-id,-l3, -property_type) %>% # desestimamos algunas variables
+  ggpairs(.,      title = "GGPairs sin agrupación")
+```
+
+Se aprecia una relación entre el precio y la cantidad de habitaciones, incluso una mayor relación entre precio y cantidad de baños.
+Llama la atención la baja relación entre el precio y las variables de superficie, sin embargo las variables de superficie se ven también poco asociadas a la cantidad de habitaciones.
+
+
+5.Outliers
+a.Graficar un scatterplot de la variable precio_en_miles y superficie_total. ¿Detectan alguna anomalía?
+
+```{r}
+ggplot(datos_propiedades_filter2, aes(x = precio_en_miles, y = surface_total)) +
+  geom_point(alpha = 1/10) +
+  geom_point(aes(colour = factor(property_type)))
+```
+Se tienen outliers de superficie muy marcados que no permiten observar claramente la información. Podría haber casos con información errónea respecto a la superficie. También pareciera haber algunos datos que guardan una relación lineal creciente entre las dos variables.
+
+b.Eliminar los outliers univariados de las variables precio_en_miles, rooms y surface_total. Utilizar y fundamentar el o los criterio/s y métodos que consideren adecuados.
+
+Se toma como criterio eliminar outliers a más de 4.5 Distancias intercuartiles para el caso de precio_en_miles, me parcía interesante ver hasta las propiedades alrededor de 1 millón USD.
+
+```{r}
+summary(datos_propiedades_filter2$precio_en_miles)
+#(270+(270-251))*4.5
+#1300
+datos_propiedades_filter3 <- datos_propiedades_filter2 %>% filter(precio_en_miles < 1300)
+```
+
+Se toma como criterio eliminar outliers a más de 1.5 Distancias intercuartiles para el caso de rooms
+
+```{r}
+summary(datos_propiedades_filter2$rooms)
+#(4+(4-3))*1.5
+#7.5
+datos_propiedades_filter3 <- datos_propiedades_filter3 %>% filter(rooms < 7.5)
+```
+
+Se toma como criterio separar las propiedades de más de 500 metros y las de menos de 500. El criterio de distancia intercuartil no parecía apropiado, puesto que para 9 Di filtraba los menor a 200 metros, que es una medida esperada para una casa promedio.
+
+```{r}
+summary(datos_propiedades_filter2$surface_total)
+#106+(106-96)*9
+#196
+datos_propiedades_filer_grandes <- datos_propiedades_filter3 %>% filter(surface_total > 500)
+datos_propiedades_filter3 <- datos_propiedades_filter3 %>% filter(surface_total < 500)
+```
+
+Se grafica de nuevo el scatterplot para el dataset filtrado
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(x = precio_en_miles, y = surface_total)) + 
+  geom_point(alpha = 1/10) +
+  geom_point(aes(colour = factor(property_type)))
+```
+
+
+6.Análisis exploratorios (III)
+Repetir los análisis exploratorios realizados en el punto 4 al dataset sin outliers. ¿Detectan algún cambio? Explicar.
+a.Obtener estadísticas descriptivas para la variable precio_en_miles (cuartiles, promedio, mínimo y máximo) y realizar un histograma de la misma.
+
+
+```{r}
+summary(datos_propiedades_filter3$precio_en_miles)
+```
+
+La remoción de outliers no afectó en gran manera los estadísticos descriptivos de la variable precio en miles.
+
+```{r}
+#qplot(datos_propiedades_filter2$precio_en_miles, geom = "histogram")
+ggplot(data=datos_propiedades_filter2, aes(precio_en_miles)) + 
+  geom_histogram(breaks=seq(0, 1300, by=10), fill="blue", color="#69b3a2", alpha = .2) + 
+  labs(title="Histograma Precio en Miles", x="Precio en Miles", y="Count")
+```
+
+Observamos una curva con cola alargada hacia la derecha, y con la mayor cantidad de datos alrededor de los 125k para precio en miles.
+
+b.Obtener las mismas estadísticas descriptivas de la nueva variable precio_en_miles para cada tipo de propiedad y realizar boxplots paralelos de la variable según tipo de propiedad. ¿Qué diferencias encuentran entre los tipos de propiedad?
+
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(property_type, precio_en_miles, group = property_type, fill = factor(property_type)))+
+  geom_boxplot(alpha = 0.75)
+```
+
+Vemos una precios superiores en las casas en promedio frente a los departamentos y PHs (probablemente por la superficia de las mismas) 
+Vemos una altísima variabilidad en los precios de los departamentos, podría explicarse por la variabilidad de su ubicación respecto a las diferentes zonas de la ciudad.
+
+
+c.Realizar un gráfico con la función ggpairs de las variables numéricas (sin abrir por tipo de propiedad). Comenten los aspectos principales que observan en el gráfico
+
+```{r, message = FALSE, warning = FALSE}
+datos_propiedades_filter3 %>% 
+  select(-id,-l3, -property_type) %>% # desestimamos algunas variables
+  ggpairs(., title = "GGPairs sin agrupación sin outliers")
+```
+
+Se ve una corelación marcada entre el precio y la superficie de las propiedades, sin embargo en la gráfica no se llega a ver relación lineal. En menor medida se observa también una corelación entre el precio y la cantidad de baños y habitaciones de la propiedad.
+
+7.Modelo lineal
+a.Realizar un modelo lineal simple para explicar el precio_en_miles en función de las habitaciones (rooms) y otro modelo que explique el precio en función de la superficie total (surface_total).
+
+```{r}
+# Modelo Rooms
+modelo_rooms = lm(formula = precio_en_miles ~ rooms, data = datos_propiedades_filter3)
+#summary(modelo_rooms)
+tidy(modelo_rooms)
+```
+
+
+```{r}
+# Modelo Superficie Total
+modelo_surface = lm(formula = precio_en_miles ~ surface_total, data = datos_propiedades_filter3)
+#summary(modelo_surface)
+tidy(modelo_surface)
+```
+
+
+b.Usar la función summary() para obtener informacion de ambos modelos. Explicar el significado de los valores de los coeficientes estimados en cada caso.
+
+```{r}
+# Modelo Rooms
+summary(modelo_rooms)
+```
+
+Se tiene como intercepto con el eje y -0.150, el aumento por cada unidad de la variable habitación representa un aumento de 82k en el precio.
+
+
+```{r}
+# Modelo Superficie Total
+summary(modelo_surface)
+```
+
+Se parte del intercepto en 53k por el aumento en superficia (1metro cuadrado) el valor de la propiedad aumenta en 2k.
+
+c.¿Cuál modelo usarían para predecir el precio? ¿Por qué?
+
+El modelo por habitaciones tiene un r-squared de 0.3471 lo que es menor al r-squared del modelo de superficie que es de 0.5165.
+El segundo modelo explica mejor la variabilidad de los datos, lo escogería.
+
+Sin embargo no descartaría el primero pues aporta entendimiento desde una variable muy importante al momento de elegir una casa.
+
+Viendo gráficamente tenemos el modelo de rooms: 
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(rooms, precio_en_miles)) + 
+  #geom_point(size = 2, colour = "#063b36") + 
+  geom_abline(intercept = -0.1502, slope = 82.1323, color="firebrick") +
+  geom_point(aes(colour = factor(property_type)))
+```
+
+
+```{r}
+ggplot(datos_propiedades_filter3, aes(surface_total, precio_en_miles)) + 
+  #geom_point(size = 2, colour = "#063b36") + 
+  geom_point(aes(colour = factor(property_type))) + 
+  geom_abline(intercept = 53.269372, slope = 2.001306, color="firebrick")
+```
+
+
