@@ -21,7 +21,79 @@ library(ggplot2)
 library(dplyr)
 library(GGally)
 library(broom)
+library(data.table)
 ```
+
+1) Preparación de datos
+Cargar el dataset de training y realizar una breve descripción del mismo.
+
+```{r}
+getwd()
+aptosTrain <- fread("ar_properties_train.csv")
+#Revisión datos con Glipse
+glimpse(aptosTrain)
+```
+
+El data set cuenta con 8 variables tenemos una para definir el barrio, otra para la cantidad de habitaciones y baños, otras dos de superficie en metros, tanto total, como cubierta, una variable de precio y por último una propiedad de clasificación por tipo de propiedad.
+
+
+Vemos un resumen estatístico básico con la función summary:
+
+```{r}
+summary(aptosTrain)
+```
+
+Vemos que el data set tiene ya un tratamiento de datos, no tiene valores nulos en ninguna de sus 8 variables.
+Las habitaciones y baños tienen valores mínimos de 1, y máximos de 8 y 5 respectivamente, lo que hace sentido respecto a el tipo de datos que tenemos en el dataset. La mediana en el caso de las variables bathrooms, surface_total, surface_covered, price, es menor que la media, con lo que tenemos una distribución de datos asimétrica positiva.
+
+La superficie de las propiedades oscila entre 28 y 320 metros, lo que sería representativo de propiedades que podemos encontrar comunmente buscando directamente en la página web. 
+
+```{r}
+summary(levels(as.factor(aptosTrain$l3)))
+(levels(as.factor(aptosTrain$l3)))
+
+```
+La variable l3 correspondería al barrio de la propiedad, con 57 clasificaciones en total, todas ellas parte de Buenos Aires.
+
+```{r}
+summary(levels(as.factor(aptosTrain$property_type)))
+(levels(as.factor(aptosTrain$property_type)))
+```
+Los tipos de propiedad se mantienen en Casa, Departamento y PH. Ahora por medio de GGpairs vamos a ver algunas gráficas de las variables, clasificadas por tipo de propiedad:
+
+``````{r, message = FALSE, warning = FALSE}
+aptosTrain %>% 
+  select(-id,-l3,) %>% # Desestimamos las variables de categóricas que no nos interesan en este punto
+  mutate(property_type = factor(property_type)) %>% 
+  ggpairs(., 
+  title = "GG Pairs por property_type",
+  mapping = aes(colour = property_type))
+```
+
+En promedio las casas cuentan con más habitaciones que los apartamentos y PHs, los apartamentos y PHstienen ouliers severos en esta variable rooms.
+En cuanto a superficie (surface_total y surface_covered) en promedio las casas muestran valores mayores como era de esperarse, sin embargo se tienen outliers marcados para los apartamentos y los PHs. 
+Vemos una correlación positiva marcada entre el precio y la superficie, tanto cubierta como total, además de una correlación positiva, pero menor, entre el precio y las variables bathrooms y rooms.
+
+Realizamos un gráfico de boxplot para analizar la variable superficie cubierta:
+
+```{r}
+ggplot(aptosTrain, aes(x = property_type, y = surface_covered, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 270)) # definimos escala del eje y
+```
+
+En el gráfico vemos que en general las casas cuentan con una mayor superficie respecto a los PHs y los apartamentos, las casas se ven distribuidas de una forma bastante balanceada, mientras que los PHs y los apartamentos tienen asímetría positiva, con outliers marcados superiores. En ninguno de los tres casos vemos outliers inferiores.
+
+Para analizar los precios por tipo de propiedad realizamos un boxplot para esta variable:  
+
+```{r}
+ggplot(aptosTrain, aes(x = property_type, y = price, group = property_type, fill = property_type))+
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 1000000)) # definimos escala del eje y
+```
+ 
+Vamos en general un precio mayor para las propiedades de tipo casa, esto se puede explicar dado que son las propiedades de mayor superficie y como vimos previamente el precio está correlacionado positivamente de forma fuerte con la superficie.
+En los tres casos vemos distribuciones asímetricas positivas, con gran cantidad de outliers superiores, principalmente para los departamentos, no se observa en ninguno de los tres casos outliers inferiores.
 
 
 2) Modelo Regresión lineal múltiple
@@ -85,20 +157,18 @@ Predecir los valores de precios de las propiedades en el dataset de testing (rec
 
 
 
+***************************************************************************************************************************
+
+***************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************
 
 ***************************************************************************************************************************
 
-1) Preparación de datos
-Cargar el dataset de training y realizar una breve descripción del mismo.
-
-```{r}
-
-getwd()
-```
 
 
-
-***************************************************************************************************************************
 1. Preparación de los datos (I)
 a.Leer el archivo ar_properties.csv y mostrar su estructura
 
@@ -220,8 +290,6 @@ correlated_pearson <- cor(datos_propiedades_filter %>%
   fashion() #Para redondear decimales y hacerlo más legible 
 correlated_pearson
 ```
-
-
 
 Observamos algunas correlacionesmarcadas y esperadas, como bedrooms<->rooms ,rooms<->bathrooms y surface_total<->surface_covered.
 Vemos también una correlación alta entre una variable de las que más nos interesan price<->bathrooms. 
@@ -606,5 +674,15 @@ ggplot(datos_propiedades_filter3, aes(surface_total, precio_en_miles)) +
   geom_point(aes(colour = factor(property_type))) + 
   geom_abline(intercept = 53.269372, slope = 2.001306, color="firebrick")
 ```
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+
 
 
