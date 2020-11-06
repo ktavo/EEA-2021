@@ -22,6 +22,7 @@ library(dplyr)
 library(GGally)
 library(broom)
 library(data.table)
+library(tidymodels)
 ```
 
 1) Preparación de datos
@@ -91,9 +92,12 @@ ggplot(aptosTrain, aes(x = property_type, y = price, group = property_type, fill
   geom_boxplot() +
   scale_y_continuous(limits = c(0, 1000000)) # definimos escala del eje y
 ```
- 
+
 Vamos en general un precio mayor para las propiedades de tipo casa, esto se puede explicar dado que son las propiedades de mayor superficie y como vimos previamente el precio está correlacionado positivamente de forma fuerte con la superficie.
 En los tres casos vemos distribuciones asímetricas positivas, con gran cantidad de outliers superiores, principalmente para los departamentos, no se observa en ninguno de los tres casos outliers inferiores.
+
+
+########################### Manejo de outliers ########################################
 
 
 2) Modelo Regresión lineal múltiple
@@ -101,10 +105,24 @@ Utilizando el dataset de training:
 
 Crear un modelo para predecir el precio con todas las covariables.
 
+
+```{r}
+# ajustamos modelo lineal multiple
+modelo_propiedades <- lm(price ~ rooms + bathrooms + surface_total + surface_covered + property_type + l3, data = aptosTrain)
+# Resumen del modelo
+tidy_meg <- tidy(modelo_propiedades, conf.int = TRUE)
+tidy_meg
+```
+
 Analizar los resultados del modelo:
 Interpretación de los coeficientes estimados
+Las variables property_type y l3 generan variables dummies, siendo su categoría basal de property type "Casa" y la de l3 "Abasto".
+El valor de B0 correspondería a una casa en abasto, con superficie 0 y cantidad de habitaciones 0.
+El modelo arroja 63 variables, asociadas en su mayoría a las variables dummy de nuestra variable principal l3.
 ¿Qué observan respecto de la significatividad de las variables dummy?
+Las variables dummy de property_type tienen alta significatividad, las variables dummy surgidas a partir de l3, varian en cuanto a significatividad algunas siendo notablemente significativas.
 Medidas de evaluación del modelo
+
 Realizar un modelo sin la covariable l3 e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
 
 ¿Cuál es el modelo que mejor explica la variabilidad del precio?
