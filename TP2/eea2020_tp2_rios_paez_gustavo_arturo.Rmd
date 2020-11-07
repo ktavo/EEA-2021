@@ -96,48 +96,132 @@ ggplot(aptosTrain, aes(x = property_type, y = price, group = property_type, fill
 Vamos en general un precio mayor para las propiedades de tipo casa, esto se puede explicar dado que son las propiedades de mayor superficie y como vimos previamente el precio está correlacionado positivamente de forma fuerte con la superficie.
 En los tres casos vemos distribuciones asímetricas positivas, con gran cantidad de outliers superiores, principalmente para los departamentos, no se observa en ninguno de los tres casos outliers inferiores.
 
-
-########################### Manejo de outliers ########################################
-
-
 2) Modelo Regresión lineal múltiple
 Utilizando el dataset de training:
+a.Crear un modelo para predecir el precio con todas las covariables.
 
-Crear un modelo para predecir el precio con todas las covariables.
-
+Generamos el modalo usando todas las covariables:
 
 ```{r}
 # ajustamos modelo lineal multiple
-modelo_propiedades <- lm(price ~ rooms + bathrooms + surface_total + surface_covered + property_type + l3, data = aptosTrain)
+modelo_propiedades_l3 <- lm(price ~ bathrooms + rooms + surface_total + surface_covered + property_type + l3, data = aptosTrain)
+# Resumen del modelo
+tidy_meg_l3 <- tidy(modelo_propiedades_l3, conf.int = TRUE)
+tidy_meg_l3
+```
+
+b,Analizar los resultados del modelo:
+I.Interpretación de los coeficientes estimados
+
+El valor de B0 correspondería a una propiedad de tipo casa en Abasto, con superficie 0 y cantidad de habitaciones 0, es un escenario irreal para el caso de estudio (siendo un valor negativo), sin embargo es el corte en Y, dada la pendiente de la recta de regresión. 
+
+Las variables property_type y l3 generan variables dummies, siendo su categoría basal de property_type "Casa" y la de l3 "Abasto".
+
+El coeficiente estimado de bathrooms de 34mil indica el aumento en el precio de una propiedad si mantenemos fijas las otras covariables, es decir, que para una propiedad de tipo casa, en Abasto, con la misma cantidad de habitaciones y con la misma superficie, por cada baño adicional la propiedad aumentaría en promedio su valor esperado en 34mil.
+
+Acorde a la pendiente definida, las variables categóricas muestras nuevos cortes con el eje Y.
+Los valores de las variables dummy de property type, muestran el aumento promedio del valor esperado del precio respecto a los mismos valores de las demás varieables, en caso de comparar una casa con un departamento o con un PH. Para el caso de una propiedad de tipo Departamento tendríamos un aumento promedio de poco más de 91mil, para un PH poco más de 46mil.
+
+El modelo arroja 62 variables, asociadas en su mayoría a las variables dummy de nuestra variable principal l3.
+El estimate para la variable bathrooms muestra un incremento de más de 34 mil en el precio, 
+
+
+
+II.¿Qué observan respecto de la significatividad de las variables dummy?
+Las variables dummy de property_type tienen alta significatividad, las variables dummy surgidas a partir de l3, varian en cuanto a significatividad algunas siendo notablemente significativas.
+
+Vamos a organizar las variables por el p-valor, notamos que las variables bathrooms, surface_covered y l3PuertoMadero (dummy) cuentan con valores tan bajos que son redondeados a 0, sin embargo viendo el estadístico vemos que son las más siginificativas.
+
+```{r}
+tidy_meg_l3[order(tidy_meg_l3$p.value),]
+```
+
+Ahora vamos a filtrar de las 62 covariables las que nos muestran un p-valor que no sea significativo.
+
+```{r}
+tidy_meg_l3 %>% 
+  filter(p.value > 0.05)
+
+```
+
+De las 62 covariables vemos que 16 no son significativas, con p-valores menores a 0.05, y con intervalos de confianza que incluyen el 0.
+Todas estas 16 covariables son vaiables dummy de la variable l3.
+
+III.Medidas de evaluación del modelo
+
+Los valores analizados hasta ahora nos dan comparativas de a pares, por ejemplo en el caso de las variables dummies, frente a la categoría basal, si queremos entender la significatividad conjunta, necesitamos un test multivariado, como test F de Fisher, prodremos ver sus resultados en la salida de ANOVA.
+
+```{r}
+tidy(anova(modelo_propiedades))
+```
+
+Los resultados del test nos muestran que acorde al p-valor las variables son estadísticamente significativas, con un valor tan bajo para property_type que es aproximado a 0.
+
+***************************************************************************************************************************
+
+c.Realizar un modelo sin la covariable l3 e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+
+```{r}
+# ajustamos modelo lineal multiple
+modelo_propiedades <- lm(price ~ surface_covered + bathrooms + rooms + surface_total + property_type, data = aptosTrain)
 # Resumen del modelo
 tidy_meg <- tidy(modelo_propiedades, conf.int = TRUE)
 tidy_meg
 ```
 
-Analizar los resultados del modelo:
-Interpretación de los coeficientes estimados
-Las variables property_type y l3 generan variables dummies, siendo su categoría basal de property type "Casa" y la de l3 "Abasto".
-El valor de B0 correspondería a una casa en abasto, con superficie 0 y cantidad de habitaciones 0.
-El modelo arroja 63 variables, asociadas en su mayoría a las variables dummy de nuestra variable principal l3.
-¿Qué observan respecto de la significatividad de las variables dummy?
-Las variables dummy de property_type tienen alta significatividad, las variables dummy surgidas a partir de l3, varian en cuanto a significatividad algunas siendo notablemente significativas.
-Medidas de evaluación del modelo
+Ahora graficaremos el precio frente a la superficie cubierta, y generaremos las rectas para la categoria basal casa, y las dos variables dummies de tipo de propiedad, departamento y PH. Todas cuentan con la misma pendiente, sin embargo tienen 3 cortes respecto a Y, y podemos ver como se ajustan mejor para las 3 categorías. 
 
-Realizar un modelo sin la covariable l3 e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+```{r}
+# Accedemos a la información de los coeficientes estimados
+intercepto_1 = modelo_propiedades$coefficients[1]
+pendiente_meed = modelo_propiedades$coefficients[2]
+intercepto = c()
+for (i in 6:7) {
+  #print(modelo_propiedades$coefficients[i])
+  intercepto[i] = modelo_propiedades$coefficients[1] + modelo_propiedades$coefficients[i]
+  #print(intercepto[i])
+ }
 
-¿Cuál es el modelo que mejor explica la variabilidad del precio?
+# Graficamos el dataset y el modelo
+aptosTrain %>% 
+  ggplot(., aes(x = surface_covered, y = price)) + 
+  geom_abline(intercept = intercepto_1, slope = pendiente_meed, color = "red", size=1) +
+  geom_abline(intercept = intercepto[6], slope = pendiente_meed, color = "forestgreen", size=1) +  
+  geom_abline(intercept = intercepto[7], slope = pendiente_meed, color = "blue", size=1) +
+  geom_point() +
+  theme_bw() +
+  scale_x_continuous(limits = c(0,275)) +
+  scale_y_continuous(limits = c(0,1000000)) +
+  labs(title="Modelo Lineal Múltiple: Superficie cubierta por tipo de propiedad", x="Surface Covered", y="Price") +
+  geom_point(aes(colour = factor(property_type)))
+```
+
+
+El modelo sin la covariable l3 es bastante más sencillo en la medida de que cuenta con 6 covariables, de las cuales tenemos en la variable property_type un valor basal para casa, y dos variables dummies para sus otras categorías.
+Todos los covariables acorde al p-valor y a los intervalos de confianza, resultan significativos para el modelo.
+El intercepto es negativo, lo que no hace sentido para este caso de negocio, sin embargo habría que tener en cuenta que sería el valor para una casa de 0 habitaciones, 0 baños, y 0 metros de superficie.
+
+d.¿Cuál es el modelo que mejor explica la variabilidad del precio?
+
+El segundo modelo, cuenta concovariables significativas, y además es un modelo de menor complejidad dadas la cantidad de covariables, con lo que podremos entender los casos de negocio de forma mucho más sencilla.
 
 3) Creación de variables
 Utilizando el dataset de training:
 
-En el ejercicio anterior deberían haber encontrado que algunos barrios son significativos, aunque no todos. Crear una nueva variable barrios que permita agrupar a los barrios. Explicar el análisis exploratorio para definir la nueva variable y los criterios utilizados en la construcción de la misma.
+a.En el ejercicio anterior deberían haber encontrado que algunos barrios son significativos, aunque no todos. Crear una nueva variable barrios que permita agrupar a los barrios. Explicar el análisis exploratorio para definir la nueva variable y los criterios utilizados en la construcción de la misma.
+
 Un criterio sugerido es agrupar los barrios según el precio por metro cuadrado promedio de las propiedades ubicadas en ellos, creando grupos de ‘precio_alto’, ‘precio_medio’ y ‘precio_bajo’.
 
-Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+#Crear variable precio por m2
 
-¿Qué modelo explica mejor la variabilidad de los datos, el que utiliza la variable l3 o el que utiliza barrio? En su opinión, ¿Qué modelo es más útil? ¿Porqué?
+#agrupar en 3 grupos
 
-La interpretación de los coeficientes de las variables surface_covered y surface_total puede ser un poco problemática ya que se encuentran altamente correlacionadas. Entonces, podemos construir una nueva variable sup_descubierta para la diferencia entre ambas superficies. Calcular nuevamente el modelo lineal del punto 3.b) (modelo con variable barrio) para todas las covariables previas (excepto surface_total), incluyendo surface_covered y sup_descubierta e interpretar los coeficientes de estas dos últimas variables.
+
+b.Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
+
+c.¿Qué modelo explica mejor la variabilidad de los datos, el que utiliza la variable l3 o el que utiliza barrio? En su opinión, ¿Qué modelo es más útil? ¿Porqué?
+
+d.La interpretación de los coeficientes de las variables surface_covered y surface_total puede ser un poco problemática ya que se encuentran altamente correlacionadas. Entonces, podemos construir una nueva variable sup_descubierta para la diferencia entre ambas superficies. Calcular nuevamente el modelo lineal del punto 3.b) (modelo con variable barrio) para todas las covariables previas (excepto surface_total), incluyendo surface_covered y sup_descubierta e interpretar los coeficientes de estas dos últimas variables.
 
 4) Diagnóstico del modelo
 Utilizando el dataset de training:
