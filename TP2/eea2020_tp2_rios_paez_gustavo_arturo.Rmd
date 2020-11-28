@@ -259,6 +259,8 @@ ggplot(aptosTrain_pricem2, aes(l3, pricem2, group = l3, fill = factor(l3)))+
   theme(legend.position="none") +
   coord_flip() 
 ```
+
+
 Ahora organizamos la gráfica para poder ver los precios del metro cuadrado organizados por su media:
 
 ```{r}
@@ -519,7 +521,7 @@ df_evaluacion_train
 Vemos una mejora marcada en la explicatividad del modelo donde incluimos el tratamiento de logaritmo, acorde al R2-Ajustado, con lo que sería el modelo que mejor explica el precio entre los que hemos generado hasta ahora.
 Con esto nos restaría validar el cumplimiento de supuestos de linealidad para el modelo donde sí aplicamos dicha conversión logarítmica:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 # calculamos las variables resumen
 #purrr::map_df(models, broom::tidy, .id = "model")
 # calculamos valores predichos para todos los modelos
@@ -581,66 +583,149 @@ models <- list(modelo_propiedades = modelo_propiedades ,modelo_propiedades_l3 = 
 
 Utilizando el dataset de training desarrollar 2 (dos) modelos de regresión múltiple nuevos. Elegir 2 (dos) modelos de los 5 (cinco) que ya fueron creados:
 
-Basado en la correlación observada entre las variables surface_total y surface_covered , y también en la observada entre las variables bathrooms y rooms, genero un modelo más reducido:
+Queremos generar un nuevo modelo trabajando con las variables rooms y bathrooms, lo primero que queremos revisar es la correlación entre las mismas, para ver si hace sentido simplemente retirar una de ellas del modelo:
 
-Primero evaluamos la correlación entre las variables mencionadas:
 ```{r}
-cor(aptosTrain_pricem2$surface_total, aptosTrain_pricem2$surface_covered)
-cor(aptosTrain_pricem2$bathrooms, aptosTrain_pricem2$rooms)
+cor(aptosTrain_pricem2$rooms, aptosTrain_pricem2$bathrooms)
 ```
-
-Ahora generamos el modelo a 
+Si bien existe alguna correlación, no es tan alta para tomar la decisión de excluir una de las dos del modelo, por lo tanto, vamos a optar por combinarlas, sumándolas:
 
 ```{r}
-modelo_propiedades_short <- lm(price ~ surface_covered + rooms + property_type + pricem2, data = aptosTrain_pricem2)
+aptosTrain_pricem2$total_rooms <- aptosTrain_pricem2$rooms + aptosTrain_pricem2$bathrooms
+
+modelo_propiedades_total_rooms <- lm(price ~ surface_covered + total_rooms + sup_descubierta + property_type, data = aptosTrain_pricem2)
 # Resumen del modelo
-tidy_meg_barrios_short <- tidy(modelo_propiedades_short, conf.int = TRUE)
-tidy_meg_barrios_short
+tidy_meg_barrios_total_rooms <- tidy(modelo_propiedades_total_rooms, conf.int = TRUE)
+tidy_meg_barrios_total_rooms
 ```
-Todas las variables para este modelo resultan altamente significativas.
 
-Ahora generamos otro modelo donde añadimos una variable para definir si la propiedad cuenta con espacio al aire libre o no:
+Vemos que el modelo cuenta enteramente con variables explicativas acorde a los p-valores que tenemos, puntualmente nuestra nueva variable total_rooms resulta significativa.
+El intercepto se mantiene siendo negativo, vemos un aumento de 2.3mil dólares para el valor promedio esperado a medida que aumenta cada metro de superficie (dadas las demás variables), y también vemos un aumento de 8.5mil dólares ara el valor promedio esperado a medida que aumenta la cantidad de habitaciones o baños (dadas las demás variables).
+
+
+Para el segundo modelo que generaremos añadiremos una variable para definir si la propiedad cuenta con espacio al aire libre o no:
 
 ```{r}
 aptosTrain_pricem2$tiene_sup_descubierta <- ifelse(aptosTrain_pricem2$sup_descubierta > 0, TRUE, FALSE)
 
-modelo_propiedades_barrios_has_descubierta <- lm(price ~ surface_covered + bathrooms + rooms + tiene_sup_descubierta + property_type + pricem2 + barrios, data = aptosTrain_pricem2)
+modelo_propiedades_has_descubierta <- lm(price ~ surface_covered + bathrooms + rooms + tiene_sup_descubierta + property_type, data = aptosTrain_pricem2)
 # Resumen del modelo
-tidy_meg_barrios_has_descubierta <- tidy(modelo_propiedades_barrios_has_descubierta, conf.int = TRUE)
+tidy_meg_barrios_has_descubierta <- tidy(modelo_propiedades_has_descubierta, conf.int = TRUE)
 tidy_meg_barrios_has_descubierta
 ```
+Todas las variables son estadísticamente significativas dado su p-valor y sus intervalos de confianza.
 
+La nueva variable generada indica un aumento de más de 22mil en promnedio para el precio esperado, para las propiedades que cuentan con superficies descubiertas, esto sería propiedades que tienen balcones o patios.
+
+Respecto a los 5 modelos que tenemos hasta el momento tomaremos el que incluye la clasificación de barrios y el modelo en el que hicimos el ajuste logarítmico:
 
 *modelo con todas las covariables
 *modelo sin l3
-*modelo con la variable barrio
+  ****modelo con la variable barrio
 *modelo con la variable sup_descubierta
-*modelo con logaritmo.
+  ****modelo con logaritmo.
 
 Puede elegir por los criterios que considere adecuados: métricas, facilidad de interpretación, etc. siempre y cuando los explique claramente
 
-De los modelos generados previamente tomaría 
+Los modelos fueron elegidos puesto que en comparativas anteriores mostraron contar con R2-Ajustado alto,que explicaría la variable precio en función de las variables de los modelos, además frente al modelo l3 cuentan con gran explicatividad y menos variables.
 
 Evalue estos 4 (cuatro) modelos en términos de su capacidad predictiva en el dataset de training, fundamentando claramente su elección con la/s métrica/s que considere adecuada/s.
 
-*modelo con la variable barrio
-Es el de la mejor R2-Ajustada entre los modelos.
-*modelo con la variable sup_descubierta
-Es el segundo modelo con mejor R2-Ajustada, además, es una variable interesante la de superficie descubierta, peusto que a nivel de negocio permite clasificar las propiedades que tienen ese plus, a nivel de departamento y PH que es el balcón, y a nivelde casa las que poseen patios.
+```{r}
 
+models <- list(modelo_propiedades_barrios = modelo_propiedades_barrios, modelo_propiedades_log = modelo_propiedades_log, modelo_propiedades_total_rooms = modelo_propiedades_total_rooms, modelo_propiedades_has_descubierta = modelo_propiedades_has_descubierta)
+
+# calculamos las métricas para todos los modelos
+df_evaluacion_train = map_df(models, broom::glance, .id = "model") %>%
+  # ordenamos por R2 ajustado
+  arrange(desc(adj.r.squared))
+df_evaluacion_train
+```
+
+El modelo que mejor explica la variabilidad viene siendo el modelo de la conversión logarítmica, su R2-Ajustado es de 0.84, frente modelo de barrios que cuenta con un R2-Ajustado de 0.77, los dos nuevos modelos generados no explican tanto la variabilidad del precio, aunque sean más sencillos de explicar dentro del caso de negocio. 
 
 Predecir los valores de precios de las propiedades en el dataset de testing (recuerden que deben realizar las mismas transformaciones que hicieron en el set de training) y comparar la performance de los modelos seleccionados con la/s métrica/s elegidas previamente. Determinar con cuál modelo se queda y por qué.
 
+```{r}
+aptosTest <- fread("ar_properties_test.csv")
+#Realizamos las transaformaciones para las nuesvas variables usadas en el modelo
+aptosTest$total_rooms = aptosTest$rooms + aptosTest$bathrooms
+aptosTest$sup_descubierta = aptosTest$surface_total - aptosTest$surface_covered
+aptosTest$tiene_sup_descubierta <- ifelse(aptosTest$sup_descubierta > 0, TRUE, FALSE)
+
+#Vamos a trabajar los cuatro modelos acorde al R2-Ajustado de forma ascendente:
+# Agregamos la predicciones al dataset de testeo para el primer modelo {modelo_propiedades_total_rooms}:
+pred_total_rooms = augment(modelo_propiedades_total_rooms, newdata=aptosTest) 
+pred_total_rooms %>% select(total_rooms, surface_covered, sup_descubierta, property_type, price, .fitted, .resid)
+```
+Ahora para el modelo de superficie descubierta:
+```{r}
+# Agregamos la predicciones al dataset de testeo para el segundo modelo modelo_propiedades_has_descubierta:
+pred_has_descubierta = augment(modelo_propiedades_has_descubierta, newdata=aptosTest) 
+pred_has_descubierta %>% select(tiene_sup_descubierta, sup_descubierta, property_type, price, .fitted, .resid)  
+```
 
 
-***************************************************************************************************************************
+Ahora para el modelo de barrios:
+```{r}
+#Generamos la transformación necesaria para el modelo barrios:
+aptosTest$pricem2 <- aptosTest$price/aptosTest$surface_total
+#Tomamos los valores de medias por barrio que ya habíamos establecido
+aptosTest$meanBarrios <- aptosTrain_pricem2$meanBarrios[match(aptosTest$l3, aptosTrain_pricem2$l3)]
+#Generamos la transformación acorde a la variable con 5 categorías:
+aptosTest <- aptosTest %>%
+  mutate(
+    barrios = case_when(
+      meanBarrios < priceQs["1st Qu."]                               ~ "1Star",
+      meanBarrios >= priceQs["1st Qu."] 
+      & meanBarrios < priceQs["Mean"]                                ~ "2Star",
+      meanBarrios >= priceQs["Mean"] 
+      & meanBarrios < priceQs["3rd Qu."]                             ~ "3Star",
+      meanBarrios >= priceQs["3rd Qu."] 
+      & meanBarrios < (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"]) ~ "4Star",
+      meanBarrios > (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"])  ~ "5Star"
+    )
+  )
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+# Agregamos la predicciones al dataset de testeo para el tercer modelo modelo_propiedades_barrios:
+pred_barrios = augment(modelo_propiedades_barrios, newdata=aptosTest) 
+pred_barrios %>% select(barrios, property_type, surface_total, price, .fitted, .resid)  
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+Ahora para el modelo donde aplicamos el logaritmo:
+```{r}
+# Agregamos la predicciones al dataset de testeo para el cuarto modelo modelo_propiedades_has_descubierta:
+
+#Reverso la transformación logarítmica con la función inversa exponencial:
+pred_log = augment(modelo_propiedades_log, newdata=aptosTest)
+pred_log$.fitted <- exp(pred_log$.fitted)
+pred_log$.resid <- pred_log$price - pred_log$.fitted
+pred_log %>% select(rooms, bathrooms, surface_covered, property_type, price, .fitted, .resid)
+```
 
 
-***************************************************************************************************************************
+Ahora empezamos a comparar los resultados en training y testing:
+
+
+Para Testing:
+
+```{r}
+# Aplicamos la función a los 4 modelos con el set de testing
+rmse(data = pred_total_rooms, truth = price, estimate = .fitted)
+rmse(data = pred_has_descubierta, truth = price, estimate = .fitted)
+rmse(data = pred_barrios, truth = price, estimate = .fitted)
+rmse(data = pred_log, truth = price, estimate = .fitted)
+```
+
+Esto nos indica que en promedio el modelo de total_rooms erra por más de 80mil USD. El modelo de has_descubierta erra por casi 79mil USD. El modelo de barrios erra por más de 66mil USD, y  el modelo de log erra por casi 62mil USD.
+
+
+El modelo que elegiría es el que tiene la transformación logarítmica, dado que cuenta con el menor RMSE, lo que me indica que erra menos que los otros modelos en promedio, por otra parte su R2-ajustado es el mayor de los cuatro modelos, con lo que explica mejor la variabilidad de los datos.
+
+La única contra que tiene es que a nivel de negocio puede ser algo complicado explicar de forma muy sencilla la transformación hecha, sin embargo dadas las dos razones iniciales, sería el modelo a elegir. 
+
+
+
+
 
