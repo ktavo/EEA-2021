@@ -19,7 +19,7 @@ library(ggplot2)
 library(dplyr)
 library(GGally)
 library(tibble)
-
+library(broom)
 library(modelr)
 library(ISLR)
 library(pROC)
@@ -29,7 +29,7 @@ library(rlang)
 library(caret)
 library(rsample)
 set.seed(1988)
-#library(broom)
+
 ```
 
 
@@ -150,7 +150,6 @@ models
 ```
 Ahora para desanidar la columna mod:
 
-
 ```{r}
 models %>% 
   mutate(tidy = map(mod, tidy)) %>% 
@@ -176,9 +175,66 @@ Tiene 17 años frente a los 20 de Jack, y acurde aumenta la edad, la probabilida
 
 
 3) Generación de modelos
-Generar 3 modelos de regresión logística sobre el dataset de entrenamiento utilizando diferentes combinaciones de variables. Al menos dos modelos deben ser multivariados
+a.Generar 3 modelos de regresión logística sobre el dataset de entrenamiento utilizando diferentes combinaciones de variables. Al menos dos modelos deben ser multivariados
 
-Ordenar por la deviance los 3 modelos creados en el punto 3)a) y el creado en el punto 2)a) y seleccionar el mejor modelo en términos de la deviance explicada.
+Actualizamos nuestro objeto formulas:
+
+```{r}
+logit_formulas <- formulas(.response = ~ Survived, # único lado derecho de las formulas.
+                         pClassSexAge = ~ Pclass + Sex + Age,
+                         pClass = ~ Pclass,
+                         #Full = ~ Pclass + Sex + Embarked + Fare + Age + SibSp + Parch,
+                         pClassSibSpParch = ~ Pclass + SibSp + Parch,
+                         sexEmbarkedFare = ~ Sex + Embarked + Fare
+                         )
+logit_formulas # observamos el objeto formulas
+```
+
+Ahora con el objeto fórmulas generamos el data frame con los modelos anidados:
+
+```{r}
+models <- data_frame(logit_formulas) %>% # dataframe a partir del objeto formulas
+  mutate(models = names(logit_formulas), # columna con los nombres de las formulas
+         expression = paste(logit_formulas), # columna con las expresiones de las formulas
+         mod = map(logit_formulas, ~glm(., family = 'binomial', data = titanic_split_train))) 
+models %>%
+    filter(models != "pClassSexAge") #Filtramos el modelo que ya teníamos definido previamente
+```
+
+Ahora para desanidar la columna mod:
+
+```{r}
+models %>% 
+  filter(models != "pClassSexAge") %>% #Filtramos el modelo que ya teníamos definido previamente
+  mutate(tidy = map(mod, tidy)) %>% 
+  unnest(tidy) %>% 
+  mutate(estimate=round(estimate,5), # redondeamos valores para facilitar lectura
+         p.value=round(p.value,4))
+```
+
+Podemos ver los 3 modelos generados, en el primero de ellos usamos sólamente la variable Pclass, vemos que todos sus coeficientes son significativos, la covariable basal es 1ra clase, para la covariables 2da clase vemos una disminución de la probabilidad de sobrevirir, dado el signo negativo del estimado, para la covariable 3ra clase el coeficiente negativo es aún mayor lo que se interpreta como una posibilidad aún menor de sobrevivir.
+
+El segundo modelo fue elaborado con las variables Pclass, SibSp y Parch, a exepción de la variable SibSp todas las variables son significativas. Se mantiene la disminución de probabilidad de supervivencia al ser de 2da o 3ra clase, dados los coeficientes negativos de estas covariables (dadas las demás variables), la variable SipSp también tiene un coeficiente negativo, disminuyendo la probabilidad esperada de sobrevivir, la variable Parch por su parte tiene un coeficiente positivo, con lo que a medida que aumenta aumenta la probabilidad esperada de sobrevivir (dadas las demás variables), esto podría deberse a que dada la premisa mujeres y niños primero, los núcleos familiares con hijos podrían haber tenido prioridad en los botes salvavidas.
+
+El tercer modelo conformado por las variables Sex, Embarked y Fare, cuenta con toda slas variables significativas, la covariable basal de sexo es "female, vemos en la primera covariable Sexmale una disminución significativa de la probabilidad de sobrevivir, con un valor negativo superior a los previamente analizados, el valor basal de la covariable Embarked es C de Cherbourg, la covariable EmbarquedQ (Queenstown) muestra una disminución de la probabilidad de sobrevivir, por su coeficiente negativo al igual que EmbarquedS (Southampton). Por último la variable Fara cuenta con un coeficiente positivo, que indica que a medida que aumenta el precio del tickete pagado aumenta la probabilidad de sobrevivir, seguramente por que los ticketes de precio altos están asociados a 1ra clase.
+
+b.Ordenar por la deviance los 3 modelos creados en el punto 3)a) y el creado en el punto 2)a) y seleccionar el mejor modelo en términos de la deviance explicada.
+
+```{r}
+# Calcular las medidas de evaluación para cada modelo
+models <- models %>% 
+  mutate(glance = map(mod,glance))
+# Obtener las medidas de evaluacion de interes
+models %>% 
+  unnest(glance) %>%
+  # Calculamos la deviance explicada
+  mutate(perc_explained_dev = 1-deviance/null.deviance) %>% 
+  select(-c(models, df.null, AIC, BIC)) %>% 
+  arrange(deviance)
+```
+
+Frente al valor de null deviance de 832.5 vemos que el modelo que más reduce la deviance es el modelo con las variables de Pclass, Sex y Age, seguido del modelo de Sex, Embarked y Fare, y del modelo de Pclass, SibSp y Parch, por último el módelo de una sóla variable Pclass es el que logra disminuir menos la deviance, esto también lo podemos ver en la columna de porcentaje explicado de la deviance, donde iniciamos con 0.31 y vamos disminuyendo primro a 0.24 y luego teniendo disminuciones fuertes a 0.08 para los dos últimos modelos.
+
 
 4) Evaluación del modelo
 Realizar el gráfico de curva ROC y obtener el AUC para el modelo elegido. Interpretar el gráfico.
