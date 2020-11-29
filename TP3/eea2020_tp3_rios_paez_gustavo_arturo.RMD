@@ -17,14 +17,24 @@ library(tidyverse)
 library(corrr)
 library(ggplot2)
 library(dplyr)
-#library(GGally)
+library(GGally)
+
+library(modelr)
+library(ISLR)
+library(pROC)
+library(cowplot)
+library(OneR)
+library(rlang)
+library(caret)
+library(rsample)
+set.seed(1988)
 #library(broom)
 ```
 
 
 DATASET DE ENTRENAMIENTO:
 1) Preparación de datos
-Leer el archivo titanic_complete_train.csv y mostrar su estructura.
+a.Leer el archivo titanic_complete_train.csv y mostrar su estructura.
 
 ```{r}
 #Leo los datos del dataSet 
@@ -37,18 +47,85 @@ glimpse(titanic_train)
 #Clase de los datos
 ```
 
+El data set cuenta con 891 observaciones y 12 variables, tenemos el id del pasajero, una variable dicotómica llamada Survived que define si sobrevivió o no. Una variable de la clase del pasajero Pclass acorde a la clasificación del barco en 1ra clase,2da clase,3ra clase, una variable de nombre Name, otra de género del pasajero Sex, una variable de edad Age, dos variables que cuentan la cantidad de familaires en el barco, estas son SibSp y PArch. Otra variable Ticket para el número de ticket, otra variable de Fare para el costo del ticket, una variable de cabina para definir la cabina en la que estaba el pasajero, y una variable embarqued que define el puerto donde embarcó el pasajero. 
 
-Seleccionar las variables PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare y Embarked.
+```{r}
+summary(titanic_train)
+```
 
-Transformar las variables Survived, Pclass y Embarked a factor.
+El resumen del dataset con summary nos aporta información interesante, en el mean de la variable survived vemos que sobrevivieron poco más del 38% de los pasajeros. La edad de los pasajeros oscila entre menos de un año y 80 años, siendo la media de los pasajeros 29 años. Las variables de SibSp y Parch nos muestran que en su mayoría los grupos familiares a bordo son pequeños con algunas exepciones evidenciadas por el número máximo. La variable Fare muestra un valor extremo en su máximo, en caso de ser interesante para la predicción, lo analizaremos más adelante.
+
+b.Seleccionar las variables PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare y Embarked.
+
+```{r}
+titanic_train_filter <- titanic_train %>% 
+  select(PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare, Embarked)
+titanic_train_filter
+```
+
+c.Transformar las variables Survived, Pclass y Embarked a factor.
+Para esto usamos la función mutate de tidyverse.
+
+```{r}
+titanic_train_filter <- titanic_train_filter %>% 
+  mutate(Survived = factor(Survived), Pclass = factor(Pclass), Embarked = factor(Embarked))
+titanic_train_filter
+```
+d.Realizar un gráfico de ggpairs para las variables Survived, Pclass, Sex, Age y Fare e interpretarlo.
+
+Antes de graficar vemos un poco más en detalle la variable Fare, que cuenta con outliers severos:
+
+```{r}
+summary(titanic_train_filter$Fare)
+titanic_train_filter %>% filter(Fare > 300)
+```
+Establecemos un punto de corte "300" para estos 3 outliers severos, lo que permitirá generar gráficos más claros.
 
 Realizar un gráfico de ggpairs para las variables Survived, Pclass, Sex, Age y Fare e interpretarlo.
 
-Mostrar la distribución de clase (Sobrevivientes vs No Sobrevivientes).
+```{r, message = FALSE, warning = FALSE}
+titanic_train_filter %>% 
+  select(Survived, Pclass, Sex, Age, Fare) %>% #Filtramos por las variables
+  #select(Survived, Pclass, Sex) %>% #Filtramos por las variables
+  filter(Fare < 300) %>% #Filtramos por el punto de corte definido
+  ggpairs(., title = "GG Pairs Titanic",
+  labeller = "label_value",
+  mapping = aes(colour = Survived)) #Coloreamos separando los sobrevivientes de los que no sobrevivieron
+```
+Coloreamos las gráficas por la variable survived, en rojo tenemos los fallecidos, en azul los sobrevivientes.
+La columna de survived nos muestra que son menos los sobrevivientes que las personas fallecidas. Cuando vemos la gráfica de Pclass vs survived, vemos que en 1ra clase tenemos más sobrevivientes que fallecidos, y que en 3ra clase tenemos una gran cantidad de fallecidos respecto a los sobrevibientes.
+La gráfica de Sex vs Survived nos muestra que se tiene una mayor tasa de sobrevivencia entre las mujeres frente a los hombres.
+La gráfica de Age vs. Survived nos muestra una distribución normal con cola larga a la derecha, en ambos casos la distribución de nuestra variable survived es muy similar, con lo que no pareciera haber una correlación entre estas dos variables.
+La gráfica de Fare vs. Survided nos muestra que en general las personas que se salvaron pagaron un fare superior a las que fallecieron, esto lo podemos ver también en la gráfica de Fare vs. PClass, donde vemos que para 1ra clase hay una tasa más grande de personas que sobrevivieron frente a las que no, en 2da y 3ra clase vemos mucho más similar la distridución en los casos de sobreviviente frente a no sobreviviente.
+La gráfica de PClass vs. Sex nos muestra que la mayoría de víctimas fueron hombres de 3ra clase, además podemos ver que una gran mayoría de mujeres de primera y segunda clase se salvaron, en 3ra clase gráficamente vemos que se salvaron alrededor de la mitad de las mujeres.
 
-Dividir al dataset en conjunto de entrenamiento (70% de los datos) y validación (30% de los datos). Volver a analizar la distribución de clase para chequear que sea aproximadamente igual entre ambos conjuntos y respecto a la distribución de clase que obtuvieron para todo el dataset en el punto 1)e).
+e.Mostrar la distribución de clase (Sobrevivientes vs No Sobrevivientes).
 
+Primero vemos un resumen de la variable:
+
+```{r}
+summary(titanic_train_filter$Survived)
+```
+Vemos que se tienen 549 personas fallecidas y 342 que sobrevivieron. Lo que sería un 62% de fallecidos frente a un 38% de sobrevivientes.
+
+f.Dividir al dataset en conjunto de entrenamiento (70% de los datos) y validación (30% de los datos). Volver a analizar la distribución de clase para chequear que sea aproximadamente igual entre ambos conjuntos y respecto a la distribución de clase que obtuvieron para todo el dataset en el punto 1)e).
 NOTA: Ya hemos imputado los valores faltantes de ciertas variables en este dataset
+
+```{r}
+#Fijamos semilla
+set.seed(1988)
+#Partición Train y Test, indicando proporción
+titanic_train_test <- initial_split(titanic_train_filter, prop = 0.7)
+#Armamos dataframe de testeo y entrenamiento
+titanic_split_train <- training(titanic_train_test)
+titanic_split_test <- testing(titanic_train_test)
+
+#Titanic Split Train
+summary(titanic_split_train$Survived)
+#Titanic Split Test
+summary(titanic_split_test$Survived)
+```
+Vemos una proporción similar a la del dataset antes de su partición, con un 62% de fallecidos. 
 
 2) Predicciones
 Realizar un modelo de regresión logística para predecir la supervivencia en función de Pclass, Sex y Age. Usar solo el dataset de entrenamiento.
