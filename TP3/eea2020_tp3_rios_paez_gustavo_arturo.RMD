@@ -115,24 +115,24 @@ NOTA: Ya hemos imputado los valores faltantes de ciertas variables en este datas
 #Fijamos semilla
 set.seed(1988)
 #Partición Train y Test, indicando proporción
-titanic_train_test <- initial_split(titanic_train_filter, prop = 0.7)
-#Armamos dataframe de testeo y entrenamiento
-titanic_split_train <- training(titanic_train_test)
-titanic_split_test <- testing(titanic_train_test)
+titanic_train_test <- createDataPartition(titanic_train_filter$Survived, p = .7, list = FALSE)
+#Armamos dataframe de testeo y entrenamiento estratificados
+titanic_split_train <- titanic_train_filter[ titanic_train_test,]
+titanic_split_test  <- titanic_train_filter[-titanic_train_test,]
 
 #Titanic Split Train
 summary(titanic_split_train$Survived)
 #Titanic Split Test
 summary(titanic_split_test$Survived)
 ```
-Vemos una proporción similar a la del dataset antes de su partición, con un 62% de fallecidos. 
+Vemos con el método estratificado una proporción como la dataset antes de su partición, con un 62% de fallecidos. 
 
 2) Predicciones
-Realizar un modelo de regresión logística para predecir la supervivencia en función de Pclass, Sex y Age. Usar solo el dataset de entrenamiento.
+a.Realizar un modelo de regresión logística para predecir la supervivencia en función de Pclass, Sex y Age. Usar solo el dataset de entrenamiento.
 
-Dar una breve interpretación de los coeficientes y su significatividad.
+b.Dar una breve interpretación de los coeficientes y su significatividad.
 
-¿Quién tiene una mayor probabilidad de supervivencia? Rose que es una mujer de 17 años que viaja en primera clase o Jack que es un hombre de 20 años viajando en tercera clase.
+c.¿Quién tiene una mayor probabilidad de supervivencia? Rose que es una mujer de 17 años que viaja en primera clase o Jack que es un hombre de 20 años viajando en tercera clase.
 
 
 
