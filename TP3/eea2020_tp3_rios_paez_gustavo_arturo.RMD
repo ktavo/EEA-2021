@@ -233,13 +233,66 @@ models %>%
   arrange(deviance)
 ```
 
-Frente al valor de null deviance de 832.5 vemos que el modelo que más reduce la deviance es el modelo con las variables de Pclass, Sex y Age, seguido del modelo de Sex, Embarked y Fare, y del modelo de Pclass, SibSp y Parch, por último el módelo de una sóla variable Pclass es el que logra disminuir menos la deviance, esto también lo podemos ver en la columna de porcentaje explicado de la deviance, donde iniciamos con 0.31 y vamos disminuyendo primro a 0.24 y luego teniendo disminuciones fuertes a 0.08 para los dos últimos modelos.
-
+Frente al valor de null deviance de 832.5 vemos que el modelo que más reduce la deviance es el modelo con las variables de Pclass, Sex y Age, seguido del modelo de Sex, Embarked y Fare, y del modelo de Pclass, SibSp y Parch, por último el módelo de una sóla variable Pclass es el que logra disminuir menos la deviance, esto también lo podemos ver en la columna de porcentaje explicado de la deviance, donde iniciamos con 0.31 y vamos disminuyendo primro a 0.24 y luego teniendo disminuciones fuertes a 0.08 para los dos últimos modelos, lo que nos indica que estos últimos dos modelos explican realmente muy poco de nuestro caso de estudio.
 
 4) Evaluación del modelo
-Realizar el gráfico de curva ROC y obtener el AUC para el modelo elegido. Interpretar el gráfico.
+a.Realizar el gráfico de curva ROC y obtener el AUC para el modelo elegido. Interpretar el gráfico.
 
-Realizar un violin plot e interpretar.
+```{r}
+# Añadir las predicciones
+models <- models %>% 
+  mutate(tita= map(mod,augment, type.predict = "response"))
+#Observaciones con probabilidad más baja
+models$pred[1]$pClassSexAge %>% arrange(.fitted) %>% head(10)
+```
+Vemos las 10 observaciones con menor probabilidad de sobrevivir, en todos los casos, hombres adultos mayores de 3ra clase.
+
+```{r}
+#Observaciones con probabilidad más alta
+models$pred[1]$pClassSexAge %>% arrange(desc(.fitted)) %>% head(10)
+```
+Ahora vemos los 10 casos de personas con mayor probabilidad de sobrevivir, todos los casos son mujeres de corta edad, de 1ra clase.
+
+Ahora guardamos los datos del modelo para graficarlo:
+
+```{r}
+# Mejor Modelo
+prediction_pClassSexAge <- models %>% 
+  filter(models=="pClassSexAge") %>% 
+  unnest(pred, .drop=TRUE)
+prediction_pClassSexAge %>% head(10)
+```
+
+Ahora con esta información calculamos la curva ROC.
+
+```{r, message = FALSE, warning = FALSE}
+# Calculamos curvas ROC
+roc_pClassSexAge <- roc(response=prediction_pClassSexAge$Survived, predictor=prediction_pClassSexAge$.fitted)
+ggroc(list(pClassSexAge=roc_pClassSexAge), size=1) + 
+  geom_abline(slope = 1, intercept = 1, linetype='dashed') +
+  theme_bw() + 
+  labs(title='Curva ROC pClassSexAge', color='Modelo')
+```
+Vemos que la curva está bastante alejada de la diagonal, con lo que veríamos que es un buen modelo. Ahora revisamos el AUC de la curva ROC:
+
+```{r}
+print(paste('AUC: Modelo pClassSexAge', round(roc_pClassSexAge$auc,3)))
+```
+El valor de 0.845 es bastante alto, con lo que nuestro modelo cuenta con un comportamiento global de exactitud alto.
+
+b.Realizar un violin plot e interpretar.
+
+Generamos los gŕaficos de violin plot:
+
+```{r}
+# graficamos el modelo completo
+ggplot(prediction_pClassSexAge, aes(x=Survived, y=.fitted, group=Survived, fill=factor(Survived))) + 
+  geom_violin() +
+  theme_bw() +
+  guides(fill=FALSE) +
+  labs(title='Violin plot', subtitle='Modelo pClassSexAge', y='Predicted probability')
+```
+Vemos en rojo la distribución de probabilidades de los no sobrevivientes, y en azul la distribución de probabilidades de quienes sobrevivieron. El modelo disctrimina bastanet bien, puesto que las dos distribuciones se ven de algún modo opuestas. Para quienes no sobrevivieron las probabilidades están cerca a 0, para quienes si sobrevivieron las probabilidades están cercanas a 1.
 
 5) Elección del punto corte
 Sobre el dataset de VALIDACIÓN realizar un gráfico de Accuracy, Specificity, Recall y Precision en función del punto de corte.
