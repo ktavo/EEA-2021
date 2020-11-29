@@ -12,6 +12,8 @@ En este trabajo deberán crear un modelo de regresión logística para clasifica
 
 
 ```{r, message = FALSE, warning = FALSE}
+rm( list=ls() )  #remove all objects
+gc()             #garbage collection
 #Añado librerías necesarias
 library(tidyverse)
 library(corrr)
@@ -28,6 +30,8 @@ library(OneR)
 library(rlang)
 library(caret)
 library(rsample)
+#install.packages('e1071', dependencies=TRUE)
+library(e1071)
 set.seed(1988)
 
 ```
@@ -173,6 +177,15 @@ Es mujer, y Jack al ser hombre cuenta con el estimado de -2.48.
 Viaja en 1ra clase, frente a la 3ra clase de Jack, que cuenta con el estimado de -2.48.
 Tiene 17 años frente a los 20 de Jack, y acurde aumenta la edad, la probabilidad de supervivencia disminuye acorde al estimado de -0.038.
 
+*************************************************************************************************************
+*************************************************************************************************************
+*************************************************************************************************************
+
+Para el punto de Rose y Jack, obtengan las probabilidades predichas de cada observación y concluyan al respecto
+
+*************************************************************************************************************
+*************************************************************************************************************
+*************************************************************************************************************
 
 3) Generación de modelos
 a.Generar 3 modelos de regresión logística sobre el dataset de entrenamiento utilizando diferentes combinaciones de variables. Al menos dos modelos deben ser multivariados
@@ -241,7 +254,7 @@ a.Realizar el gráfico de curva ROC y obtener el AUC para el modelo elegido. Int
 ```{r}
 # Añadir las predicciones
 models <- models %>% 
-  mutate(tita= map(mod,augment, type.predict = "response"))
+  mutate(pred= map(mod,augment, type.predict = "response"))
 #Observaciones con probabilidad más baja
 models$pred[1]$pClassSexAge %>% arrange(.fitted) %>% head(10)
 ```
@@ -258,7 +271,7 @@ Ahora guardamos los datos del modelo para graficarlo:
 ```{r}
 # Mejor Modelo
 prediction_pClassSexAge <- models %>% 
-  filter(models=="pClassSexAge") %>% 
+  filter(models == "pClassSexAge") %>% 
   unnest(pred, .drop=TRUE)
 prediction_pClassSexAge %>% head(10)
 ```
@@ -295,746 +308,89 @@ ggplot(prediction_pClassSexAge, aes(x=Survived, y=.fitted, group=Survived, fill=
 Vemos en rojo la distribución de probabilidades de los no sobrevivientes, y en azul la distribución de probabilidades de quienes sobrevivieron. El modelo disctrimina bastanet bien, puesto que las dos distribuciones se ven de algún modo opuestas. Para quienes no sobrevivieron las probabilidades están cerca a 0, para quienes si sobrevivieron las probabilidades están cercanas a 1.
 
 5) Elección del punto corte
-Sobre el dataset de VALIDACIÓN realizar un gráfico de Accuracy, Specificity, Recall y Precision en función del punto de corte.
+a.Sobre el dataset de VALIDACIÓN realizar un gráfico de Accuracy, Specificity, Recall y Precision en función del punto de corte.
 
-Elegir un punto de corte y explicar su decisión.
 
-Obtener la matriz de confusión con el modelo y punto de corte elegidos. Interpretarla.
+```{r}
+#titanic_split_test$fitted <- predict.glm(prediction_pClassSexAge, titanic_split_test, type = "response")
+#df_val$fitted_2 = predict.glm(m2, df_val, type = "response")
+full_model <- glm(logit_formulas$pClassSexAge, family = 'binomial', data = titanic_split_train)
+titanic_split_test$.fitted2 <- predict(full_model, newdata =  titanic_split_test, type = "response")
+
+#prediction_pClassSexAge %>% head(10)
+#titanic_split_test %>% head(10)
+
+prediction_metrics <- function(cutoff, predictions=titanic_split_test){
+  table <- predictions %>% 
+    mutate(predicted_class=if_else(.fitted2>cutoff, 1, 0) %>% as.factor(),
+           Survived= factor(Survived))
+  #str(table$predicted_class)
+  #str(table$Survived)
+  confusionMatrix(table(table$predicted_class, table$Survived), positive = "1") %>%
+    tidy() %>%
+    select(term, estimate) %>%
+    filter(term %in% c('accuracy', 'sensitivity', 'specificity', 'precision')) %>%
+    mutate(cutoff=cutoff)
+  
+}
+
+cutoffs = seq(0.02,0.95,0.01)
+logit_pred= map_dfr(cutoffs, prediction_metrics)%>% mutate(term=as.factor(term))
+
+ggplot(logit_pred, aes(cutoff,estimate, group=term, color=term)) + geom_line(size=1) +
+  theme_bw() +
+  labs(title= 'Accuracy, Sensitivity, Specificity y Precision', subtitle= 'Modelo prediction_pClassSexAge', color="")
+
+
+```
+Generamos las predicciones en la variable .fitted 2 para nuestra partición de test.
+
+b.Elegir un punto de corte y explicar su decisión.
+
+El punte de corte elegido es 0.54, puesto que es donde vemos que se cruzan la sensitivity y la presicion. Siendo este el punto donde vemos el máximo del F-Score.
+
+c.Obtener la matriz de confusión con el modelo y punto de corte elegidos. Interpretarla.
+
+
+```{r}
+sel_cutoff = 0.54
+# Creamos el modelo de validación
+full_model <- glm(logit_formulas$pClassSexAge, family = 'binomial', data = titanic_split_train)
+# Agregamos la predicciones al dataset de testeo
+table= augment(x=full_model, newdata=titanic_split_test, type.predict='response') 
+# Clasificamos utilizamos el punto de corte
+table=table %>% 
+  mutate(predicted_class=if_else(.fitted>sel_cutoff, 1, 0) %>% as.factor(), 
+         default= factor(Survived))
+# Creamos la matriz de confusión
+confusionMatrix(table(table$predicted_class, table$default), positive = "1")
+```
+
+El modelo tiene un acuracy de 78% y de la matriz de confusión podemos ver que clasifica de forma correcta como fallecidos a 134 de los 163 fallecidos, y prediciento a 73 sobrevivientes de los 103 sobrevivientes.
+Se tienen 30 falsos positivos (Error de tipo 1) y 29 falsos negativos (Error de tipo 2) 
+Vemos que se supera el No Information Rate que representa un predictor ingenuo. El p-valor que tenemos es bastante bajo, con lo que podemos concluír que el acurracy de nuestro modelo es estadísticamente distinto del predictor ingenuo.
+La prevalencia de la clase positiva es de poco más del 38%.
+De los valores positivos se clasificaron más del 70%, de los valores negativos se clasificaron de forma correcta el 82%.
 
 DATASET DE TESTEO:
 6) Evaluación del Modelo
-Leer el archivo titanic_complete_test.csv y transformar las variables Survived, Pclass y Embarked a factor.
-
-Con el modelo y punto de corte elegidos clasificar a las personas del dataset de testing.
-
-Obtener la matriz de confusión y comparar con la obtenida en el punto 5)c).
-
-
-
-
-******************************************************************************************************************************
-******************************************************************************************************************************
-******************************************************************************************************************************
-******************************************************************************************************************************
-******************************************************************************************************************************
-
-CONSIGNAS
-El objetivo general es poder crear un modelo lineal simple para explicar el precio de venta de las propiedades en Capital Federal reportadas por la empresa Properati. Para ello es necesario realizar analisis exploratorios, limpieza del dataset y realizar los modelos. Vamos a utilizar datos del 2019 para no incorporar comportamientos atípicos ocasionados por la pandemia del COVID-19.
-```{r, message = FALSE, warning = FALSE}
-#Añado librerías necesarias
-rm( list=ls() )  #remove all objects
-gc()             #garbage collection
-
-
-library(tidyverse)
-library(corrr)
-library(ggplot2)
-library(dplyr)
-library(GGally)
-library(broom)
-library(data.table)
-library(tidymodels)
-library(gridExtra)
-```
-
-1) Preparación de datos
-Cargar el dataset de training y realizar una breve descripción del mismo.
+a.Leer el archivo titanic_complete_test.csv y transformar las variables Survived, Pclass y Embarked a factor.
 
 ```{r}
-getwd()
-aptosTrain <- fread("ar_properties_train.csv")
+titanic_test <- read.csv("titanic_complete_test.csv")
+#Revisión datos con str
+#str(titanic_test)
 #Revisión datos con Glipse
-glimpse(aptosTrain)
-```
-
-El data set cuenta con 8 variables tenemos una para definir el barrio, otra para la cantidad de habitaciones y baños, otras dos de superficie en metros, tanto total, como cubierta, una variable de precio y por último una propiedad de clasificación por tipo de propiedad.
-
-
-Vemos un resumen estatístico básico con la función summary:
-
-```{r}
-summary(aptosTrain)
-```
-
-Vemos que el data set tiene ya un tratamiento de datos, no tiene valores nulos en ninguna de sus 8 variables.
-Las habitaciones y baños tienen valores mínimos de 1, y máximos de 8 y 5 respectivamente, lo que hace sentido respecto a el tipo de datos que tenemos en el dataset. La mediana en el caso de las variables bathrooms, surface_total, surface_covered, price, es menor que la media, con lo que tenemos una distribución de datos asimétrica positiva.
-
-La superficie de las propiedades oscila entre 28 y 320 metros, lo que sería representativo de propiedades que podemos encontrar comunmente buscando directamente en la página web. 
-
-```{r}
-summary(levels(as.factor(aptosTrain$l3)))
-(levels(as.factor(aptosTrain$l3)))
-```
-La variable l3 correspondería al barrio de la propiedad, con 57 clasificaciones en total, todas ellas parte de Buenos Aires.
-
-```{r}
-summary(levels(as.factor(aptosTrain$property_type)))
-(levels(as.factor(aptosTrain$property_type)))
-```
-Los tipos de propiedad se mantienen en Casa, Departamento y PH. Ahora por medio de GGpairs vamos a ver algunas gráficas de las variables, clasificadas por tipo de propiedad:
-
-``````{r, message = FALSE, warning = FALSE}
-aptosTrain %>% 
-  select(-id,-l3,) %>% # Desestimamos las variables de categóricas que no nos interesan en este punto
-  mutate(property_type = factor(property_type)) %>% 
-  ggpairs(., 
-  title = "GG Pairs por property_type",
-  mapping = aes(colour = property_type))
-```
-
-En promedio las casas cuentan con más habitaciones que los apartamentos y PHs, los apartamentos y PHstienen ouliers severos en esta variable rooms.
-En cuanto a superficie (surface_total y surface_covered) en promedio las casas muestran valores mayores como era de esperarse, sin embargo se tienen outliers marcados para los apartamentos y los PHs. 
-Vemos una correlación positiva marcada entre el precio y la superficie, tanto cubierta como total, además de una correlación positiva, pero menor, entre el precio y las variables bathrooms y rooms.
-
-Realizamos un gráfico de boxplot para analizar la variable superficie cubierta:
-
-```{r}
-ggplot(aptosTrain, aes(x = property_type, y = surface_covered, group = property_type, fill = property_type))+
-  geom_boxplot() +
-  scale_y_continuous(limits = c(0, 270)) # definimos escala del eje y
-```
-
-En el gráfico vemos que en general las casas cuentan con una mayor superficie respecto a los PHs y los apartamentos, las casas se ven distribuidas de una forma bastante balanceada, mientras que los PHs y los apartamentos tienen asímetría positiva, con outliers marcados superiores. En ninguno de los tres casos vemos outliers inferiores.
-
-Para analizar los precios por tipo de propiedad realizamos un boxplot para esta variable:  
-
-```{r}
-ggplot(aptosTrain, aes(x = property_type, y = price, group = property_type, fill = property_type))+
-  geom_boxplot() +
-  scale_y_continuous(limits = c(0, 1000000)) # definimos escala del eje y
-```
-
-Vamos en general un precio mayor para las propiedades de tipo casa, esto se puede explicar dado que son las propiedades de mayor superficie y como vimos previamente el precio está correlacionado positivamente de forma fuerte con la superficie.
-En los tres casos vemos distribuciones asímetricas positivas, con gran cantidad de outliers superiores, principalmente para los departamentos, no se observa en ninguno de los tres casos outliers inferiores.
-
-2) Modelo Regresión lineal múltiple
-Utilizando el dataset de training:
-a.Crear un modelo para predecir el precio con todas las covariables.
-
-Generamos el modalo usando todas las covariables:
-
-```{r}
-# ajustamos modelo lineal multiple
-modelo_propiedades_l3 <- lm(price ~ bathrooms + rooms + surface_total + surface_covered + property_type + l3, data = aptosTrain)
-# Resumen del modelo
-tidy_meg_l3 <- tidy(modelo_propiedades_l3, conf.int = TRUE)
-tidy_meg_l3
-```
-
-b,Analizar los resultados del modelo:
-I.Interpretación de los coeficientes estimados
-
-El valor de B0 correspondería a una propiedad de tipo casa en Abasto, con superficie 0 y cantidad de habitaciones 0, es un escenario irreal para el caso de estudio (siendo un valor negativo), sin embargo es el corte en Y, dada la pendiente de la recta de regresión. 
-
-Las variables property_type y l3 generan variables dummies, siendo su categoría basal de property_type "Casa" y la de l3 "Abasto".
-
-El coeficiente estimado de bathrooms de 34mil indica el aumento en el precio de una propiedad si mantenemos fijas las otras covariables, es decir, que para una propiedad de tipo casa, en Abasto, con la misma cantidad de habitaciones y con la misma superficie, por cada baño adicional la propiedad aumentaría en promedio su valor esperado en 34mil.
-
-Acorde a la pendiente definida, las variables categóricas muestras nuevos cortes con el eje Y.
-Los valores de las variables dummy de property type, muestran el aumento promedio del valor esperado del precio respecto a los mismos valores de las demás varieables, en caso de comparar una casa con un departamento o con un PH. Para el caso de una propiedad de tipo Departamento tendríamos un aumento promedio de poco más de 91mil, para un PH poco más de 46mil.
-
-El modelo arroja 62 variables, asociadas en su mayoría a las variables dummy de nuestra variable principal l3.
-El estimate para la variable bathrooms muestra un incremento de más de 34 mil en el precio, 
-
-II.¿Qué observan respecto de la significatividad de las variables dummy?
-Las variables dummy de property_type tienen alta significatividad, las variables dummy surgidas a partir de l3, varian en cuanto a significatividad algunas siendo notablemente significativas.
-
-Vamos a organizar las variables por el p-valor, notamos que las variables bathrooms, surface_covered y l3PuertoMadero (dummy) cuentan con valores tan bajos que son redondeados a 0, sin embargo viendo el estadístico vemos que son las más siginificativas.
-
-```{r}
-tidy_meg_l3[order(tidy_meg_l3$p.value),]
-```
-
-Ahora vamos a filtrar de las 62 covariables las que nos muestran un p-valor que no sea significativo.
-
-```{r}
-tidy_meg_l3 %>% 
-  filter(p.value > 0.05)
-```
-
-De las 62 covariables vemos que 16 no son significativas, con p-valores menores a 0.05, y con intervalos de confianza que incluyen el 0.
-Todas estas 16 covariables son vaiables dummy de la variable l3.
-
-III.Medidas de evaluación del modelo
-
-Los valores analizados hasta ahora nos dan comparativas de a pares, por ejemplo en el caso de las variables dummies, frente a la categoría basal, si queremos entender la significatividad conjunta, necesitamos un test multivariado, como test F de Fisher, prodremos ver sus resultados en la salida de ANOVA.
-
-```{r}
-tidy(anova(modelo_propiedades_l3))
-```
-
-Los resultados del test nos muestran que acorde al p-valor las variables son estadísticamente significativas, property type y l3 son significativas en conjunto.
-
-
-c.Realizar un modelo sin la covariable l3 e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
-
-```{r}
-modelo_propiedades <- lm(price ~ surface_covered + bathrooms + rooms + surface_total + property_type, data = aptosTrain)
-# Resumen del modelo
-tidy_meg <- tidy(modelo_propiedades, conf.int = TRUE)
-tidy_meg
-```
-
-Ahora graficaremos el precio frente a la superficie cubierta, y generaremos las rectas para la categoria basal casa, y las dos variables dummies de tipo de propiedad, departamento y PH. Todas cuentan con la misma pendiente, sin embargo tienen 3 cortes respecto a Y, y podemos ver como se ajustan mejor para las 3 categorías. 
-
-```{r}
-# Accedemos a la información de los coeficientes estimados
-intercepto_1 = modelo_propiedades$coefficients[1]
-pendiente_meed = modelo_propiedades$coefficients[2]
-intercepto = c()
-for (i in 6:7) {
-  #print(modelo_propiedades$coefficients[i])
-  intercepto[i] = modelo_propiedades$coefficients[1] + modelo_propiedades$coefficients[i]
-  #print(intercepto[i])
- }
-
-# Graficamos el dataset y el modelo
-aptosTrain %>% 
-  ggplot(., aes(x = surface_covered, y = price)) + 
-  geom_abline(intercept = intercepto_1, slope = pendiente_meed, color = "red", size=1) +
-  geom_abline(intercept = intercepto[6], slope = pendiente_meed, color = "forestgreen", size=1) +  
-  geom_abline(intercept = intercepto[7], slope = pendiente_meed, color = "blue", size=1) +
-  geom_point() +
-  theme_bw() +
-  scale_x_continuous(limits = c(0,275)) +
-  scale_y_continuous(limits = c(0,1000000)) +
-  labs(title="Modelo Lineal Múltiple: Superficie cubierta por tipo de propiedad", x="Surface Covered", y="Price") +
-  geom_point(aes(colour = factor(property_type)))
-```
-
-El modelo sin la covariable l3 es bastante más sencillo en la medida de que cuenta con 6 covariables, de las cuales tenemos en la variable property_type un valor basal para casa, y dos variables dummies para sus otras categorías.
-Todos los covariables acorde al p-valor y a los intervalos de confianza, resultan significativos para el modelo.
-El intercepto es negativo, lo que no hace sentido para este caso de negocio, sin embargo habría que tener en cuenta que sería el valor para una casa de 0 habitaciones, 0 baños, y 0 metros de superficie.
-
-d.¿Cuál es el modelo que mejor explica la variabilidad del precio?
-
-Vamos a comparar los valores de resumen de cada modelo, enfocaremos la comparación en el R2-ajustado, dado que los modelos no cuentan con la misma cantidad de variables, por lo tanto si nos fijamos sólo en R2, podemos cometer el error de entender el involucramiento de l3 como favorable, cuando sólo se podría deber al aumento en R2 dada la gran cantidad de variables dummies que aporta.
-
-
-```{r}
-#Armamos lista con todos los modelos
-models <- list(modelo_propiedades = modelo_propiedades, modelo_propiedades_l3 = modelo_propiedades_l3)
-# calculamos las variables resumen
-purrr::map_df(models, broom::tidy, .id = "model")
-```
-Tras esto calculamos las variables de resumen para los dos modelos a comparar:
-
-```{r}
-# calculamos las métricas para todos los modelos
-df_evaluacion_train = map_df(models, broom::glance, .id = "model") %>%
-  # ordenamos por R2 ajustado
-  arrange(desc(adj.r.squared))
-df_evaluacion_train
-```
-Tanto el R2 y el R2-Ajustado son mayores en el modelo que incluye l3, con lo que lo hacen un modelo que explica mejor la variabilidad del precio.
-
-3) Creación de variables
-Utilizando el dataset de training:
-
-a.En el ejercicio anterior deberían haber encontrado que algunos barrios son significativos, aunque no todos. Crear una nueva variable barrios que permita agrupar a los barrios. Explicar el análisis exploratorio para definir la nueva variable y los criterios utilizados en la construcción de la misma.
-
-Un criterio sugerido es agrupar los barrios según el precio por metro cuadrado promedio de las propiedades ubicadas en ellos, creando grupos de ‘precio_alto’, ‘precio_medio’ y ‘precio_bajo’.
-
-
-```{r}
-#Crear variable precio por m2
-aptosTrain_pricem2 <- aptosTrain
-aptosTrain_pricem2$pricem2 <- aptosTrain_pricem2$price/aptosTrain_pricem2$surface_total
-summary(aptosTrain_pricem2$pricem2)
-```
-Vemos un boxplot de la variable precio por metro cuadrado para empezar a entenderla:
-
-```{r}
-ggplot(aptosTrain_pricem2, aes(y = pricem2, fill = 1)) +
-  geom_boxplot(alpha = 0.6)
-```
-
-Vemos que en general los precios por metro cuadrado están entre 2mil y 3mil dólares por metro cuadrado, acorde a nuestro primer y tercer cuantil, con la media en 2.7miles de dólares por metro cuadrado, vemos ademas una gran cantidad de ouliers, de los cuales algunos exceden los 10mil dólares por metro cuadrado.
-
-
-A continuación hacemos un boxplot separando por tipo de propiedad:
-
-
-```{r}
-ggplot(aptosTrain_pricem2, aes(property_type, pricem2, group = property_type, fill = factor(property_type)))+
-  geom_boxplot(alpha = 0.6) + 
-  theme(legend.position="none")
-```
-Vemos que los precios por metro cuadrado son en general más bajos en las casas, y más altos en los departamentos, además los precios por metro cuadrado en los departameentos tienen gran parte de los outliers más severos.
-
-Haremos un gráfico de boxplots para visualizar la distribución de los datos por barrio:
-
-```{r}
-ggplot(aptosTrain_pricem2, aes(l3, pricem2, group = l3, fill = factor(l3)))+
-  geom_boxplot(alpha = 0.6) +
-  theme(legend.position="none") +
-  coord_flip() 
+glimpse(titanic_test)
 ```
 
 
-Ahora organizamos la gráfica para poder ver los precios del metro cuadrado organizados por su media:
+b.Con el modelo y punto de corte elegidos clasificar a las personas del dataset de testing.
 
-```{r}
-aptosTrain_pricem2$l3 = with(aptosTrain_pricem2, reorder(l3, pricem2, mean))
+c.Obtener la matriz de confusión y comparar con la obtenida en el punto 5)c).
 
-aptosTrain_pricem2 %>%
-ggplot(aes(l3, pricem2, group = l3, fill = factor(l3)))+
-  geom_boxplot(alpha = 0.6) +
-  theme(legend.position="none") +
-  coord_flip() 
-```
 
-Basados en los que vemos en el gráfico estableceremos 5 grupos con respecto al precio por metro cuadrado los barrios.
-Las agrupaciones serán acorde a los cuartiles, de la siguiente manera para la varible precios por metro cuadrado:
 
-1)<1erQ
-2)1erQ-2doQ
-3)2doQ-3erQ
-4)3Q-3Q+2DE (Entre el 3er cuartil y dos desviaciones estándar)
-5)>3Q+2DE (Mayor al 3er cuartil más dos desviaciones estándar)
-
-
-```{r}
-priceQs <- summary(aptosTrain_pricem2$pricem2)
-priceQs["IQ Distance"] <- priceQs["Mean"] - priceQs["1st Qu."]
-priceQs
-#priceQs["1st Qu."]
-```
-
-Añadimos el valor de la media de precio por barrio al dataset.
-
-```{r}
-aptosTrain_pricem2 <- aptosTrain_pricem2 %>% 
-  group_by(l3) %>% 
-  mutate(meanBarrios = mean(pricem2))
-aptosTrain_pricem2
-```
-
-Y basados en este valor generamos la clasificación descrita previamente
-
-```{r}
-aptosTrain_pricem2 <- aptosTrain_pricem2 %>%
-  mutate(
-    barrios = case_when(
-      meanBarrios < priceQs["1st Qu."]                               ~ "1Star",
-      meanBarrios >= priceQs["1st Qu."] 
-      & meanBarrios < priceQs["Mean"]                                ~ "2Star",
-      meanBarrios >= priceQs["Mean"] 
-      & meanBarrios < priceQs["3rd Qu."]                             ~ "3Star",
-      meanBarrios >= priceQs["3rd Qu."] 
-      & meanBarrios < (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"]) ~ "4Star",
-      meanBarrios > (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"])  ~ "5Star"
-    )
-  )
-head(aptosTrain_pricem2,30)
-```
-Con esto podemos agrupar la cantidad de barrios de se asociarían a nuestra clasificación de priceLevel del siguiente modo:
-
-```{r}
-aptosTrain_pricem2 %>% 
-  group_by(barrios) %>%
-  count(l3) %>%
-  count(barrios)
-```
-
-Podemos ver que tenemos un desbalanceo en las clases, con una mayor cantidad de barrios para precios por m2 bajos, y que la cantidad de barrios disminuye a medida que aumentamos en el precio por metro cuadrado, lo que tiene sentido a nivel de negocio, entendiéndolo como que los barrios exclusivos (y costosos), son menos.
-
-Viendo ahora nuestra información de acuerdo a la nueva clasificación:
-
-```{r}
-ggplot(aptosTrain_pricem2, aes(barrios, pricem2, group = barrios, fill = factor(barrios)))+
-  geom_boxplot(alpha = 0.6)
-```
-
-Vemos un salto importante en el precio por metro cuadrado, que ya habíamos evidenciado en nuestro diagrama de boxplot por barrios, para el barrio clasificado como 5Star, que es Puerto Madero.
-
-b.Calcular el modelo que predice el precio en función de las nuevas covariables e interpretar sus resultados (todas las partes de la salida que consideren relevantes).
-
-```{r}
-modelo_propiedades_barrios <- lm(price ~ surface_covered + bathrooms + rooms + surface_total + property_type + barrios, data = aptosTrain_pricem2)
-# Resumen del modelo
-tidy_meg_barrios <- tidy(modelo_propiedades_barrios, conf.int = TRUE)
-tidy_meg_barrios
-```
-
-En general todas las covariables son significativas acorde al p-valor, también vemos que ninguna contiene en su intervalod de confianza al 0. 
-Tenemos un intercepto negativo, que no nos hace mucho sentido, dado que es negativo, pero corresponde a un caso que no hace sentido al caso de negocio, puesto que sería un apto con 0m2 de superficie y 0 habitaciones.
-Las categorias basales son para este caso Casa (por property_type) y barrio1Star (por Barrios).
-Se ve un aumento consistente en las categorías dummy de barrios, dado que es una variable categórica ordenada construida a partir del precio por m2.
-Vemos también un aumento en el precio promedio esperado, si mantenemos todas las variables, y vamos aumentando la cantidad de baños, el aumento en el valor esperado del precio, en promedio sería de más de 35mil. 
-
-Para entender más la significatividad conjunta de la variable barrios, haremos un test ANOVA.
-
-
-```{r}
-tidy(anova(modelo_propiedades_barrios))
-```
-
-En él test acorde al resultado del estádistivo de F. y el p-valor vemos que la variable barrios resulta significativa en conjunto para explicar el precio, con lo tanto vemos que es una variable importante para el modelo.
-  
-Ahora procedemos a graficar las diferentes rectas acorde a la clasificación por barrios:
-
-```{r}
-# Accedemos a la información de los coeficientes estimados 
-intercepto_1 = modelo_propiedades_barrios$coefficients[1]
-pendiente_meed = modelo_propiedades_barrios$coefficients[2]
-intercepto = c()
-for (i in 8:11) {
-  #print(modelo_propiedades_barrios$coefficients[i])
-  intercepto[i] = modelo_propiedades_barrios$coefficients[1] + modelo_propiedades_barrios$coefficients[i]
-  #print(intercepto[i])
- }
-
-# Graficamos el dataset y el modelo
-aptosTrain_pricem2 %>% 
-  ggplot(., aes(x = surface_covered, y = price)) + 
-  geom_abline(intercept = intercepto_1, slope = pendiente_meed, color = "#ed927b", size=1) +
-  geom_abline(intercept = intercepto[8], slope = pendiente_meed, color = "#808717", size=1) +  
-  geom_abline(intercept = intercepto[9], slope = pendiente_meed, color = "#0a693d", size=1) +
-  geom_abline(intercept = intercepto[10], slope = pendiente_meed, color = "#12b3ad", size=1) +
-  geom_abline(intercept = intercepto[11], slope = pendiente_meed, color = "#d035db", size=1) +
-  geom_point() +
-  theme_bw() +
-  scale_x_continuous(limits = c(0,275)) +
-  scale_y_continuous(limits = c(0,1000000)) +
-  labs(title="Modelo Lineal Múltiple: Superficie cubierta por tipo de propiedad", x="Surface Covered", y="Price") +
-  geom_point(aes(colour = factor(barrios)))
-```
-
-Vemos como varían los interceptos de acorde a la variable categórica que generamos.
-
-c.¿Qué modelo explica mejor la variabilidad de los datos, el que utiliza la variable l3 o el que utiliza barrio? En su opinión, ¿Qué modelo es más útil? ¿Porqué?
-
-Para esto de nuevo generaremos la lista con los modelos a comparar:
-
-```{r}
-#Armamos lista con todos los modelos
-models <- list(modelo_propiedades = modelo_propiedades ,modelo_propiedades_l3 = modelo_propiedades_l3, modelo_propiedades_barrios = modelo_propiedades_barrios)
-# calculamos las variables resumen
-purrr::map_df(models, broom::tidy, .id = "model")
-```
-
-Ahora generaremos los métricas para los modelos que tenemos, y las organizaremos por el R2-Ajustado 
-
-```{r}
-# calculamos las métricas para todos los modelos
-df_evaluacion_train = map_df(models, broom::glance, .id = "model") %>%
-  # ordenamos por R2 ajustado
-  arrange(desc(adj.r.squared))
-df_evaluacion_train
-```
-
-Al fijarnos en el R2-Ajustado, Vemos que la variabilidad explicada por el modelo que incluye los barrios individualmente es ligeramente mayor que la que generamos para la clasificación de barrios. Sin embargo la cantidad de variables que usa el modelo barrios lo hace más sencillo de explicar y graficar, puesto que genera sólo 4 variables dummies, frente a las más de 50 que genera el modelo que incluye l3.
-
-
-d.La interpretación de los coeficientes de las variables surface_covered y surface_total puede ser un poco problemática ya que se encuentran altamente correlacionadas. Entonces, podemos construir una nueva variable sup_descubierta para la diferencia entre ambas superficies. Calcular nuevamente el modelo lineal del punto 3.b) (modelo con variable barrio) para todas las covariables previas (excepto surface_total), incluyendo surface_covered y sup_descubierta e interpretar los coeficientes de estas dos últimas variables.
-
-```{r}
-aptosTrain_pricem2$sup_descubierta <- aptosTrain_pricem2$surface_total - aptosTrain_pricem2$surface_covered
-
-modelo_propiedades_barrios_descubierta <- lm(price ~ surface_covered + bathrooms + rooms + sup_descubierta + property_type + barrios, data = aptosTrain_pricem2)
-# Resumen del modelo
-tidy_meg_barrios_descubierta <- tidy(modelo_propiedades_barrios_descubierta, conf.int = TRUE)
-tidy_meg_barrios_descubierta
-```
-
-Vemos que la nueva variable sup_descubierta es significativa para explicar el modelo, su p-valor es realmente bajo, la variable surface_covered sería significativa, con un p-valor muy bajo. El valor del estadístico creció muy notablemente para surface_covered.
-
-
-4) Diagnóstico del modelo
-Utilizando el dataset de training:
-Analizar los residuos del modelo elaborado en el punto 3.d) y evaluar el cumplimiento de los supuestos del modelo lineal.
-
-```{r}
-#Armamos lista con todos los modelos
-models <- list(modelo_propiedades = modelo_propiedades ,modelo_propiedades_l3 = modelo_propiedades_l3, modelo_propiedades_barrios = modelo_propiedades_barrios, modelo_propiedades_barrios_descubierta = modelo_propiedades_barrios_descubierta)
-# calculamos las variables resumen
-#purrr::map_df(models, broom::tidy, .id = "model")
-# calculamos valores predichos para todos los modelos
-au_modelos = purrr::map_df(models, broom::augment, .id = "model")
-# observamos lo que ocurre con las variables que no se incluyen en el modelo
-#au_modelos %>%
-#  head(5)
-#au_modelos %>%
-#  tail(5)
-# Modelo barrios con superficie descubierta
-g1 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_barrios_descubierta"), 
-       aes(.fitted, .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0) +
-  geom_smooth(se = FALSE) +
-  labs(title = "Residuos vs valores predichos") + 
-  theme_bw()
-g2 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_barrios_descubierta"), 
-       aes(sample = .std.resid)) +
-  stat_qq() +
-  geom_abline() +
-  labs(title = "Normal QQ plot") + 
-  theme_bw()
-g3 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_barrios_descubierta"), 
-       aes(.fitted, sqrt(abs(.std.resid)))) +
-  geom_point() +
-  geom_smooth(se = FALSE) + 
-  theme_bw() +
-  labs(title = "Scale-location plot")
-g4 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_barrios_descubierta"), 
-       aes(.hat, .std.resid)) +
-  geom_vline(size = 2, colour = "white", xintercept = 0) +
-  geom_hline(size = 2, colour = "white", yintercept = 0) +
-  geom_point() + 
-  geom_smooth(se = FALSE) + 
-  theme_bw() +
-  labs(title = "Residual vs leverage")
-# grafico todos juntos
-grid.arrange(g1, g2, g3, g4, nrow = 2)
-```
-
-
-Residuos vs valores predichos: Se ve una estructura en los datos, la varianza aumenta, y luego disminuye, con lo que no es constante, y nos lleva a concluir que al parecer no se satisface el supuesto de homocedasticidad.
-
-Normal QQ plot: Tanto el extremo inferior izquierdo como el extremo superior derecho no se ajustan a la distribución teórica.
-
-Residual vs leverage: Existen varios puntos con un leverage bastante alto.
-
-Diagnóstico del modelo: El modelo que generamos no cumple con los supuestos del modelo lineal. Tenemos problemas de heterocedasticidad, falta de normalidad y presencia de observaciones de alto leverage.
-
-5) Modelo Log(price)
-Utilizando el dataset de training:
-
-Crear un modelo para log(price) e interpretar los parámetros estimados de este nuevo modelo. Comparar la performance del modelo de 3.d) con éste, tanto en términos de la variabilidad explicada como del cumplimiento de los supuestos del modelo lineal.
-
-log(price)=β0+β1log(rooms)+β2log(bathrooms)+β3log(surface_covered)+β4property_type+β5barrio+β6surface_patio
-
-Generamos el modelo acorde a la modificación logarítmica:
-
-```{r}
-modelo_propiedades_log <- lm(log(price) ~ log(rooms) + log(bathrooms) + log(surface_covered) + property_type + barrios + sup_descubierta, data = aptosTrain_pricem2)
-# Resumen del modelo
-tidy_meg_log <- tidy(modelo_propiedades_log, conf.int = TRUE)
-tidy_meg_log
-```
-Todas las variables se muestran como significativas para este modelo, algunas con p-valores extremadamente bajos.
-El estimate nos muestra el intercepto de la recta para las categorías basales en 8.3 (recordando que esto corresponde al logaritmo del precio, no al preico como tal).
-La variable surface covered, sería una de las que aportan mayor significatividad, en conjunto con la variable dummy barrio5Star.
-
-Ahora queremos comparar el modelo creado recientemente, con el logaritmo para algunas variables, con el modelo creado previamente, que incluye la variable de superficie descubierta.
-
-```{r}
-models <- list(modelo_propiedades_barrios_descubierta = modelo_propiedades_barrios_descubierta, modelo_propiedades_log = modelo_propiedades_log)
-
-# calculamos las métricas para todos los modelos
-df_evaluacion_train = map_df(models, broom::glance, .id = "model") %>%
-  # ordenamos por R2 ajustado
-  arrange(desc(adj.r.squared))
-df_evaluacion_train
-```
-
-Vemos una mejora marcada en la explicatividad del modelo donde incluimos el tratamiento de logaritmo, acorde al R2-Ajustado, con lo que sería el modelo que mejor explica el precio entre los que hemos generado hasta ahora.
-Con esto nos restaría validar el cumplimiento de supuestos de linealidad para el modelo donde sí aplicamos dicha conversión logarítmica:
-
-```{r, message = FALSE, warning = FALSE}
-# calculamos las variables resumen
-#purrr::map_df(models, broom::tidy, .id = "model")
-# calculamos valores predichos para todos los modelos
-au_modelos = purrr::map_df(models, broom::augment, .id = "model")
-# observamos lo que ocurre con las variables que no se incluyen en el modelo
-#au_modelos %>%
-#  head(5)
-#au_modelos %>%
-#  tail(5)
-# Modelo barrios con superficie descubierta
-g1 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_log"), 
-       aes(.fitted, .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0) +
-  geom_smooth(se = FALSE) +
-  labs(title = "Residuos vs valores predichos") + 
-  theme_bw()
-g2 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_log"), 
-       aes(sample = .std.resid)) +
-  stat_qq() +
-  geom_abline() +
-  labs(title = "Normal QQ plot") + 
-  theme_bw()
-g3 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_log"), 
-       aes(.fitted, sqrt(abs(.std.resid)))) +
-  geom_point() +
-  geom_smooth(se = FALSE) + 
-  theme_bw() +
-  labs(title = "Scale-location plot")
-g4 = ggplot(au_modelos %>% filter(model == "modelo_propiedades_log"), 
-       aes(.hat, .std.resid)) +
-  geom_vline(size = 2, colour = "white", xintercept = 0) +
-  geom_hline(size = 2, colour = "white", yintercept = 0) +
-  geom_point() + 
-  geom_smooth(se = FALSE) + 
-  theme_bw() +
-  labs(title = "Residual vs leverage")
-# grafico todos juntos
-grid.arrange(g1, g2, g3, g4, nrow = 2)
-```
-
-
-Normal QQ plot: El extremo inferior izquierdo y el superior derecho parecen ajustarse un poco mejor, sin embargo siguen sin estar ajustados completamente con la distribución teórica.
-
-Residual vs leverage: Siguen existiendo puntos con un leverage bastante alto.
-
-Diagnóstico del modelo: El modelo que generamos no cumple con los supuestos del modelo lineal, falta de normalidad y presencia de observaciones de alto leverage.
-
-
-6) Selección de modelo
-Ahora debe elegir el mejor modelo para predecir los precios de nuevas propiedades.
-
-Agrupamos en models los cinco modelos generados hasta ahora.
-
-```{r}
-models <- list(modelo_propiedades = modelo_propiedades ,modelo_propiedades_l3 = modelo_propiedades_l3, modelo_propiedades_barrios = modelo_propiedades_barrios, modelo_propiedades_barrios_descubierta = modelo_propiedades_barrios_descubierta, modelo_propiedades_log = modelo_propiedades_log)
-```
-
-
-Utilizando el dataset de training desarrollar 2 (dos) modelos de regresión múltiple nuevos. Elegir 2 (dos) modelos de los 5 (cinco) que ya fueron creados:
-
-Queremos generar un nuevo modelo trabajando con las variables rooms y bathrooms, lo primero que queremos revisar es la correlación entre las mismas, para ver si hace sentido simplemente retirar una de ellas del modelo:
-
-```{r}
-cor(aptosTrain_pricem2$rooms, aptosTrain_pricem2$bathrooms)
-```
-Si bien existe alguna correlación, no es tan alta para tomar la decisión de excluir una de las dos del modelo, por lo tanto, vamos a optar por combinarlas, sumándolas:
-
-```{r}
-aptosTrain_pricem2$total_rooms <- aptosTrain_pricem2$rooms + aptosTrain_pricem2$bathrooms
-
-modelo_propiedades_total_rooms <- lm(price ~ surface_covered + total_rooms + sup_descubierta + property_type, data = aptosTrain_pricem2)
-# Resumen del modelo
-tidy_meg_barrios_total_rooms <- tidy(modelo_propiedades_total_rooms, conf.int = TRUE)
-tidy_meg_barrios_total_rooms
-```
-
-Vemos que el modelo cuenta enteramente con variables explicativas acorde a los p-valores que tenemos, puntualmente nuestra nueva variable total_rooms resulta significativa.
-El intercepto se mantiene siendo negativo, vemos un aumento de 2.3mil dólares para el valor promedio esperado a medida que aumenta cada metro de superficie (dadas las demás variables), y también vemos un aumento de 8.5mil dólares ara el valor promedio esperado a medida que aumenta la cantidad de habitaciones o baños (dadas las demás variables).
-
-
-Para el segundo modelo que generaremos añadiremos una variable para definir si la propiedad cuenta con espacio al aire libre o no:
-
-```{r}
-aptosTrain_pricem2$tiene_sup_descubierta <- ifelse(aptosTrain_pricem2$sup_descubierta > 0, TRUE, FALSE)
-
-modelo_propiedades_has_descubierta <- lm(price ~ surface_covered + bathrooms + rooms + tiene_sup_descubierta + property_type, data = aptosTrain_pricem2)
-# Resumen del modelo
-tidy_meg_barrios_has_descubierta <- tidy(modelo_propiedades_has_descubierta, conf.int = TRUE)
-tidy_meg_barrios_has_descubierta
-```
-Todas las variables son estadísticamente significativas dado su p-valor y sus intervalos de confianza.
-
-La nueva variable generada indica un aumento de más de 22mil en promnedio para el precio esperado, para las propiedades que cuentan con superficies descubiertas, esto sería propiedades que tienen balcones o patios.
-
-Respecto a los 5 modelos que tenemos hasta el momento tomaremos el que incluye la clasificación de barrios y el modelo en el que hicimos el ajuste logarítmico:
-
-*modelo con todas las covariables
-*modelo sin l3
-  ****modelo con la variable barrio
-*modelo con la variable sup_descubierta
-  ****modelo con logaritmo.
-
-Puede elegir por los criterios que considere adecuados: métricas, facilidad de interpretación, etc. siempre y cuando los explique claramente
-
-Los modelos fueron elegidos puesto que en comparativas anteriores mostraron contar con R2-Ajustado alto,que explicaría la variable precio en función de las variables de los modelos, además frente al modelo l3 cuentan con gran explicatividad y menos variables.
-
-Evalue estos 4 (cuatro) modelos en términos de su capacidad predictiva en el dataset de training, fundamentando claramente su elección con la/s métrica/s que considere adecuada/s.
-
-```{r}
-
-models <- list(modelo_propiedades_barrios = modelo_propiedades_barrios, modelo_propiedades_log = modelo_propiedades_log, modelo_propiedades_total_rooms = modelo_propiedades_total_rooms, modelo_propiedades_has_descubierta = modelo_propiedades_has_descubierta)
-
-# calculamos las métricas para todos los modelos
-df_evaluacion_train = map_df(models, broom::glance, .id = "model") %>%
-  # ordenamos por R2 ajustado
-  arrange(desc(adj.r.squared))
-df_evaluacion_train
-```
-
-El modelo que mejor explica la variabilidad viene siendo el modelo de la conversión logarítmica, su R2-Ajustado es de 0.84, frente modelo de barrios que cuenta con un R2-Ajustado de 0.77, los dos nuevos modelos generados no explican tanto la variabilidad del precio, aunque sean más sencillos de explicar dentro del caso de negocio. 
-
-Predecir los valores de precios de las propiedades en el dataset de testing (recuerden que deben realizar las mismas transformaciones que hicieron en el set de training) y comparar la performance de los modelos seleccionados con la/s métrica/s elegidas previamente. Determinar con cuál modelo se queda y por qué.
-
-```{r}
-aptosTest <- fread("ar_properties_test.csv")
-#Realizamos las transaformaciones para las nuesvas variables usadas en el modelo
-aptosTest$total_rooms = aptosTest$rooms + aptosTest$bathrooms
-aptosTest$sup_descubierta = aptosTest$surface_total - aptosTest$surface_covered
-aptosTest$tiene_sup_descubierta <- ifelse(aptosTest$sup_descubierta > 0, TRUE, FALSE)
-
-#Vamos a trabajar los cuatro modelos acorde al R2-Ajustado de forma ascendente:
-# Agregamos la predicciones al dataset de testeo para el primer modelo {modelo_propiedades_total_rooms}:
-pred_total_rooms = augment(modelo_propiedades_total_rooms, newdata=aptosTest) 
-pred_total_rooms %>% select(total_rooms, surface_covered, sup_descubierta, property_type, price, .fitted, .resid)
-```
-Ahora para el modelo de superficie descubierta:
-```{r}
-# Agregamos la predicciones al dataset de testeo para el segundo modelo modelo_propiedades_has_descubierta:
-pred_has_descubierta = augment(modelo_propiedades_has_descubierta, newdata=aptosTest) 
-pred_has_descubierta %>% select(tiene_sup_descubierta, sup_descubierta, property_type, price, .fitted, .resid)  
-```
-
-
-Ahora para el modelo de barrios:
-```{r}
-#Generamos la transformación necesaria para el modelo barrios:
-aptosTest$pricem2 <- aptosTest$price/aptosTest$surface_total
-#Tomamos los valores de medias por barrio que ya habíamos establecido
-aptosTest$meanBarrios <- aptosTrain_pricem2$meanBarrios[match(aptosTest$l3, aptosTrain_pricem2$l3)]
-#Generamos la transformación acorde a la variable con 5 categorías:
-aptosTest <- aptosTest %>%
-  mutate(
-    barrios = case_when(
-      meanBarrios < priceQs["1st Qu."]                               ~ "1Star",
-      meanBarrios >= priceQs["1st Qu."] 
-      & meanBarrios < priceQs["Mean"]                                ~ "2Star",
-      meanBarrios >= priceQs["Mean"] 
-      & meanBarrios < priceQs["3rd Qu."]                             ~ "3Star",
-      meanBarrios >= priceQs["3rd Qu."] 
-      & meanBarrios < (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"]) ~ "4Star",
-      meanBarrios > (priceQs["3rd Qu."] + 2*priceQs["IQ Distance"])  ~ "5Star"
-    )
-  )
-
-# Agregamos la predicciones al dataset de testeo para el tercer modelo modelo_propiedades_barrios:
-pred_barrios = augment(modelo_propiedades_barrios, newdata=aptosTest) 
-pred_barrios %>% select(barrios, property_type, surface_total, price, .fitted, .resid)  
-```
-
-
-Ahora para el modelo donde aplicamos el logaritmo:
-```{r}
-# Agregamos la predicciones al dataset de testeo para el cuarto modelo modelo_propiedades_has_descubierta:
-
-#Reverso la transformación logarítmica con la función inversa exponencial:
-pred_log = augment(modelo_propiedades_log, newdata=aptosTest)
-pred_log$.fitted <- exp(pred_log$.fitted)
-pred_log$.resid <- pred_log$price - pred_log$.fitted
-pred_log %>% select(rooms, bathrooms, surface_covered, property_type, price, .fitted, .resid)
-```
-
-
-Ahora empezamos a comparar los resultados en training y testing:
-
-
-Para Testing:
-
-```{r}
-# Aplicamos la función a los 4 modelos con el set de testing
-rmse(data = pred_total_rooms, truth = price, estimate = .fitted)
-rmse(data = pred_has_descubierta, truth = price, estimate = .fitted)
-rmse(data = pred_barrios, truth = price, estimate = .fitted)
-rmse(data = pred_log, truth = price, estimate = .fitted)
-```
-
-Esto nos indica que en promedio el modelo de total_rooms erra por más de 80mil USD. El modelo de has_descubierta erra por casi 79mil USD. El modelo de barrios erra por más de 66mil USD, y  el modelo de log erra por casi 62mil USD.
-
-
-El modelo que elegiría es el que tiene la transformación logarítmica, dado que cuenta con el menor RMSE, lo que me indica que erra menos que los otros modelos en promedio, por otra parte su R2-ajustado es el mayor de los cuatro modelos, con lo que explica mejor la variabilidad de los datos.
-
-La única contra que tiene es que a nivel de negocio puede ser algo complicado explicar de forma muy sencilla la transformación hecha, sin embargo dadas las dos razones iniciales, sería el modelo a elegir. 
 
 
 
