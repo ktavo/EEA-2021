@@ -18,6 +18,7 @@ library(corrr)
 library(ggplot2)
 library(dplyr)
 library(GGally)
+library(tibble)
 
 library(modelr)
 library(ISLR)
@@ -130,10 +131,48 @@ Vemos con el método estratificado una proporción como la dataset antes de su p
 2) Predicciones
 a.Realizar un modelo de regresión logística para predecir la supervivencia en función de Pclass, Sex y Age. Usar solo el dataset de entrenamiento.
 
+Creamos primero el objeto de fórmulas para este modelo
+```{r}
+logit_formulas <- formulas(.response = ~ Survived, # único lado derecho de las formulas.
+                         pClassSexAge = ~ Pclass + Sex + Age 
+                         )
+logit_formulas # observamos el objeto formulas
+```
+
+Ahora creamos el modelo basados en las 3 variables:
+
+```{r}
+models <- data_frame(logit_formulas) %>% # dataframe a partir del objeto formulas
+  mutate(models = names(logit_formulas), # columna con los nombres de las formulas
+         expression = paste(logit_formulas), # columna con las expresiones de las formulas
+         mod = map(logit_formulas, ~glm(., family = 'binomial', data = titanic_split_train))) 
+models
+```
+Ahora para desanidar la columna mod:
+
+
+```{r}
+models %>% 
+  mutate(tidy = map(mod, tidy)) %>% 
+  unnest(tidy) %>% 
+  mutate(estimate=round(estimate,5), # redondeamos valores para facilitar lectura
+         p.value=round(p.value,4))
+```
+
+
 b.Dar una breve interpretación de los coeficientes y su significatividad.
+
+Para este modelo vemos que acorde al p-valor todos los coeficientes son significativos. Debemos tener en cuenta que las variables no tienen una relación lineal con la probabilidad, dado que trabajamos una regresión logística.
+La variable basal de clase es "1ra clase", y la de sexo es "female".
+Los estimados de las otras variables de este modelo, son todos negativos, con lo que las probabilidades de sobrevivir disminuyen si se es de 2da clase (dadas las demás variables), y disminuyen aún más si se es de 3ra clase  (dadas las demás variables), el ser de 3ra clase disminuye las probabilidades casi del mismo modo que ser hombre (dadas las demás variables). A medida que la edad aumenta también disminuye la probabilidad de salvarse.
+
 
 c.¿Quién tiene una mayor probabilidad de supervivencia? Rose que es una mujer de 17 años que viaja en primera clase o Jack que es un hombre de 20 años viajando en tercera clase.
 
+Acorde al modelo Rose tiene una mayor probabilidad de supervivencia, dado que:
+Es mujer, y Jack al ser hombre cuenta con el estimado de -2.48.
+Viaja en 1ra clase, frente a la 3ra clase de Jack, que cuenta con el estimado de -2.48.
+Tiene 17 años frente a los 20 de Jack, y acurde aumenta la edad, la probabilidad de supervivencia disminuye acorde al estimado de -0.038.
 
 
 3) Generación de modelos
