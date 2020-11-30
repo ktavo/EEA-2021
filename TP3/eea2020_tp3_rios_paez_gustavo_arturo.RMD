@@ -44,7 +44,6 @@ a.Leer el archivo titanic_complete_train.csv y mostrar su estructura.
 ```{r}
 #Leo los datos del dataSet 
 titanic_train <- read.csv("titanic_complete_train.csv")
-
 #Revisión datos con str
 #str(titanic_train)
 #Revisión datos con Glipse
@@ -52,7 +51,7 @@ glimpse(titanic_train)
 #Clase de los datos
 ```
 
-El data set cuenta con 891 observaciones y 12 variables, tenemos el id del pasajero, una variable dicotómica llamada Survived que define si sobrevivió o no. Una variable de la clase del pasajero Pclass acorde a la clasificación del barco en 1ra clase,2da clase,3ra clase, una variable de nombre Name, otra de género del pasajero Sex, una variable de edad Age, dos variables que cuentan la cantidad de familaires en el barco, estas son SibSp y PArch. Otra variable Ticket para el número de ticket, otra variable de Fare para el costo del ticket, una variable de cabina para definir la cabina en la que estaba el pasajero, y una variable embarqued que define el puerto donde embarcó el pasajero. 
+El data set cuenta con 891 observaciones y 12 variables, tenemos el id del pasajero, una variable dicotómica llamada Survived que define si sobrevivió o no. Una variable de la clase del pasajero Pclass acorde a la clasificación del barco en 1ra clase,2da clase,3ra clase, una variable de nombre Name, otra de género del pasajero Sex, una variable de edad Age, dos variables que cuentan la cantidad de familiares en el barco, estas son SibSp y Parch. Otra variable Ticket para el número de ticket, otra variable de Fare para el costo del ticket, una variable de cabina para definir la cabina en la que estaba el pasajero, y una variable embarqued que define el puerto donde embarcó el pasajero. 
 
 ```{r}
 summary(titanic_train)
@@ -62,6 +61,8 @@ El resumen del dataset con summary nos aporta información interesante, en el me
 
 b.Seleccionar las variables PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare y Embarked.
 
+Para esto usamos la función select:
+
 ```{r}
 titanic_train_filter <- titanic_train %>% 
   select(PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare, Embarked)
@@ -69,6 +70,7 @@ titanic_train_filter
 ```
 
 c.Transformar las variables Survived, Pclass y Embarked a factor.
+
 Para esto usamos la función mutate de tidyverse.
 
 ```{r}
@@ -97,11 +99,16 @@ titanic_train_filter %>%
   labeller = "label_value",
   mapping = aes(colour = Survived)) #Coloreamos separando los sobrevivientes de los que no sobrevivieron
 ```
+
+
 Coloreamos las gráficas por la variable survived, en rojo tenemos los fallecidos, en azul los sobrevivientes.
 La columna de survived nos muestra que son menos los sobrevivientes que las personas fallecidas. Cuando vemos la gráfica de Pclass vs survived, vemos que en 1ra clase tenemos más sobrevivientes que fallecidos, y que en 3ra clase tenemos una gran cantidad de fallecidos respecto a los sobrevibientes.
+
 La gráfica de Sex vs Survived nos muestra que se tiene una mayor tasa de sobrevivencia entre las mujeres frente a los hombres.
 La gráfica de Age vs. Survived nos muestra una distribución normal con cola larga a la derecha, en ambos casos la distribución de nuestra variable survived es muy similar, con lo que no pareciera haber una correlación entre estas dos variables.
+
 La gráfica de Fare vs. Survided nos muestra que en general las personas que se salvaron pagaron un fare superior a las que fallecieron, esto lo podemos ver también en la gráfica de Fare vs. PClass, donde vemos que para 1ra clase hay una tasa más grande de personas que sobrevivieron frente a las que no, en 2da y 3ra clase vemos mucho más similar la distridución en los casos de sobreviviente frente a no sobreviviente.
+
 La gráfica de PClass vs. Sex nos muestra que la mayoría de víctimas fueron hombres de 3ra clase, además podemos ver que una gran mayoría de mujeres de primera y segunda clase se salvaron, en 3ra clase gráficamente vemos que se salvaron alrededor de la mitad de las mujeres.
 
 e.Mostrar la distribución de clase (Sobrevivientes vs No Sobrevivientes).
@@ -114,6 +121,7 @@ summary(titanic_train_filter$Survived)
 Vemos que se tienen 549 personas fallecidas y 342 que sobrevivieron. Lo que sería un 62% de fallecidos frente a un 38% de sobrevivientes.
 
 f.Dividir al dataset en conjunto de entrenamiento (70% de los datos) y validación (30% de los datos). Volver a analizar la distribución de clase para chequear que sea aproximadamente igual entre ambos conjuntos y respecto a la distribución de clase que obtuvieron para todo el dataset en el punto 1)e).
+
 NOTA: Ya hemos imputado los valores faltantes de ciertas variables en este dataset
 
 ```{r}
@@ -130,6 +138,7 @@ summary(titanic_split_train$Survived)
 #Titanic Split Test
 summary(titanic_split_test$Survived)
 ```
+
 Vemos con el método estratificado una proporción como la dataset antes de su partición, con un 62% de fallecidos. 
 
 2) Predicciones
@@ -145,7 +154,7 @@ logit_formulas # observamos el objeto formulas
 
 Ahora creamos el modelo basados en las 3 variables:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 models <- data_frame(logit_formulas) %>% # dataframe a partir del objeto formulas
   mutate(models = names(logit_formulas), # columna con los nombres de las formulas
          expression = paste(logit_formulas), # columna con las expresiones de las formulas
@@ -165,9 +174,12 @@ models %>%
 
 b.Dar una breve interpretación de los coeficientes y su significatividad.
 
+
 Para este modelo vemos que acorde al p-valor todos los coeficientes son significativos. Debemos tener en cuenta que las variables no tienen una relación lineal con la probabilidad, dado que trabajamos una regresión logística.
 La variable basal de clase es "1ra clase", y la de sexo es "female".
-Los estimados de las otras variables de este modelo, son todos negativos, con lo que las probabilidades de sobrevivir disminuyen si se es de 2da clase (dadas las demás variables), y disminuyen aún más si se es de 3ra clase  (dadas las demás variables), el ser de 3ra clase disminuye las probabilidades casi del mismo modo que ser hombre (dadas las demás variables). A medida que la edad aumenta también disminuye la probabilidad de salvarse.
+
+
+Los estimados de las otras variables de este modelo, son todos negativos, con lo que las probabilidades de sobrevivir disminuyen si se es de la variable dummy 2da clase (dadas las demás variables), y disminuyen aún más si se es de 3ra clase  (dadas las demás variables), el ser de 3ra clase disminuye las probabilidades casi del mismo modo que ser hombre (dadas las demás variables). A medida que la edad aumenta también disminuye la probabilidad de salvarse.
 
 
 c.¿Quién tiene una mayor probabilidad de supervivencia? Rose que es una mujer de 17 años que viaja en primera clase o Jack que es un hombre de 20 años viajando en tercera clase.
@@ -176,16 +188,6 @@ Acorde al modelo Rose tiene una mayor probabilidad de supervivencia, dado que:
 Es mujer, y Jack al ser hombre cuenta con el estimado de -2.48.
 Viaja en 1ra clase, frente a la 3ra clase de Jack, que cuenta con el estimado de -2.48.
 Tiene 17 años frente a los 20 de Jack, y acurde aumenta la edad, la probabilidad de supervivencia disminuye acorde al estimado de -0.038.
-
-*************************************************************************************************************
-*************************************************************************************************************
-*************************************************************************************************************
-
-Para el punto de Rose y Jack, obtengan las probabilidades predichas de cada observación y concluyan al respecto
-
-*************************************************************************************************************
-*************************************************************************************************************
-*************************************************************************************************************
 
 3) Generación de modelos
 a.Generar 3 modelos de regresión logística sobre el dataset de entrenamiento utilizando diferentes combinaciones de variables. Al menos dos modelos deben ser multivariados
@@ -216,7 +218,7 @@ models %>%
 
 Ahora para desanidar la columna mod:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 models %>% 
   filter(models != "pClassSexAge") %>% #Filtramos el modelo que ya teníamos definido previamente
   mutate(tidy = map(mod, tidy)) %>% 
@@ -227,9 +229,9 @@ models %>%
 
 Podemos ver los 3 modelos generados, en el primero de ellos usamos sólamente la variable Pclass, vemos que todos sus coeficientes son significativos, la covariable basal es 1ra clase, para la covariables 2da clase vemos una disminución de la probabilidad de sobrevirir, dado el signo negativo del estimado, para la covariable 3ra clase el coeficiente negativo es aún mayor lo que se interpreta como una posibilidad aún menor de sobrevivir.
 
-El segundo modelo fue elaborado con las variables Pclass, SibSp y Parch, a exepción de la variable SibSp todas las variables son significativas. Se mantiene la disminución de probabilidad de supervivencia al ser de 2da o 3ra clase, dados los coeficientes negativos de estas covariables (dadas las demás variables), la variable SipSp también tiene un coeficiente negativo, disminuyendo la probabilidad esperada de sobrevivir, la variable Parch por su parte tiene un coeficiente positivo, con lo que a medida que aumenta aumenta la probabilidad esperada de sobrevivir (dadas las demás variables), esto podría deberse a que dada la premisa mujeres y niños primero, los núcleos familiares con hijos podrían haber tenido prioridad en los botes salvavidas.
+El segundo modelo fue elaborado con las variables Pclass, SibSp y Parch, a exepción de la variable SibSp todas las variables son significativas. Se mantiene la disminución de probabilidad de supervivencia al ser de 2da o 3ra clase, dados los coeficientes negativos de estas variables dummies (dadas las demás variables), la variable SipSp también tiene un coeficiente negativo, disminuyendo la probabilidad esperada de sobrevivir, la variable Parch por su parte tiene un coeficiente positivo, con lo que a medida que aumenta aumenta la probabilidad esperada de sobrevivir (dadas las demás variables), esto podría deberse a que dada la premisa mujeres y niños primero, los núcleos familiares con hijos podrían haber tenido prioridad en los botes salvavidas.
 
-El tercer modelo conformado por las variables Sex, Embarked y Fare, cuenta con toda slas variables significativas, la covariable basal de sexo es "female, vemos en la primera covariable Sexmale una disminución significativa de la probabilidad de sobrevivir, con un valor negativo superior a los previamente analizados, el valor basal de la covariable Embarked es C de Cherbourg, la covariable EmbarquedQ (Queenstown) muestra una disminución de la probabilidad de sobrevivir, por su coeficiente negativo al igual que EmbarquedS (Southampton). Por último la variable Fara cuenta con un coeficiente positivo, que indica que a medida que aumenta el precio del tickete pagado aumenta la probabilidad de sobrevivir, seguramente por que los ticketes de precio altos están asociados a 1ra clase.
+El tercer modelo conformado por las variables Sex, Embarked y Fare, cuenta con todas las variables significativas, la variable basal de sexo es "female", vemos en la primera variable dummy Sexmale una disminución significativa de la probabilidad de sobrevivir, con un valor negativo superior a los previamente analizados, el valor basal de la variable Embarked es C de Cherbourg, la variable dummy EmbarquedQ (Queenstown) muestra una disminución de la probabilidad de sobrevivir, por su coeficiente negativo al igual que EmbarquedS (Southampton). Por último la variable Fara cuenta con un coeficiente positivo, que indica que a medida que aumenta el precio del tickete pagado aumenta la probabilidad de sobrevivir, seguramente por que los ticketes de precio altos están asociados a 1ra clase.
 
 b.Ordenar por la deviance los 3 modelos creados en el punto 3)a) y el creado en el punto 2)a) y seleccionar el mejor modelo en términos de la deviance explicada.
 
@@ -251,7 +253,7 @@ Frente al valor de null deviance de 832.5 vemos que el modelo que más reduce la
 4) Evaluación del modelo
 a.Realizar el gráfico de curva ROC y obtener el AUC para el modelo elegido. Interpretar el gráfico.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 # Añadir las predicciones
 models <- models %>% 
   mutate(pred= map(mod,augment, type.predict = "response"))
@@ -268,7 +270,7 @@ Ahora vemos los 10 casos de personas con mayor probabilidad de sobrevivir, todos
 
 Ahora guardamos los datos del modelo para graficarlo:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 # Mejor Modelo
 prediction_pClassSexAge <- models %>% 
   filter(models == "pClassSexAge") %>% 
@@ -286,12 +288,14 @@ ggroc(list(pClassSexAge=roc_pClassSexAge), size=1) +
   theme_bw() + 
   labs(title='Curva ROC pClassSexAge', color='Modelo')
 ```
+
+
 Vemos que la curva está bastante alejada de la diagonal, con lo que veríamos que es un buen modelo. Ahora revisamos el AUC de la curva ROC:
 
 ```{r}
 print(paste('AUC: Modelo pClassSexAge', round(roc_pClassSexAge$auc,3)))
 ```
-El valor de 0.845 es bastante alto, con lo que nuestro modelo cuenta con un comportamiento global de exactitud alto.
+El valor de 0.847 es bastante alto, con lo que nuestro modelo cuenta con un comportamiento global de exactitud alto.
 
 b.Realizar un violin plot e interpretar.
 
@@ -305,6 +309,8 @@ ggplot(prediction_pClassSexAge, aes(x=Survived, y=.fitted, group=Survived, fill=
   guides(fill=FALSE) +
   labs(title='Violin plot', subtitle='Modelo pClassSexAge', y='Predicted probability')
 ```
+
+
 Vemos en rojo la distribución de probabilidades de los no sobrevivientes, y en azul la distribución de probabilidades de quienes sobrevivieron. El modelo disctrimina bastanet bien, puesto que las dos distribuciones se ven de algún modo opuestas. Para quienes no sobrevivieron las probabilidades están cerca a 0, para quienes si sobrevivieron las probabilidades están cercanas a 1.
 
 5) Elección del punto corte
@@ -343,11 +349,12 @@ ggplot(logit_pred, aes(cutoff,estimate, group=term, color=term)) + geom_line(siz
 
 
 ```
+
 Generamos las predicciones en la variable .fitted 2 para nuestra partición de test.
 
 b.Elegir un punto de corte y explicar su decisión.
 
-El punte de corte elegido es 0.54, puesto que es donde vemos que se cruzan la sensitivity y la presicion. Siendo este el punto donde vemos el máximo del F-Score.
+El punte de corte elegido es 0.54, puesto que es donde vemos que se cruzan la sensitivity y la precisión. Siendo este el punto donde se máximiza del F-Score.
 
 c.Obtener la matriz de confusión con el modelo y punto de corte elegidos. Interpretarla.
 
@@ -366,9 +373,12 @@ table=table %>%
 confusionMatrix(table(table$predicted_class, table$default), positive = "1")
 ```
 
-El modelo tiene un acuracy de 78% y de la matriz de confusión podemos ver que clasifica de forma correcta como fallecidos a 134 de los 163 fallecidos, y prediciento a 73 sobrevivientes de los 103 sobrevivientes.
-Se tienen 30 falsos positivos (Error de tipo 1) y 29 falsos negativos (Error de tipo 2) 
+El modelo tiene un acuracy de 78% y de la matriz de confusión podemos ver que clasifica de forma correcta como fallecidos a 134 de los 163 fallecidos, y prediciendo a 73 sobrevivientes de los 103 sobrevivientes.
+
+Se tienen 30 falsos positivos (Error de tipo 1) y 29 falsos negativos (Error de tipo 2).
+
 Vemos que se supera el No Information Rate que representa un predictor ingenuo. El p-valor que tenemos es bastante bajo, con lo que podemos concluír que el acurracy de nuestro modelo es estadísticamente distinto del predictor ingenuo.
+
 La prevalencia de la clase positiva es de poco más del 38%.
 De los valores positivos se clasificaron más del 70%, de los valores negativos se clasificaron de forma correcta el 82%.
 
@@ -377,29 +387,52 @@ DATASET DE TESTEO:
 a.Leer el archivo titanic_complete_test.csv y transformar las variables Survived, Pclass y Embarked a factor.
 
 ```{r}
+#Cargamos el dataset
 titanic_test <- read.csv("titanic_complete_test.csv")
-#Revisión datos con str
-#str(titanic_test)
-#Revisión datos con Glipse
-glimpse(titanic_test)
+#Filtramos las variables a usar
+titanic_test <- titanic_test %>% 
+  select(PassengerId, Survived, Pclass, Sex, Age, SibSp,Parch, Fare, Embarked)
+#Convertimos a factores las varialbes indicadas
+titanic_test <- titanic_test %>% 
+  mutate(Survived = factor(Survived), Pclass = factor(Pclass), Embarked = factor(Embarked))
+summary(titanic_test)
 ```
+
+Vemos el resumen del dataset con los filtros y las modificaciones de factor indicadas, 9 variables, con distribuciones similares al dataset de training.
 
 
 b.Con el modelo y punto de corte elegidos clasificar a las personas del dataset de testing.
 
+```{r}
+#sel_cutoff = 0.54
+# Creamos el modelo de validación
+#full_model <- glm(logit_formulas$pClassSexAge, family = 'binomial', data = titanic_split_train)
+# Agregamos la predicciones al dataset de testeo
+table= augment(x=full_model, newdata=titanic_test, type.predict='response') 
+# Clasificamos utilizamos el punto de corte
+table=table %>% 
+  mutate(predicted_class=if_else(.fitted>sel_cutoff, 1, 0) %>% as.factor(), 
+         default= factor(Survived))
+table %>% select (Pclass, Sex, Age, Survived, predicted_class)
+```
+
+Generados los valores de las predicciones, procederíamos a analizar la matriz de confusión.
+
 c.Obtener la matriz de confusión y comparar con la obtenida en el punto 5)c).
 
+```{r}
+# Creamos la matriz de confusión
+confusionMatrix(table(table$predicted_class, table$default), positive = "1")
+```
+
+Vemos un accuracy del modelo sobre los nuevos datos de 77%, (manteniendo el accuracy del modelo en los datos de validación) el accuracy del modelo ingenuo es de 62% y vemos que el accuracy de nuestro modelo es estadísticamente diferente respecto al modelo ingenuo, esto en el valor tan bajo del p-value.
+
+En cuanto a los valores positivos se predijeron correctamente el 70% (manteniendo el accuracy del modelo en los datos de validación), respecto a los valores negativos tenemos una predicción de 81% (teniendo una mínima disminución del accuracy frente al modelo en los datos de validación que tenía un 82%).
 
 
 
 
 
-******************************************************************************************************************************
-******************************************************************************************************************************
-******************************************************************************************************************************
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
